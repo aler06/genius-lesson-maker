@@ -3,10 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import SessionDetail from "./pages/SessionDetail";
-import ExerciseTypeSelector from "./pages/ExerciseTypeSelector";
+import CreateExercise from "./modules/exercises/pages/CreateExercise";
+import Dashboard from "./modules/dashboard/pages/Dashboard";
+import ExerciseDetail from "./modules/exercises/pages/ExerciseDetail";
+import ExerciseTypeSelector from "./modules/exercises/pages/ExerciseTypeSelector";
+import Login from "./modules/auth/pages/Login";
+import Register from "./modules/auth/pages/Register";
+import ProtectedRoute from "./components/ui/protected-route";
+import { Role } from "./types/enums";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,11 +22,33 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/session/:sessionId" element={<SessionDetail />} />
-          <Route path="/session/:sessionId/select-types" element={<ExerciseTypeSelector />} />
-          <Route path="/session/:sessionId/edit" element={<SessionDetail />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/" element={
+            <ProtectedRoute requiredRole={Role.PROFESSOR}>
+              <CreateExercise />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/exercise/:sessionId" element={
+            <ProtectedRoute>
+              <ExerciseDetail />
+            </ProtectedRoute>
+          } />
+          <Route path="/exercise/:sessionId/select-types" element={
+            <ProtectedRoute requiredRole={Role.PROFESSOR}>
+              <ExerciseTypeSelector />
+            </ProtectedRoute>
+          } />
+          <Route path="/exercise/:sessionId/edit" element={
+            <ProtectedRoute requiredRole={Role.PROFESSOR}>
+              <ExerciseDetail />
+            </ProtectedRoute>
+          } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
