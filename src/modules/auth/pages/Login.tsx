@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { apiService } from '@/services/api.service';
+import { authService } from '../services/auth.service';
 import { BookOpen, Mail, Lock } from 'lucide-react';
 
 const Login = () => {
@@ -20,9 +20,8 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const response = await apiService.login(email, password);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      await authService.login({ email, password });
+      // Token and user are already stored by the auth service
       
       toast({
         title: "¡Bienvenido!",

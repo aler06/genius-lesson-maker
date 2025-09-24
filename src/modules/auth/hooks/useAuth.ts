@@ -1,30 +1,43 @@
 import { useState, useEffect } from 'react';
-import { UserResponseDTO } from '@/types/dtos';
+import { authService } from '../services/auth.service';
+import { UserProfile } from '../model/auth-response.model';
 
 export const useAuth = () => {
-  const [user, setUser] = useState<UserResponseDTO | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
+    const init = async () => {
       try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
+        const token = authService.getToken();
+        if (!token) {
+          setIsLoading(false);
+          return;
+        }
+
+        // Try to read cached user first
+        const cached = authService.getStoredUser();
+        if (cached) {
+          setUser(cached);
+        }
+
+        // Always verify token and refresh user data
+        const profile = await authService.getProfile();
+        setUser(profile);
+        localStorage.setItem('user', JSON.stringify(profile));
       } catch (error) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        // Any error means unauthenticated
+        authService.logout();
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    
-    setIsLoading(false);
+    };
+    init();
   }, []);
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    authService.logout();
     setUser(null);
   };
 

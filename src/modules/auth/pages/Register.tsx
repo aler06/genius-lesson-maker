@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { apiService } from '@/services/api.service';
+import { authService } from '../services/auth.service';
 import { Role } from '@/types/enums';
 import { BookOpen, User, Mail, Lock, UserCheck } from 'lucide-react';
 
@@ -27,9 +27,7 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const response = await apiService.register(formData);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      await authService.register(formData);
       
       toast({
         title: "¡Cuenta creada!",
