@@ -67,8 +67,8 @@ const Index = () => {
         description: `Se generaron ${exercises.length} ejercicios para "${formData.topic}".`,
       });
 
-      // Navigate to session detail
-      navigate(`/session/${newSession.id}`);
+      // Navigate to exercise type selector
+      navigate(`/session/${newSession.id}/select-types`);
 
     } catch (error) {
       toast({

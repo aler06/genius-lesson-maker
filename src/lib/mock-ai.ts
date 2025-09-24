@@ -39,6 +39,20 @@ export class MockAIService {
     return exercises;
   }
 
+  static async generateSpecificExercises(topic: string, type: Exercise['type'], count: number = 2): Promise<Exercise[]> {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    const exercises: Exercise[] = [];
+    const topicKey = this.getTopicKey(topic.toLowerCase());
+    
+    for (let i = 0; i < count; i++) {
+      exercises.push(this.createSpecificExercise(i + 1, topicKey, topic, type));
+    }
+
+    return exercises;
+  }
+
   private static getTopicKey(topic: string): string {
     if (topic.includes('matemática') || topic.includes('álgebra') || topic.includes('geometría')) {
       return 'matemáticas';
@@ -59,10 +73,15 @@ export class MockAIService {
     const types: Exercise['type'][] = ['multiple-choice', 'true-false', 'short-answer'];
     const type = types[Math.floor(Math.random() * types.length)];
     
+    return this.createSpecificExercise(index, topicKey, originalTopic, type);
+  }
+
+  private static createSpecificExercise(index: number, topicKey: string, originalTopic: string, type: Exercise['type']): Exercise {
     const baseQuestion = this.generateQuestionForTopic(topicKey, originalTopic);
     
     switch (type) {
       case 'multiple-choice':
+      case 'quiz':
         return {
           id: `ex-${Date.now()}-${index}`,
           type,
@@ -70,7 +89,7 @@ export class MockAIService {
           options: this.generateOptions(topicKey),
           correctAnswer: 'A',
           explanation: 'Esta es la respuesta correcta según los conceptos fundamentales del tema.',
-          points: 10
+          points: type === 'quiz' ? 10 : 10
         };
       
       case 'true-false':
@@ -81,6 +100,41 @@ export class MockAIService {
           correctAnswer: Math.random() > 0.5 ? 'Verdadero' : 'Falso',
           explanation: 'Revisa los conceptos básicos para entender esta respuesta.',
           points: 5
+        };
+
+      case 'hangman':
+        const hangmanWords = this.getHangmanWords(topicKey);
+        const selectedWord = hangmanWords[Math.floor(Math.random() * hangmanWords.length)];
+        return {
+          id: `ex-${Date.now()}-${index}`,
+          type,
+          question: `Adivina la palabra relacionada con ${originalTopic}`,
+          hangmanWord: selectedWord,
+          correctAnswer: selectedWord,
+          explanation: `La palabra "${selectedWord}" es un concepto clave en ${originalTopic}.`,
+          points: 15
+        };
+
+      case 'flip-cards':
+        return {
+          id: `ex-${Date.now()}-${index}`,
+          type,
+          question: baseQuestion,
+          flipCardBack: this.generateFlipCardAnswer(topicKey, originalTopic),
+          correctAnswer: this.generateFlipCardAnswer(topicKey, originalTopic),
+          explanation: 'Memoriza la relación entre pregunta y respuesta.',
+          points: 8
+        };
+
+      case 'fill-blank':
+        const fillBlankSentence = this.generateFillBlankSentence(topicKey, originalTopic);
+        return {
+          id: `ex-${Date.now()}-${index}`,
+          type,
+          question: fillBlankSentence.question,
+          correctAnswer: fillBlankSentence.answer,
+          explanation: 'Completa el espacio con el término correcto.',
+          points: 12
         };
       
       default:
@@ -127,5 +181,53 @@ export class MockAIService {
     };
 
     return optionSets[topicKey as keyof typeof optionSets] || optionSets.matemáticas;
+  }
+
+  private static getHangmanWords(topicKey: string): string[] {
+    const wordSets = {
+      matemáticas: ['ECUACION', 'ALGEBRA', 'GEOMETRIA', 'CALCULO', 'FRACCION'],
+      ciencias: ['CELULA', 'MOLECULA', 'FOTOSINTESIS', 'EVOLUCION', 'GRAVEDAD'],
+      historia: ['REVOLUCION', 'IMPERIO', 'DINASTIA', 'CONQUISTA', 'CIVILIZACION'],
+      literatura: ['METAFORA', 'SONETO', 'NARRATIVA', 'PROSA', 'VERSO']
+    };
+
+    return wordSets[topicKey as keyof typeof wordSets] || wordSets.matemáticas;
+  }
+
+  private static generateFlipCardAnswer(topicKey: string, originalTopic: string): string {
+    const answers = {
+      matemáticas: 'Operación matemática fundamental',
+      ciencias: 'Proceso biológico esencial',
+      historia: 'Evento histórico significativo',
+      literatura: 'Recurso literario importante'
+    };
+
+    return answers[topicKey as keyof typeof answers] || `Concepto clave de ${originalTopic}`;
+  }
+
+  private static generateFillBlankSentence(topicKey: string, originalTopic: string): { question: string; answer: string } {
+    const sentences = {
+      matemáticas: {
+        question: 'Una ______ es una igualdad que contiene una o más incógnitas.',
+        answer: 'ecuación'
+      },
+      ciencias: {
+        question: 'La ______ es el proceso por el cual las plantas producen su alimento.',
+        answer: 'fotosíntesis'
+      },
+      historia: {
+        question: 'La ______ Francesa comenzó en el año 1789.',
+        answer: 'Revolución'
+      },
+      literatura: {
+        question: 'Una ______ es una comparación poética entre dos elementos.',
+        answer: 'metáfora'
+      }
+    };
+
+    return sentences[topicKey as keyof typeof sentences] || {
+      question: `Un concepto importante en ${originalTopic} es ______.`,
+      answer: 'fundamental'
+    };
   }
 }

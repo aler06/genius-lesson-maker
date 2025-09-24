@@ -1,11 +1,13 @@
 export interface Exercise {
   id: string;
-  type: 'multiple-choice' | 'true-false' | 'fill-blank' | 'short-answer';
+  type: 'multiple-choice' | 'true-false' | 'fill-blank' | 'short-answer' | 'quiz' | 'hangman' | 'flip-cards';
   question: string;
   options?: string[];
   correctAnswer: string | string[];
   explanation?: string;
   points: number;
+  hangmanWord?: string; // for hangman exercises
+  flipCardBack?: string; // for flip card exercises
 }
 
 export interface Session {
