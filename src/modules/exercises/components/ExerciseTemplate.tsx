@@ -58,26 +58,47 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({ exercise }) => {
               {question.options?.map((option, optionIndex) => (
                 <div
                   key={optionIndex}
-                  className={`p-3 rounded-lg border ${
-                    optionIndex === parseInt(question.correct_answer)
-                      ? 'bg-green-50 border-green-200 text-green-800'
+                  className={`p-4 rounded-lg border-2 ${
+                    option === question.correct_answer
+                      ? 'bg-green-100 border-green-400 text-green-900 shadow-md'
                       : 'bg-gray-50 border-gray-200'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    {optionIndex === parseInt(question.correct_answer) ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <div className="flex items-center gap-3">
+                    {option === question.correct_answer ? (
+                      <div className="bg-green-600 text-white rounded-full p-1">
+                        <CheckCircle2 className="h-4 w-4" />
+                      </div>
                     ) : (
                       <XCircle className="h-4 w-4 text-gray-400" />
                     )}
-                    <span className="font-medium">
+                    <span className={`font-bold text-lg ${
+                      option === question.correct_answer ? 'text-green-800' : 'text-gray-600'
+                    }`}>
                       {String.fromCharCode(65 + optionIndex)}.
                     </span>
-                    <span>{option}</span>
+                    <span className={`${
+                      option === question.correct_answer 
+                        ? 'font-bold text-green-900 text-lg' 
+                        : 'text-gray-700'
+                    }`}>
+                      {option}
+                    </span>
+                    {option === question.correct_answer && (
+                      <div className="ml-auto flex items-center gap-2">
+                        <Badge variant="default" className="bg-green-600 text-white font-bold px-3 py-1">
+                          ✓ CORRECTA
+                        </Badge>
+                        <div className="bg-green-600 text-white rounded-full p-1 animate-pulse">
+                          <CheckCircle2 className="h-3 w-3" />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
+            
             {question.explanation && (
               <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800">
@@ -88,6 +109,30 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({ exercise }) => {
           </CardContent>
         </Card>
       ))}
+      
+      {/* Summary of correct answers */}
+      <Card className="bg-green-50 border-green-200 mt-6">
+        <CardHeader>
+          <CardTitle className="text-lg text-green-800 flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5" />
+            Resumen de Respuestas Correctas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {exercise.questions?.map((question, index) => (
+              <div key={index} className="bg-white p-3 rounded-lg border border-green-200 text-center">
+                <div className="font-bold text-green-800 text-lg">
+                  Pregunta {index + 1}
+                </div>
+                <div className="text-2xl font-bold text-green-600 mt-1">
+                  {String.fromCharCode(65 + (question.options?.indexOf(question.correct_answer) || 0))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 

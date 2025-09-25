@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 const ExerciseTypeSelector = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedType, setSelectedType] = useState<Game | null>(null);
+  const [selectedTypes, setSelectedTypes] = useState<Game[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [pendingExercise, setPendingExercise] = useState<any>(null);
 
@@ -77,15 +77,19 @@ const ExerciseTypeSelector = () => {
     }
   ];
 
-  const handleTypeSelect = (gameType: Game) => {
-    setSelectedType(gameType);
+  const handleTypeToggle = (gameType: Game) => {
+    setSelectedTypes(prev => 
+      prev.includes(gameType)
+        ? prev.filter(type => type !== gameType)
+        : [...prev, gameType]
+    );
   };
 
-  const handleGenerateExercise = async () => {
-    if (!selectedType || !pendingExercise) {
+  const handleGenerateExercises = async () => {
+    if (selectedTypes.length === 0 || !pendingExercise) {
       toast({
         title: "Error",
-        description: "Selecciona un tipo de ejercicio para continuar.",
+        description: "Selecciona al menos un tipo de ejercicio para continuar.",
         variant: "destructive"
       });
       return;
@@ -94,32 +98,41 @@ const ExerciseTypeSelector = () => {
     setIsGenerating(true);
 
     try {
-      // Generate exercise using the service
-      const exercise = await exerciseService.generateExercise({
-        userId: pendingExercise.userId,
-        topic: pendingExercise.topic,
-        gameType: selectedType,
-        difficulty: pendingExercise.difficulty,
-        targetAudience: pendingExercise.targetAudience,
-        additionalInstructions: pendingExercise.additionalInstructions,
-        numberOfItems: pendingExercise.numberOfItems
-      });
+      const createdExercises = [];
+      
+      // Generate exercises for each selected type
+      for (const gameType of selectedTypes) {
+        const exercise = await exerciseService.generateExercise({
+          userId: pendingExercise.userId,
+          topic: pendingExercise.topic,
+          gameType: gameType,
+          difficulty: pendingExercise.difficulty,
+          targetAudience: pendingExercise.targetAudience,
+          additionalInstructions: pendingExercise.additionalInstructions,
+          numberOfItems: pendingExercise.numberOfItems
+        });
+        createdExercises.push(exercise);
+      }
 
       // Clear pending exercise data
       localStorage.removeItem('pendingExercise');
 
       toast({
-        title: "¡Ejercicio creado exitosamente!",
-        description: `Se generó un ejercicio de ${selectedType} para "${pendingExercise.topic}".`,
+        title: "¡Ejercicios creados exitosamente!",
+        description: `Se generaron ${createdExercises.length} ejercicios para "${pendingExercise.topic}".`,
       });
 
-      // Navigate to exercise detail
-      navigate(`/exercise/${exercise.id}`);
+      // Navigate to the first exercise or dashboard
+      if (createdExercises.length === 1) {
+        navigate(`/exercise/${createdExercises[0].id}`);
+      } else {
+        navigate('/dashboard');
+      }
 
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Ocurrió un error al generar el ejercicio.",
+        description: error instanceof Error ? error.message : "Ocurrió un error al generar los ejercicios.",
         variant: "destructive"
       });
     } finally {
@@ -148,10 +161,10 @@ const ExerciseTypeSelector = () => {
 
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Selecciona el Tipo de Ejercicio
+              Selecciona los Tipos de Ejercicios
             </h1>
             <p className="text-muted-foreground mb-4">
-              Elige el tipo de ejercicio que deseas crear:
+              Elige uno o más tipos de ejercicios que deseas crear:
             </p>
             {pendingExercise && (
               <Badge variant="secondary" className="text-sm">
@@ -165,7 +178,7 @@ const ExerciseTypeSelector = () => {
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {exerciseTypes.map((type) => {
               const Icon = type.icon;
-              const isSelected = selectedType === type.id;
+              const isSelected = selectedTypes.includes(type.id);
               
               return (
                 <Card 
@@ -175,7 +188,7 @@ const ExerciseTypeSelector = () => {
                       ? 'ring-2 ring-primary shadow-lg scale-105' 
                       : 'hover:shadow-md hover:scale-102'
                   }`}
-                  onClick={() => handleTypeSelect(type.id)}
+                  onClick={() => handleTypeToggle(type.id)}
                 >
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
@@ -190,10 +203,14 @@ const ExerciseTypeSelector = () => {
                           </Badge>
                         </div>
                       </div>
-                      <div className={`w-4 h-4 rounded-full border-2 ${
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                         isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'
                       }`}>
-                        {isSelected && <div className="w-2 h-2 bg-white rounded-full m-0.5" />}
+                        {isSelected && (
+                          <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
                       </div>
                     </div>
                   </CardHeader>
@@ -218,28 +235,28 @@ const ExerciseTypeSelector = () => {
             </Button>
             
             <Button
-              onClick={handleGenerateExercise}
-              disabled={!selectedType || isGenerating}
+              onClick={handleGenerateExercises}
+              disabled={selectedTypes.length === 0 || isGenerating}
               className="px-8 bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600"
             >
               {isGenerating ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Generando ejercicio...
+                  Generando ejercicios...
                 </>
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                  Crear Ejercicio
+                  Crear Ejercicios ({selectedTypes.length})
                 </>
               )}
             </Button>
           </div>
 
-          {selectedType && (
+          {selectedTypes.length > 0 && (
             <div className="mt-6 p-4 bg-muted/50 rounded-lg">
               <p className="text-sm text-muted-foreground text-center">
-                Se creará un ejercicio de tipo <strong>{exerciseTypes.find(t => t.id === selectedType)?.name}</strong>
+                Se crearán <strong>{selectedTypes.length} ejercicio{selectedTypes.length !== 1 ? 's' : ''}</strong> de tipo{selectedTypes.length !== 1 ? 's' : ''}: <strong>{selectedTypes.map(type => exerciseTypes.find(t => t.id === type)?.name).join(', ')}</strong>
                 {pendingExercise && ` sobre "${pendingExercise.topic}"`}
               </p>
             </div>

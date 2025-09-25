@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { NavHeader } from "@/components/ui/nav-header";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,6 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { useExerciseById, useExercises } from "../hooks/useExercises";
 import ExerciseTemplate from "../components/ExerciseTemplate";
+import ExerciseEditor from "../components/ExerciseEditor";
+import { ExerciseResponse } from "../model/exercise-response.model";
+import { exerciseService } from "../services/exercise.service";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const ExerciseDetail = () => {
@@ -17,6 +21,8 @@ const ExerciseDetail = () => {
   
   const { exercise, isLoading, error } = useExerciseById(exerciseId, user?.id);
   const { deleteExercise } = useExercises(user?.id);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentExercise, setCurrentExercise] = useState<ExerciseResponse | null>(null);
 
   const handleDeleteExercise = async () => {
     if (!exerciseId || !user?.id) return;
@@ -35,6 +41,47 @@ const ExerciseDetail = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleEditClick = () => {
+    if (exercise) {
+      setCurrentExercise(exercise);
+      setIsEditing(true);
+    }
+  };
+
+  const handleSaveEdit = async (updatedExercise: ExerciseResponse) => {
+    if (!exerciseId || !user?.id) return;
+
+    try {
+      await exerciseService.updateExercise({
+        exerciseId,
+        userId: user.id,
+        ...updatedExercise
+      });
+      
+      setCurrentExercise(updatedExercise);
+      setIsEditing(false);
+      
+      toast({
+        title: "Ejercicio actualizado",
+        description: "Los cambios han sido guardados correctamente.",
+      });
+      
+      // Refresh the page to show updated data
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo actualizar el ejercicio.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setCurrentExercise(null);
   };
 
   if (isLoading) {
@@ -103,7 +150,7 @@ const ExerciseDetail = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate(`/exercise/${exerciseId}/edit`)}
+                onClick={handleEditClick}
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Editar
@@ -135,17 +182,27 @@ const ExerciseDetail = () => {
           </div>
 
           {/* Exercise content */}
-          <ExerciseTemplate exercise={exercise} />
+          {isEditing && currentExercise ? (
+            <ExerciseEditor
+              exercise={currentExercise}
+              onSave={handleSaveEdit}
+              onCancel={handleCancelEdit}
+            />
+          ) : (
+            <ExerciseTemplate exercise={exercise} />
+          )}
 
           {/* Action buttons */}
-          <div className="mt-8 flex justify-center gap-4">
-            <Button onClick={() => navigate('/dashboard')} variant="outline">
-              Volver al Dashboard
-            </Button>
-            <Button onClick={() => navigate('/')}>
-              Crear Nuevo Ejercicio
-            </Button>
-          </div>
+          {!isEditing && (
+            <div className="mt-8 flex justify-center gap-4">
+              <Button onClick={() => navigate('/dashboard')} variant="outline">
+                Volver al Dashboard
+              </Button>
+              <Button onClick={() => navigate('/')}>
+                Crear Nuevo Ejercicio
+              </Button>
+            </div>
+          )}
         </div>
       </main>
     </div>

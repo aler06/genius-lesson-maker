@@ -4,8 +4,8 @@ export interface ExerciseRequestModel {
   userId: string;
   topic: string;
   gameType: Game;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
   targetAudience?: string;
   additionalInstructions?: string;
-  numberOfItems?: number;
+  numberOfItems: number;
 }
