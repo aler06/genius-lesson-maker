@@ -10,7 +10,13 @@ import { Plus, Target } from 'lucide-react';
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { exercises, isLoading, deleteExercise } = useExercises(user?._id);
+  const { exercises, isLoading, deleteExercise, error } = useExercises(user?.id);
+
+  // Debug logs
+  console.log('Dashboard - User:', user);
+  console.log('Dashboard - User ID:', user?.id);
+  console.log('Dashboard - Exercises:', exercises);
+  console.log('Dashboard - Is Loading:', isLoading);
 
   const handleViewExercise = (exerciseId: string) => {
     navigate(`/exercise/${exerciseId}`);
@@ -21,8 +27,8 @@ const Dashboard = () => {
   };
 
   const handleDeleteExercise = (exerciseId: string) => {
-    if (user?._id && window.confirm('¿Estás seguro de que quieres eliminar este ejercicio?')) {
-      deleteExercise({ exerciseId, userId: user._id });
+    if (user?.id && window.confirm('¿Estás seguro de que quieres eliminar este ejercicio?')) {
+      deleteExercise({ exerciseId, userId: user.id });
     }
   };
 
@@ -36,8 +42,35 @@ const Dashboard = () => {
         <NavHeader />
         <main className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Cargando ejercicios...</p>
+            </div>
           </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+        <NavHeader />
+        <main className="container mx-auto px-4 py-8">
+          <Card className="text-center py-12 border-destructive">
+            <CardContent>
+              <div className="mx-auto w-24 h-24 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+                <Target className="h-10 w-10 text-destructive" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2 text-destructive">Error al cargar ejercicios</h3>
+              <p className="text-muted-foreground mb-4">
+                {error instanceof Error ? error.message : 'Ocurrió un error inesperado'}
+              </p>
+              <Button onClick={() => window.location.reload()} variant="outline">
+                Intentar de nuevo
+              </Button>
+            </CardContent>
+          </Card>
         </main>
       </div>
     );
@@ -53,6 +86,11 @@ const Dashboard = () => {
             <p className="text-muted-foreground">
               Gestiona tus ejercicios interactivos generados por IA
             </p>
+            {exercises && exercises.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-1">
+                {exercises.length} ejercicio{exercises.length !== 1 ? 's' : ''} creado{exercises.length !== 1 ? 's' : ''}
+              </p>
+            )}
           </div>
           <Button onClick={handleCreateExercise} className="gap-2 bg-gradient-to-r from-primary to-blue-500">
             <Plus className="h-4 w-4" />

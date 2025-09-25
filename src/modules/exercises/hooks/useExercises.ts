@@ -1,13 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiService } from '@/services/api.service';
-import { 
-  ExerciseRequestDTO, 
-  ExerciseResponseDto, 
-  ExerciseByIdRequestDTO,
-  ExerciseUpdateRequestDTO,
-  UserExerciseRequestDTO 
-} from '@/types/dtos';
+import { exerciseService } from '../services/exercise.service';
+import { ExerciseRequestModel } from '../model/exercise-request.model';
+import { ExerciseResponse } from '../model/exercise-response.model';
+import { ExerciseByIdRequestModel } from '../model/exercise-by-id-request.model';
+import { ExerciseUpdateRequestModel } from '../model/exercise-update-request.model';
 import { useToast } from '@/hooks/use-toast';
 
 export const useExercises = (userId?: string) => {
@@ -21,13 +18,13 @@ export const useExercises = (userId?: string) => {
     error
   } = useQuery({
     queryKey: ['exercises', userId],
-    queryFn: () => userId ? apiService.getUserExercises({ userId }) : Promise.resolve([]),
+    queryFn: () => userId ? exerciseService.getUserExercises(userId) : Promise.resolve([]),
     enabled: !!userId,
   });
 
   // Create exercise mutation
   const createExerciseMutation = useMutation({
-    mutationFn: (data: ExerciseRequestDTO) => apiService.createExercise(data),
+    mutationFn: (data: ExerciseRequestModel) => exerciseService.generateExercise(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercises'] });
       toast({
@@ -46,7 +43,7 @@ export const useExercises = (userId?: string) => {
 
   // Update exercise mutation
   const updateExerciseMutation = useMutation({
-    mutationFn: (data: ExerciseUpdateRequestDTO) => apiService.updateExercise(data),
+    mutationFn: (data: ExerciseUpdateRequestModel) => exerciseService.updateExercise(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercises'] });
       toast({
@@ -65,7 +62,7 @@ export const useExercises = (userId?: string) => {
 
   // Delete exercise mutation
   const deleteExerciseMutation = useMutation({
-    mutationFn: (data: ExerciseByIdRequestDTO) => apiService.deleteExercise(data),
+    mutationFn: (data: ExerciseByIdRequestModel) => exerciseService.deleteExercise(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercises'] });
       toast({
@@ -100,7 +97,7 @@ export const useExerciseById = (exerciseId?: string, userId?: string) => {
     queryKey: ['exercise', exerciseId],
     queryFn: () => 
       exerciseId && userId 
-        ? apiService.getExerciseById({ exerciseId, userId })
+        ? exerciseService.getExerciseById(exerciseId, userId)
         : Promise.resolve(null),
     enabled: !!(exerciseId && userId),
   });
