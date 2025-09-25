@@ -44,7 +44,10 @@ export function NavHeader() {
                 <Button
                   variant={location.pathname === '/' ? 'default' : 'ghost'}
                   onClick={() => navigate('/')}
-                  className="gap-2"
+                  className={location.pathname === '/' ? 
+                    "gap-2 bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600" : 
+                    "gap-2 hover:bg-gradient-to-r hover:from-primary hover:to-blue-500 hover:text-white"
+                  }
                 >
                   <BookOpen className="h-4 w-4" />
                   Crear Ejercicio
@@ -53,7 +56,10 @@ export function NavHeader() {
                 <Button
                   variant={location.pathname === '/dashboard' ? 'default' : 'ghost'}
                   onClick={() => navigate('/dashboard')}
-                  className="gap-2"
+                  className={location.pathname === '/dashboard' ? 
+                    "gap-2 bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600" : 
+                    "gap-2 hover:bg-gradient-to-r hover:from-primary hover:to-blue-500 hover:text-white"
+                  }
                 >
                   <Settings className="h-4 w-4" />
                   Dashboard
@@ -83,7 +89,10 @@ export function NavHeader() {
                 <Button variant="ghost" onClick={() => navigate('/login')}>
                   Iniciar Sesión
                 </Button>
-                <Button onClick={() => navigate('/register')}>
+                <Button 
+                  onClick={() => navigate('/register')}
+                  className="bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600"
+                >
                   Registrarse
                 </Button>
               </div>

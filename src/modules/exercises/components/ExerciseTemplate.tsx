@@ -66,11 +66,11 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({ exercise }) => {
                 >
                   <div className="flex items-center gap-3">
                     {option === question.correct_answer ? (
-                      <div className="bg-green-600 text-white rounded-full p-1">
-                        <CheckCircle2 className="h-4 w-4" />
+                      <div className="bg-green-600 text-white rounded-full p-1 pointer-events-none">
+                        <CheckCircle2 className="h-4 w-4 pointer-events-none" />
                       </div>
                     ) : (
-                      <XCircle className="h-4 w-4 text-gray-400" />
+                      <XCircle className="h-4 w-4 text-gray-400 pointer-events-none" />
                     )}
                     <span className={`font-bold text-lg ${
                       option === question.correct_answer ? 'text-green-800' : 'text-gray-600'
@@ -86,11 +86,11 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({ exercise }) => {
                     </span>
                     {option === question.correct_answer && (
                       <div className="ml-auto flex items-center gap-2">
-                        <Badge variant="default" className="bg-green-600 text-white font-bold px-3 py-1">
+                        <Badge variant="default" className="bg-green-600 text-white font-bold px-3 py-1 pointer-events-none hover:bg-green-600">
                           ✓ CORRECTA
                         </Badge>
-                        <div className="bg-green-600 text-white rounded-full p-1 animate-pulse">
-                          <CheckCircle2 className="h-3 w-3" />
+                        <div className="bg-green-600 text-white rounded-full p-1 animate-pulse pointer-events-none">
+                          <CheckCircle2 className="h-3 w-3 pointer-events-none" />
                         </div>
                       </div>
                     )}
@@ -114,7 +114,7 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({ exercise }) => {
       <Card className="bg-green-50 border-green-200 mt-6">
         <CardHeader>
           <CardTitle className="text-lg text-green-800 flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5" />
+            <CheckCircle2 className="h-5 w-5 pointer-events-none" />
             Resumen de Respuestas Correctas
           </CardTitle>
         </CardHeader>

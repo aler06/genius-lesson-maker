@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { NavHeader } from "@/components/ui/nav-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Loader2, Share2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "../../auth/hooks/useAuth";
 import { useExerciseById, useExercises } from "../hooks/useExercises";
@@ -20,7 +20,7 @@ const ExerciseDetail = () => {
   const { user } = useAuth();
   
   const { exercise, isLoading, error } = useExerciseById(exerciseId, user?.id);
-  const { deleteExercise } = useExercises(user?.id);
+  const { deleteExercise, publishExercise, isPublishing } = useExercises(user?.id);
   const [isEditing, setIsEditing] = useState(false);
   const [currentExercise, setCurrentExercise] = useState<ExerciseResponse | null>(null);
 
@@ -38,43 +38,47 @@ const ExerciseDetail = () => {
       toast({
         title: "Error",
         description: "No se pudo eliminar el ejercicio.",
-        variant: "destructive"
       });
     }
   };
 
   const handleEditClick = () => {
-    if (exercise) {
-      setCurrentExercise(exercise);
-      setIsEditing(true);
-    }
+    setCurrentExercise(exercise);
+    setIsEditing(true);
   };
 
   const handleSaveEdit = async (updatedExercise: ExerciseResponse) => {
-    if (!exerciseId || !user?.id) return;
-
     try {
-      await exerciseService.updateExercise({
-        exerciseId,
-        userId: user.id,
-        ...updatedExercise
-      });
+      // Create the update request object
+      const updateRequest = {
+        exerciseId: updatedExercise.id,
+        userId: user?.id || '',
+        questions: updatedExercise.questions,
+        word: updatedExercise.word,
+        hint: updatedExercise.hint,
+        cards: updatedExercise.cards,
+        instructions: updatedExercise.instructions,
+      };
       
-      setCurrentExercise(updatedExercise);
-      setIsEditing(false);
+      // Update the exercise using the service
+      await exerciseService.updateExercise(updateRequest);
       
       toast({
         title: "Ejercicio actualizado",
-        description: "Los cambios han sido guardados correctamente.",
+        description: "Los cambios han sido guardados exitosamente.",
       });
+      
+      // Exit edit mode
+      setIsEditing(false);
+      setCurrentExercise(null);
       
       // Refresh the page to show updated data
       window.location.reload();
     } catch (error) {
       toast({
-        title: "Error",
+        variant: "destructive",
+        title: "Error al actualizar",
         description: error instanceof Error ? error.message : "No se pudo actualizar el ejercicio.",
-        variant: "destructive"
       });
     }
   };
@@ -82,6 +86,11 @@ const ExerciseDetail = () => {
   const handleCancelEdit = () => {
     setIsEditing(false);
     setCurrentExercise(null);
+  };
+
+  const handlePublishExercise = async () => {
+    if (!exerciseId) return;
+    publishExercise(exerciseId);
   };
 
   if (isLoading) {
@@ -147,19 +156,49 @@ const ExerciseDetail = () => {
             </Button>
             
             <div className="flex gap-2">
+              {!exercise.isPublished && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handlePublishExercise}
+                  disabled={isPublishing}
+                  className="bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600 text-white"
+                >
+                  {isPublishing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Publicando...
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Publicar
+                    </>
+                  )}
+                </Button>
+              )}
+              
+              {exercise.isPublished && (
+                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-md pointer-events-none">
+                  <CheckCircle className="h-4 w-4 pointer-events-none" />
+                  Publicado
+                </div>
+              )}
+              
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleEditClick}
+                className={exercise.isPublished ? 'pointer-events-none hover:bg-background hover:text-foreground' : ''}
               >
-                <Edit className="h-4 w-4 mr-2" />
+                <Edit className={`h-4 w-4 mr-2 ${exercise.isPublished ? 'pointer-events-none' : ''}`} />
                 Editar
               </Button>
               
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                    <Trash2 className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" className={`text-destructive ${exercise.isPublished ? 'pointer-events-none hover:bg-background hover:text-destructive' : 'hover:text-destructive'}`}>
+                    <Trash2 className={`h-4 w-4 mr-2 ${exercise.isPublished ? 'pointer-events-none' : ''}`} />
                     Eliminar
                   </Button>
                 </AlertDialogTrigger>
@@ -198,7 +237,10 @@ const ExerciseDetail = () => {
               <Button onClick={() => navigate('/dashboard')} variant="outline">
                 Volver al Dashboard
               </Button>
-              <Button onClick={() => navigate('/')}>
+              <Button 
+                onClick={() => navigate('/')}
+                className="bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600"
+              >
                 Crear Nuevo Ejercicio
               </Button>
             </div>

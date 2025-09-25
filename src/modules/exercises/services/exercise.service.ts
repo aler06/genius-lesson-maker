@@ -139,6 +139,30 @@ class ExerciseService {
   }
 
   /**
+   * Publish exercise
+   */
+  async publishExercise(exerciseId: string, userId?: string): Promise<ExerciseResponse> {
+    try {
+      const response: AxiosResponse<ExerciseResponse> = await this.api.patch(`/exercise-generator/exercise/${exerciseId}/publish`, {
+        userId
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || 'Error al publicar el ejercicio';
+        if (error.response?.status === 403) {
+          throw new Error('Solo los profesores pueden publicar ejercicios');
+        }
+        if (error.response?.status === 404) {
+          throw new Error('Ejercicio no encontrado');
+        }
+        throw new Error(Array.isArray(message) ? message.join(', ') : message);
+      }
+      throw new Error('Error de conexión');
+    }
+  }
+
+  /**
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {

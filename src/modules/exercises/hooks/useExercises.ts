@@ -79,6 +79,26 @@ export const useExercises = (userId?: string) => {
     },
   });
 
+  // Publish exercise mutation
+  const publishExerciseMutation = useMutation({
+    mutationFn: (exerciseId: string) => exerciseService.publishExercise(exerciseId, userId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exercises'] });
+      queryClient.invalidateQueries({ queryKey: ['exercise'] });
+      toast({
+        title: "¡Ejercicio publicado!",
+        description: "El ejercicio ha sido publicado exitosamente y ahora está disponible públicamente.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        title: "Error al publicar ejercicio",
+        description: error.message,
+      });
+    },
+  });
+
   return {
     exercises: exercises || [],
     isLoading,
@@ -86,9 +106,11 @@ export const useExercises = (userId?: string) => {
     createExercise: createExerciseMutation.mutate,
     updateExercise: updateExerciseMutation.mutate,
     deleteExercise: deleteExerciseMutation.mutate,
+    publishExercise: publishExerciseMutation.mutate,
     isCreating: createExerciseMutation.isPending,
     isUpdating: updateExerciseMutation.isPending,
     isDeleting: deleteExerciseMutation.isPending,
+    isPublishing: publishExerciseMutation.isPending,
   };
 };
 

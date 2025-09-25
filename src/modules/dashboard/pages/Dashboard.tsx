@@ -10,7 +10,7 @@ import { Plus, Target } from 'lucide-react';
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { exercises, isLoading, deleteExercise, error } = useExercises(user?.id);
+  const { exercises, isLoading, deleteExercise, publishExercise, isPublishing, error } = useExercises(user?.id);
 
   // Debug logs
   console.log('Dashboard - User:', user);
@@ -23,13 +23,17 @@ const Dashboard = () => {
   };
 
   const handleEditExercise = (exerciseId: string) => {
-    navigate(`/exercise/${exerciseId}/edit`);
+    navigate(`/exercise/${exerciseId}`);
   };
 
   const handleDeleteExercise = (exerciseId: string) => {
     if (user?.id && window.confirm('¿Estás seguro de que quieres eliminar este ejercicio?')) {
       deleteExercise({ exerciseId, userId: user.id });
     }
+  };
+
+  const handlePublishExercise = (exerciseId: string) => {
+    publishExercise(exerciseId);
   };
 
   const handleCreateExercise = () => {
@@ -92,7 +96,7 @@ const Dashboard = () => {
               </p>
             )}
           </div>
-          <Button onClick={handleCreateExercise} className="gap-2 bg-gradient-to-r from-primary to-blue-500">
+          <Button onClick={handleCreateExercise} className="gap-2 bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600">
             <Plus className="h-4 w-4" />
             Crear Ejercicio
           </Button>
@@ -108,7 +112,7 @@ const Dashboard = () => {
               <p className="text-muted-foreground mb-4">
                 Comienza creando tu primer ejercicio interactivo
               </p>
-              <Button onClick={handleCreateExercise} className="bg-gradient-to-r from-primary to-blue-500">
+              <Button onClick={handleCreateExercise} className="bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600">
                 Crear Primer Ejercicio
               </Button>
             </CardContent>
@@ -122,6 +126,8 @@ const Dashboard = () => {
                 onView={handleViewExercise}
                 onEdit={handleEditExercise}
                 onDelete={handleDeleteExercise}
+                onPublish={handlePublishExercise}
+                isPublishing={isPublishing}
               />
             ))}
           </div>
@@ -131,7 +137,7 @@ const Dashboard = () => {
           <div className="mt-8 text-center">
             <Button
               onClick={handleCreateExercise}
-              className="bg-gradient-to-r from-secondary to-green-500 hover:from-secondary-hover hover:to-green-600 gap-2"
+              className="bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600 gap-2"
             >
               <Plus className="h-4 w-4" />
               Crear Nuevo Ejercicio

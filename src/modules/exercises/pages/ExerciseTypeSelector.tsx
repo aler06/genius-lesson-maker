@@ -167,7 +167,7 @@ const ExerciseTypeSelector = () => {
               Elige uno o más tipos de ejercicios que deseas crear:
             </p>
             {pendingExercise && (
-              <Badge variant="secondary" className="text-sm">
+              <Badge variant="secondary" className="text-sm no-hover">
                 <BookOpen className="h-4 w-4 mr-2" />
                 {pendingExercise.topic}
               </Badge>
@@ -198,7 +198,7 @@ const ExerciseTypeSelector = () => {
                         </div>
                         <div>
                           <CardTitle className="text-lg">{type.name}</CardTitle>
-                          <Badge variant="outline" className="mt-1">
+                          <Badge variant="outline" className="mt-1 no-hover">
                             {type.points} pts c/u
                           </Badge>
                         </div>

@@ -39,11 +39,6 @@ const App = () => (
               <ExerciseDetail />
             </ProtectedRoute>
           } />
-          <Route path="/exercise/:sessionId" element={
-            <ProtectedRoute>
-              <ExerciseDetail />
-            </ProtectedRoute>
-          } />
           <Route path="/exercise-type-selector" element={
             <ProtectedRoute>
               <ExerciseTypeSelector />
@@ -52,11 +47,6 @@ const App = () => (
           <Route path="/exercise/:sessionId/select-types" element={
             <ProtectedRoute>
               <ExerciseTypeSelector />
-            </ProtectedRoute>
-          } />
-          <Route path="/exercise/:sessionId/edit" element={
-            <ProtectedRoute>
-              <ExerciseDetail />
             </ProtectedRoute>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
