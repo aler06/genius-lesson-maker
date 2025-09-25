@@ -9,7 +9,6 @@ import {
   PenTool, 
   RotateCcw, 
   Eye, 
-  Edit, 
   Trash2,
   Calendar,
   Clock,
@@ -20,7 +19,6 @@ import {
 interface ExerciseCardProps {
   exercise: ExerciseResponse;
   onView: (id: string) => void;
-  onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onPublish: (id: string) => void;
   isPublishing?: boolean;
@@ -71,7 +69,7 @@ const getGameColor = (game: Game) => {
   }
 };
 
-const ExerciseCard = ({ exercise, onView, onEdit, onDelete, onPublish, isPublishing }: ExerciseCardProps) => {
+const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: ExerciseCardProps) => {
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -88,23 +86,28 @@ const ExerciseCard = ({ exercise, onView, onEdit, onDelete, onPublish, isPublish
   };
 
   return (
-    <Card className="transition-shadow duration-200">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
-            <Badge className={`${getGameColor(exercise.game)} pointer-events-none hover:bg-current`}>
-              <div className="flex items-center gap-1 pointer-events-none">
-                {getGameIcon(exercise.game)}
-                {getGameName(exercise.game)}
-              </div>
-            </Badge>
-            <CardTitle className="text-lg">
-              Ejercicio #{exercise.id.slice(-6)}
-            </CardTitle>
-          </div>
+    <Card className="transition-all duration-200 hover:shadow-md border-0 bg-card/50 backdrop-blur-sm">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <Badge className={`${getGameColor(exercise.game)} pointer-events-none hover:bg-current`}>
+            <div className="flex items-center gap-1.5 pointer-events-none">
+              {getGameIcon(exercise.game)}
+              <span className="text-xs font-medium">{getGameName(exercise.game)}</span>
+            </div>
+          </Badge>
+          {exercise.isPublished && (
+            <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+              <CheckCircle className="h-3 w-3" />
+              <span>Publicado</span>
+            </div>
+          )}
         </div>
         
-        <CardDescription className="flex items-center gap-4 text-sm">
+        <CardTitle className="text-base font-semibold text-left">
+          Ejercicio #{exercise.id.slice(-6)}
+        </CardTitle>
+        
+        <CardDescription className="flex items-center gap-3 text-xs">
           <div className="flex items-center gap-1">
             <Calendar className="h-3 w-3" />
             {formatDate(exercise.createdAt)}
@@ -117,53 +120,38 @@ const ExerciseCard = ({ exercise, onView, onEdit, onDelete, onPublish, isPublish
       </CardHeader>
 
       <CardContent className="pt-0">
-        <div className="space-y-4">
+        <div className="space-y-3">
           {exercise.instructions && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
+            <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
               {exercise.instructions}
             </p>
           )}
           
           {exercise.hint && (
-            <div className="text-xs text-muted-foreground">
-              <strong>Pista:</strong> {exercise.hint}
+            <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-md">
+              <strong className="text-foreground">Pista:</strong> {exercise.hint}
             </div>
           )}
 
           <div className="space-y-2">
-            {exercise.isPublished && (
-              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 pointer-events-none">
-                <CheckCircle className="h-4 w-4 pointer-events-none" />
-                Publicado
-              </div>
-            )}
-            
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onView(exercise.id)}
-                className={`flex-1 ${exercise.isPublished ? 'pointer-events-none hover:bg-background hover:text-foreground' : ''}`}
+                className="flex-[3] hover:bg-primary/10 hover:border-primary/20 transition-colors"
               >
-                <Eye className={`h-4 w-4 mr-1 ${exercise.isPublished ? 'pointer-events-none' : ''}`} />
-                Ver
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onEdit(exercise.id)}
-                className={`flex-1 ${exercise.isPublished ? 'pointer-events-none hover:bg-background hover:text-foreground' : ''}`}
-              >
-                <Edit className={`h-4 w-4 mr-1 ${exercise.isPublished ? 'pointer-events-none' : ''}`} />
-                Editar
+                <Eye className="h-4 w-4 mr-2" />
+                Ver ejercicio
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onDelete(exercise.id)}
-                className={`text-destructive ${exercise.isPublished ? 'pointer-events-none hover:bg-background hover:text-destructive' : 'hover:text-destructive'}`}
+                className="flex-[1] text-destructive hover:bg-destructive/10 hover:border-destructive/20 hover:text-destructive transition-colors"
+                disabled={exercise.isPublished}
               >
-                <Trash2 className={`h-4 w-4 ${exercise.isPublished ? 'pointer-events-none' : ''}`} />
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
             
@@ -173,17 +161,17 @@ const ExerciseCard = ({ exercise, onView, onEdit, onDelete, onPublish, isPublish
                 size="sm"
                 onClick={() => onPublish(exercise.id)}
                 disabled={isPublishing}
-                className="w-full bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600 text-white"
+                className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white shadow-sm"
               >
                 {isPublishing ? (
                   <>
-                    <Clock className="h-4 w-4 mr-1 animate-spin" />
+                    <Clock className="h-4 w-4 mr-2 animate-spin" />
                     Publicando...
                   </>
                 ) : (
                   <>
-                    <Share2 className="h-4 w-4 mr-1" />
-                    Publicar
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Publicar ejercicio
                   </>
                 )}
               </Button>

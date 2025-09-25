@@ -22,9 +22,6 @@ const Dashboard = () => {
     navigate(`/exercise/${exerciseId}`);
   };
 
-  const handleEditExercise = (exerciseId: string) => {
-    navigate(`/exercise/${exerciseId}`);
-  };
 
   const handleDeleteExercise = (exerciseId: string) => {
     if (user?.id && window.confirm('¿Estás seguro de que quieres eliminar este ejercicio?')) {
@@ -124,7 +121,6 @@ const Dashboard = () => {
                 key={exercise.id}
                 exercise={exercise}
                 onView={handleViewExercise}
-                onEdit={handleEditExercise}
                 onDelete={handleDeleteExercise}
                 onPublish={handlePublishExercise}
                 isPublishing={isPublishing}

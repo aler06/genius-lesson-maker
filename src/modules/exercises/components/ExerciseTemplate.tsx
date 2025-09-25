@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ExerciseResponse } from '../model/exercise-response.model';
 import { Game } from '../enum/game.enum';
 import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, CheckCircle2, XCircle } from 'lucide-react';
+import HangmanGame from './HangmanGame';
 
 interface ExerciseTemplateProps {
   exercise: ExerciseResponse;
@@ -136,32 +137,27 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({ exercise }) => {
     </div>
   );
 
-  const renderHangmanTemplate = () => (
-    <div className="space-y-4">
-      <Card className="border-l-4 border-l-green-500">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Gamepad2 className="h-5 w-5 text-green-600" />
-            Palabra a Adivinar
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center">
-            <div className="text-3xl font-mono font-bold tracking-widest mb-4 p-4 bg-gray-100 rounded-lg">
-              {exercise.word?.toUpperCase()}
-            </div>
-            {exercise.hint && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-sm text-green-800">
-                  <strong>Pista:</strong> {exercise.hint}
-                </p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  const renderHangmanTemplate = () => {
+    if (!exercise.word) {
+      return (
+        <Card className="border-l-4 border-l-red-500">
+          <CardContent className="p-6 text-center">
+            <p className="text-red-600">Error: No se ha configurado una palabra para el juego del ahorcado.</p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <HangmanGame 
+        word={exercise.word} 
+        hint={exercise.hint}
+        onGameComplete={(won, attempts) => {
+          console.log(`Game completed: ${won ? 'Won' : 'Lost'} with ${attempts} wrong attempts`);
+        }}
+      />
+    );
+  };
 
   const renderFillBlankTemplate = () => (
     <div className="space-y-4">
