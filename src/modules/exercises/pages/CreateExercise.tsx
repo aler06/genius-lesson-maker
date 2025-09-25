@@ -17,7 +17,6 @@ const Index = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [formData, setFormData] = useState({
     topic: '',
-    gameType: Game.QUIZ,
     difficulty: 'intermediate' as 'beginner' | 'intermediate' | 'advanced',
     targetAudience: '',
     additionalInstructions: '',
@@ -51,29 +50,28 @@ const Index = () => {
     setIsGenerating(true);
 
     try {
-      // Generate exercise using the new service
-      const exercise = await exerciseService.generateExercise({
-        userId: user.id,
+      // Store the exercise data for the type selector
+      localStorage.setItem('pendingExercise', JSON.stringify({
         topic: formData.topic,
-        gameType: formData.gameType,
         difficulty: formData.difficulty,
-        targetAudience: formData.targetAudience || undefined,
-        additionalInstructions: formData.additionalInstructions || undefined,
-        numberOfItems: formData.numberOfItems
-      });
+        targetAudience: formData.targetAudience,
+        additionalInstructions: formData.additionalInstructions,
+        numberOfItems: formData.numberOfItems,
+        userId: user.id
+      }));
 
       toast({
-        title: "¡Ejercicio creado exitosamente!",
-        description: `Se generó un ejercicio de ${formData.gameType} para "${formData.topic}".`,
+        title: "¡Información guardada!",
+        description: `Ahora selecciona el tipo de ejercicio para "${formData.topic}".`,
       });
-
-      // Navigate to exercise detail
-      navigate(`/exercises/${exercise.id}`);
+      
+      // Navigate to exercise type selector
+      navigate('/exercise-type-selector');
 
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Ocurrió un error al generar el ejercicio.",
+        description: "Ocurrió un error al procesar la información.",
         variant: "destructive"
       });
     } finally {
@@ -127,23 +125,6 @@ const Index = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="gameType">Tipo de Ejercicio</Label>
-                    <Select 
-                      value={formData.gameType} 
-                      onValueChange={(value: Game) => setFormData(prev => ({ ...prev, gameType: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={Game.QUIZ}>Quiz</SelectItem>
-                        <SelectItem value={Game.HANGMAN}>Ahorcado</SelectItem>
-                        <SelectItem value={Game.FILL_IN_THE_BLANK}>Rellenar espacios</SelectItem>
-                        <SelectItem value={Game.FLIP_CARDS}>Tarjetas giratorias</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="targetAudience">Audiencia Objetivo (Opcional)</Label>
@@ -211,12 +192,12 @@ const Index = () => {
                     {isGenerating ? (
                       <>
                         <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Generando ejercicio...
+                        Procesando...
                       </>
                     ) : (
                       <>
                         <Sparkles className="h-5 w-5 mr-2" />
-                        Generar Ejercicio con IA
+                        Continuar - Seleccionar Tipo
                       </>
                     )}
                   </Button>

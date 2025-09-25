@@ -1,34 +1,50 @@
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { NavHeader } from "@/components/ui/nav-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, BookOpen, HelpCircle, RotateCcw, Gamepad2, PuzzleIcon, FlipHorizontal } from "lucide-react";
-import { MockAIService } from "@/lib/mock-ai";
-import { Session, Exercise } from "@/types/session";
+import { ArrowLeft, Plus, BookOpen, HelpCircle, RotateCcw, Gamepad2, PuzzleIcon, FlipHorizontal, Loader2 } from "lucide-react";
+import { exerciseService } from "../services/exercise.service";
+import { Game } from "../enum/game.enum";
 import { useToast } from "@/hooks/use-toast";
 
 const ExerciseTypeSelector = () => {
-  const { sessionId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedType, setSelectedType] = useState<Game | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [pendingExercise, setPendingExercise] = useState<any>(null);
 
-  // Get session data from localStorage
-  const sessions = JSON.parse(localStorage.getItem('eduai-sessions') || '[]');
-  const session = sessions.find((s: Session) => s.id === sessionId);
-
-  if (!session) {
-    navigate('/dashboard');
-    return null;
-  }
+  useEffect(() => {
+    // Get pending exercise data from localStorage
+    const pendingData = localStorage.getItem('pendingExercise');
+    if (!pendingData) {
+      toast({
+        title: "Error",
+        description: "No se encontraron datos del ejercicio. Regresando al inicio.",
+        variant: "destructive"
+      });
+      navigate('/');
+      return;
+    }
+    
+    try {
+      const data = JSON.parse(pendingData);
+      setPendingExercise(data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Datos del ejercicio inválidos. Regresando al inicio.",
+        variant: "destructive"
+      });
+      navigate('/');
+    }
+  }, [navigate, toast]);
 
   const exerciseTypes = [
     {
-      id: 'quiz',
+      id: Game.QUIZ,
       name: 'Quiz Interactivo',
       description: 'Preguntas con múltiples opciones y retroalimentación inmediata',
       icon: HelpCircle,
@@ -36,7 +52,7 @@ const ExerciseTypeSelector = () => {
       points: 10
     },
     {
-      id: 'hangman',
+      id: Game.HANGMAN,
       name: 'Ahorcado',
       description: 'Juego de palabras donde los estudiantes adivinan letra por letra',
       icon: Gamepad2,
@@ -44,7 +60,7 @@ const ExerciseTypeSelector = () => {
       points: 15
     },
     {
-      id: 'flip-cards',
+      id: Game.FLIP_CARDS,
       name: 'Tarjetas Voltear',
       description: 'Tarjetas con pregunta al frente y respuesta al reverso',
       icon: FlipHorizontal,
@@ -52,7 +68,7 @@ const ExerciseTypeSelector = () => {
       points: 8
     },
     {
-      id: 'fill-blank',
+      id: Game.FILL_IN_THE_BLANK,
       name: 'Rellenar Espacios',
       description: 'Oraciones con espacios en blanco para completar',
       icon: PuzzleIcon,
@@ -61,19 +77,15 @@ const ExerciseTypeSelector = () => {
     }
   ];
 
-  const handleTypeToggle = (typeId: string) => {
-    setSelectedTypes(prev => 
-      prev.includes(typeId) 
-        ? prev.filter(id => id !== typeId)
-        : [...prev, typeId]
-    );
+  const handleTypeSelect = (gameType: Game) => {
+    setSelectedType(gameType);
   };
 
-  const handleGenerateExercises = async () => {
-    if (selectedTypes.length === 0) {
+  const handleGenerateExercise = async () => {
+    if (!selectedType || !pendingExercise) {
       toast({
-        title: "Selecciona al menos un tipo",
-        description: "Debes elegir al menos un tipo de ejercicio para continuar.",
+        title: "Error",
+        description: "Selecciona un tipo de ejercicio para continuar.",
         variant: "destructive"
       });
       return;
@@ -82,45 +94,32 @@ const ExerciseTypeSelector = () => {
     setIsGenerating(true);
 
     try {
-      // Generate exercises for each selected type
-      const newExercises: Exercise[] = [];
-      
-      for (const typeId of selectedTypes) {
-        const exercises = await MockAIService.generateSpecificExercises(
-          session.topic, 
-          typeId as Exercise['type'],
-          2 // Generate 2 exercises per type
-        );
-        newExercises.push(...exercises);
-      }
-
-      // Update session with new exercises
-      const updatedSession = {
-        ...session,
-        exercises: [...session.exercises, ...newExercises],
-        totalPoints: session.totalPoints + newExercises.reduce((sum, ex) => sum + ex.points, 0),
-        estimatedDuration: session.estimatedDuration + newExercises.length * 3,
-        updatedAt: new Date()
-      };
-
-      // Save updated session
-      const updatedSessions = sessions.map((s: Session) => 
-        s.id === sessionId ? updatedSession : s
-      );
-      localStorage.setItem('eduai-sessions', JSON.stringify(updatedSessions));
-
-      toast({
-        title: "¡Ejercicios agregados!",
-        description: `Se agregaron ${newExercises.length} ejercicios nuevos a la sesión.`,
+      // Generate exercise using the service
+      const exercise = await exerciseService.generateExercise({
+        userId: pendingExercise.userId,
+        topic: pendingExercise.topic,
+        gameType: selectedType,
+        difficulty: pendingExercise.difficulty,
+        targetAudience: pendingExercise.targetAudience,
+        additionalInstructions: pendingExercise.additionalInstructions,
+        numberOfItems: pendingExercise.numberOfItems
       });
 
-      // Navigate to session detail
-      navigate(`/session/${sessionId}`);
+      // Clear pending exercise data
+      localStorage.removeItem('pendingExercise');
+
+      toast({
+        title: "¡Ejercicio creado exitosamente!",
+        description: `Se generó un ejercicio de ${selectedType} para "${pendingExercise.topic}".`,
+      });
+
+      // Navigate to exercise detail
+      navigate(`/exercise/${exercise.id}`);
 
     } catch (error) {
       toast({
         title: "Error",
-        description: "Ocurrió un error al generar los ejercicios. Inténtalo de nuevo.",
+        description: error instanceof Error ? error.message : "Ocurrió un error al generar el ejercicio.",
         variant: "destructive"
       });
     } finally {
@@ -149,22 +148,24 @@ const ExerciseTypeSelector = () => {
 
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">
-              Agregar Tipos de Ejercicios
+              Selecciona el Tipo de Ejercicio
             </h1>
             <p className="text-muted-foreground mb-4">
-              Selecciona los tipos de ejercicios que deseas agregar a la sesión:
+              Elige el tipo de ejercicio que deseas crear:
             </p>
-            <Badge variant="secondary" className="text-sm">
-              <BookOpen className="h-4 w-4 mr-2" />
-              {session.title}
-            </Badge>
+            {pendingExercise && (
+              <Badge variant="secondary" className="text-sm">
+                <BookOpen className="h-4 w-4 mr-2" />
+                {pendingExercise.topic}
+              </Badge>
+            )}
           </div>
 
           {/* Exercise Types Grid */}
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {exerciseTypes.map((type) => {
               const Icon = type.icon;
-              const isSelected = selectedTypes.includes(type.id);
+              const isSelected = selectedType === type.id;
               
               return (
                 <Card 
@@ -174,7 +175,7 @@ const ExerciseTypeSelector = () => {
                       ? 'ring-2 ring-primary shadow-lg scale-105' 
                       : 'hover:shadow-md hover:scale-102'
                   }`}
-                  onClick={() => handleTypeToggle(type.id)}
+                  onClick={() => handleTypeSelect(type.id)}
                 >
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
@@ -189,10 +190,11 @@ const ExerciseTypeSelector = () => {
                           </Badge>
                         </div>
                       </div>
-                      <Checkbox 
-                        checked={isSelected}
-                        onChange={() => handleTypeToggle(type.id)}
-                      />
+                      <div className={`w-4 h-4 rounded-full border-2 ${
+                        isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'
+                      }`}>
+                        {isSelected && <div className="w-2 h-2 bg-white rounded-full m-0.5" />}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -209,36 +211,36 @@ const ExerciseTypeSelector = () => {
           <div className="flex justify-center gap-4">
             <Button
               variant="outline"
-              onClick={() => navigate(`/session/${sessionId}`)}
+              onClick={() => navigate('/')}
               className="px-6"
             >
-              Saltar y Ver Sesión
+              Volver al Inicio
             </Button>
             
             <Button
-              onClick={handleGenerateExercises}
-              disabled={selectedTypes.length === 0 || isGenerating}
+              onClick={handleGenerateExercise}
+              disabled={!selectedType || isGenerating}
               className="px-8 bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600"
             >
               {isGenerating ? (
                 <>
-                  <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
-                  Generando...
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Generando ejercicio...
                 </>
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                  Agregar Ejercicios Seleccionados
+                  Crear Ejercicio
                 </>
               )}
             </Button>
           </div>
 
-          {selectedTypes.length > 0 && (
+          {selectedType && (
             <div className="mt-6 p-4 bg-muted/50 rounded-lg">
               <p className="text-sm text-muted-foreground text-center">
-                Se generarán <strong>{selectedTypes.length * 2} ejercicios nuevos</strong> 
-                ({selectedTypes.map(type => exerciseTypes.find(t => t.id === type)?.name).join(', ')})
+                Se creará un ejercicio de tipo <strong>{exerciseTypes.find(t => t.id === selectedType)?.name}</strong>
+                {pendingExercise && ` sobre "${pendingExercise.topic}"`}
               </p>
             </div>
           )}

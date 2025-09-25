@@ -34,9 +34,19 @@ const App = () => (
               <Dashboard />
             </ProtectedRoute>
           } />
+          <Route path="/exercise/:exerciseId" element={
+            <ProtectedRoute>
+              <ExerciseDetail />
+            </ProtectedRoute>
+          } />
           <Route path="/exercise/:sessionId" element={
             <ProtectedRoute>
               <ExerciseDetail />
+            </ProtectedRoute>
+          } />
+          <Route path="/exercise-type-selector" element={
+            <ProtectedRoute>
+              <ExerciseTypeSelector />
             </ProtectedRoute>
           } />
           <Route path="/exercise/:sessionId/select-types" element={
