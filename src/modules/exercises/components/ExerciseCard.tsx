@@ -1,8 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ExerciseResponseDto } from '@/types/dtos';
-import { Game } from '@/types/enums';
+import { ExerciseResponse } from '../model/exercise-response.model';
+import { Game } from '../enum/game.enum';
 import { 
   Brain, 
   HelpCircle, 
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 interface ExerciseCardProps {
-  exercise: ExerciseResponseDto;
+  exercise: ExerciseResponse;
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;

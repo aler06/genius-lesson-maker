@@ -7,21 +7,25 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Sparkles, BookOpen, Target, Clock } from "lucide-react";
-import { MockAIService } from "@/lib/mock-ai";
-import { Session } from "@/types/session";
+import { exerciseService } from "../services/exercise.service";
+import { Game } from "../enum/game.enum";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "../../auth/hooks/useAuth";
 
 const Index = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [formData, setFormData] = useState({
     topic: '',
-    description: '',
-    difficulty: 'intermediate' as const,
-    exerciseCount: 5
+    gameType: Game.QUIZ,
+    difficulty: 'intermediate' as 'beginner' | 'intermediate' | 'advanced',
+    targetAudience: '',
+    additionalInstructions: '',
+    numberOfItems: 5
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +33,16 @@ const Index = () => {
     if (!formData.topic.trim()) {
       toast({
         title: "Error",
-        description: "Por favor, ingresa un tema para la sesión.",
+        description: "Por favor, ingresa un tema para el ejercicio.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "Debes estar autenticado para crear ejercicios.",
         variant: "destructive"
       });
       return;
@@ -38,42 +51,29 @@ const Index = () => {
     setIsGenerating(true);
 
     try {
-      // Generate exercises using mock AI
-      const exercises = await MockAIService.generateExercises(
-        formData.topic, 
-        formData.exerciseCount
-      );
-
-      // Create session object
-      const newSession: Session = {
-        id: `session-${Date.now()}`,
-        title: `Sesión: ${formData.topic}`,
+      // Generate exercise using the new service
+      const exercise = await exerciseService.generateExercise({
+        userId: user.id,
         topic: formData.topic,
-        description: formData.description || undefined,
-        exercises,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        totalPoints: exercises.reduce((sum, ex) => sum + ex.points, 0),
-        estimatedDuration: exercises.length * 3 // 3 minutes per exercise
-      };
-
-      // Save to localStorage
-      const existingSessions = JSON.parse(localStorage.getItem('eduai-sessions') || '[]');
-      const updatedSessions = [newSession, ...existingSessions];
-      localStorage.setItem('eduai-sessions', JSON.stringify(updatedSessions));
-
-      toast({
-        title: "¡Sesión creada exitosamente!",
-        description: `Se generaron ${exercises.length} ejercicios para "${formData.topic}".`,
+        gameType: formData.gameType,
+        difficulty: formData.difficulty,
+        targetAudience: formData.targetAudience || undefined,
+        additionalInstructions: formData.additionalInstructions || undefined,
+        numberOfItems: formData.numberOfItems
       });
 
-      // Navigate to exercise type selector
-      navigate(`/session/${newSession.id}/select-types`);
+      toast({
+        title: "¡Ejercicio creado exitosamente!",
+        description: `Se generó un ejercicio de ${formData.gameType} para "${formData.topic}".`,
+      });
+
+      // Navigate to exercise detail
+      navigate(`/exercises/${exercise.id}`);
 
     } catch (error) {
       toast({
         title: "Error",
-        description: "Ocurrió un error al generar los ejercicios. Inténtalo de nuevo.",
+        description: error instanceof Error ? error.message : "Ocurrió un error al generar el ejercicio.",
         variant: "destructive"
       });
     } finally {
@@ -97,7 +97,7 @@ const Index = () => {
               Crea Ejercicios Interactivos
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Introduce un tema y nuestra IA generará ejercicios personalizados para tus estudiantes
+              Introduce un tema y selecciona el tipo de ejercicio. Nuestra IA generará contenido personalizado para tus estudiantes
             </p>
           </div>
 
@@ -107,17 +107,17 @@ const Index = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BookOpen className="h-5 w-5 text-primary" />
-                  Nueva Sesión de Ejercicios
+                  Nuevo Ejercicio
                 </CardTitle>
                 <CardDescription>
-                  Completa los detalles para generar ejercicios automáticamente
+                  Completa los detalles para generar un ejercicio automáticamente
                 </CardDescription>
               </CardHeader>
               
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <Label htmlFor="topic">Tema de la Sesión *</Label>
+                    <Label htmlFor="topic">Tema del Ejercicio *</Label>
                     <Input
                       id="topic"
                       placeholder="ej. Ecuaciones de segundo grado, La Revolución Francesa..."
@@ -128,12 +128,40 @@ const Index = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">Descripción (Opcional)</Label>
+                    <Label htmlFor="gameType">Tipo de Ejercicio</Label>
+                    <Select 
+                      value={formData.gameType} 
+                      onValueChange={(value: Game) => setFormData(prev => ({ ...prev, gameType: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={Game.QUIZ}>Quiz</SelectItem>
+                        <SelectItem value={Game.HANGMAN}>Ahorcado</SelectItem>
+                        <SelectItem value={Game.FILL_IN_THE_BLANK}>Rellenar espacios</SelectItem>
+                        <SelectItem value={Game.FLIP_CARDS}>Tarjetas giratorias</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="targetAudience">Audiencia Objetivo (Opcional)</Label>
+                    <Input
+                      id="targetAudience"
+                      placeholder="ej. estudiantes de secundaria, universitarios..."
+                      value={formData.targetAudience}
+                      onChange={(e) => setFormData(prev => ({ ...prev, targetAudience: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="additionalInstructions">Instrucciones Adicionales (Opcional)</Label>
                     <Textarea
-                      id="description"
+                      id="additionalInstructions"
                       placeholder="Añade contexto adicional o objetivos específicos..."
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                      value={formData.additionalInstructions}
+                      onChange={(e) => setFormData(prev => ({ ...prev, additionalInstructions: e.target.value }))}
                       rows={3}
                     />
                   </div>
@@ -149,7 +177,7 @@ const Index = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="basic">Básico</SelectItem>
+                          <SelectItem value="beginner">Básico</SelectItem>
                           <SelectItem value="intermediate">Intermedio</SelectItem>
                           <SelectItem value="advanced">Avanzado</SelectItem>
                         </SelectContent>
@@ -157,19 +185,19 @@ const Index = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Número de Ejercicios</Label>
+                      <Label>Número de Elementos</Label>
                       <Select 
-                        value={formData.exerciseCount.toString()} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, exerciseCount: parseInt(value) }))}
+                        value={formData.numberOfItems.toString()} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, numberOfItems: parseInt(value) }))}
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="3">3 ejercicios</SelectItem>
-                          <SelectItem value="5">5 ejercicios</SelectItem>
-                          <SelectItem value="8">8 ejercicios</SelectItem>
-                          <SelectItem value="10">10 ejercicios</SelectItem>
+                          <SelectItem value="3">3 elementos</SelectItem>
+                          <SelectItem value="5">5 elementos</SelectItem>
+                          <SelectItem value="8">8 elementos</SelectItem>
+                          <SelectItem value="10">10 elementos</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -183,12 +211,12 @@ const Index = () => {
                     {isGenerating ? (
                       <>
                         <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                        Generando ejercicios...
+                        Generando ejercicio...
                       </>
                     ) : (
                       <>
                         <Sparkles className="h-5 w-5 mr-2" />
-                        Generar Ejercicios con IA
+                        Generar Ejercicio con IA
                       </>
                     )}
                   </Button>

@@ -25,7 +25,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/" element={
-            <ProtectedRoute requiredRole={Role.PROFESSOR}>
+            <ProtectedRoute>
               <CreateExercise />
             </ProtectedRoute>
           } />
@@ -40,12 +40,12 @@ const App = () => (
             </ProtectedRoute>
           } />
           <Route path="/exercise/:sessionId/select-types" element={
-            <ProtectedRoute requiredRole={Role.PROFESSOR}>
+            <ProtectedRoute>
               <ExerciseTypeSelector />
             </ProtectedRoute>
           } />
           <Route path="/exercise/:sessionId/edit" element={
-            <ProtectedRoute requiredRole={Role.PROFESSOR}>
+            <ProtectedRoute>
               <ExerciseDetail />
             </ProtectedRoute>
           } />
