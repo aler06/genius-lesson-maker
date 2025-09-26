@@ -92,18 +92,18 @@ const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: E
   const SubjectIcon = subjectInfo.icon;
 
   return (
-    <Card className="h-[320px] transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 border-0 bg-gradient-to-br from-white/80 via-card/60 to-primary/5 backdrop-blur-sm flex flex-col group cursor-pointer overflow-hidden relative">
+    <Card className="h-[380px] w-full min-w-[300px] transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 border-0 bg-gradient-to-br from-white/80 via-card/60 to-primary/5 backdrop-blur-sm flex flex-col group cursor-pointer overflow-hidden relative">
       {/* Decorative gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       
-      <CardHeader className="pb-4 flex-1 flex items-center justify-center relative z-10">
-        <div className="text-center space-y-4">
-          {/* Icon container with animation - optimized size */}
-          <div className="flex justify-center">
-            <div className="p-3 bg-gradient-to-br from-primary/10 to-blue-500/10 rounded-2xl border border-primary/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm group-hover:shadow-lg">
-              <SubjectIcon className="h-8 w-8 text-primary group-hover:text-blue-600 transition-colors duration-300" />
-            </div>
-          </div>
+      <CardHeader className="pb-6 pt-8 flex-1 flex items-center justify-center relative z-10">
+        <div className="text-center space-y-5">
+           {/* Icon container with animation - larger size */}
+           <div className="flex justify-center">
+             <div className="p-4 bg-gradient-to-br from-primary/10 to-blue-500/10 rounded-3xl border border-primary/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm group-hover:shadow-lg">
+               <SubjectIcon className="h-12 w-12 text-primary group-hover:text-blue-600 transition-colors duration-300" />
+             </div>
+           </div>
           
           {/* Badges with improved styling - compact */}
           <div className="flex flex-col gap-2">
@@ -124,8 +124,8 @@ const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: E
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0 flex-shrink-0 relative z-10">
-        <div className="space-y-3">
+      <CardContent className="pt-0 pb-6 px-6 flex-shrink-0 relative z-10">
+        <div className="space-y-4">
           {/* Action buttons with enhanced styling */}
           <div className="flex gap-2">
             <Button

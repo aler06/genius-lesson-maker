@@ -160,17 +160,19 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {exercises.map((exercise) => (
-              <ExerciseCard
-                key={exercise.id}
-                exercise={exercise}
-                onView={handleViewExercise}
-                onDelete={handleDeleteExercise}
-                onPublish={handlePublishExercise}
-                isPublishing={publishingExerciseId === exercise.id}
-              />
-            ))}
+          <div className="flex justify-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl">
+              {exercises.map((exercise) => (
+                <ExerciseCard
+                  key={exercise.id}
+                  exercise={exercise}
+                  onView={handleViewExercise}
+                  onDelete={handleDeleteExercise}
+                  onPublish={handlePublishExercise}
+                  isPublishing={publishingExerciseId === exercise.id}
+                />
+              ))}
+            </div>
           </div>
         )}
 
