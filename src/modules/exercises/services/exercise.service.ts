@@ -45,12 +45,23 @@ class ExerciseService {
   }
 
   /**
+   * Normalize exercise response from API
+   */
+  private normalizeExerciseResponse(exercise: any): ExerciseResponse {
+    return {
+      ...exercise,
+      isPublished: exercise.isPublished || exercise.published || false,
+      published: undefined // Remove published field to avoid confusion
+    };
+  }
+
+  /**
    * Generate a new exercise
    */
   async generateExercise(exerciseData: ExerciseRequestModel): Promise<ExerciseResponse> {
     try {
       const response: AxiosResponse<ExerciseResponse> = await this.api.post('/exercise-generator', exerciseData);
-      return response.data;
+      return this.normalizeExerciseResponse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const message = error.response?.data?.message || 'Error al generar el ejercicio';
@@ -68,7 +79,7 @@ class ExerciseService {
       const response: AxiosResponse<ExerciseResponse[]> = await this.api.get('/exercise-generator/my-exercises', {
         params: { userId }
       });
-      return response.data;
+      return response.data.map(exercise => this.normalizeExerciseResponse(exercise));
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const message = error.response?.data?.message || 'Error al obtener los ejercicios';
@@ -86,7 +97,7 @@ class ExerciseService {
       const response: AxiosResponse<ExerciseResponse> = await this.api.get('/exercise-generator/exercise', {
         params: { exerciseId, userId }
       });
-      return response.data;
+      return this.normalizeExerciseResponse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const message = error.response?.data?.message || 'Error al obtener el ejercicio';
@@ -125,7 +136,7 @@ class ExerciseService {
   async updateExercise(exerciseData: ExerciseUpdateRequestModel): Promise<ExerciseResponse> {
     try {
       const response: AxiosResponse<ExerciseResponse> = await this.api.put('/exercise-generator/exercise', exerciseData);
-      return response.data;
+      return this.normalizeExerciseResponse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const message = error.response?.data?.message || 'Error al actualizar el ejercicio';
@@ -146,7 +157,7 @@ class ExerciseService {
       const response: AxiosResponse<ExerciseResponse> = await this.api.patch(`/exercise-generator/exercise/${exerciseId}/publish`, {
         userId
       });
-      return response.data;
+      return this.normalizeExerciseResponse(response.data);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const message = error.response?.data?.message || 'Error al publicar el ejercicio';

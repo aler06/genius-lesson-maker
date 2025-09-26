@@ -7,18 +7,15 @@ import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useExercises } from '@/modules/exercises/hooks/useExercises';
 import ExerciseCard from '@/modules/exercises/components/ExerciseCard';
 import { Plus, Target, Brain, CheckCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { exercises, isLoading, deleteExercise, publishExercise, isPublishing, error } = useExercises(user?.id);
   const [publishingExerciseId, setPublishingExerciseId] = useState<string | null>(null);
+  const { toast } = useToast();
 
-  // Debug logs
-  console.log('Dashboard - User:', user);
-  console.log('Dashboard - User ID:', user?.id);
-  console.log('Dashboard - Exercises:', exercises);
-  console.log('Dashboard - Is Loading:', isLoading);
 
   const handleViewExercise = (exerciseId: string) => {
     navigate(`/exercise/${exerciseId}`);
@@ -35,10 +32,10 @@ const Dashboard = () => {
     setPublishingExerciseId(exerciseId);
     publishExercise(exerciseId);
     
-    // Reset publishing state after a shorter delay since we have optimistic updates
+    // Reset publishing state after mutation completes
     setTimeout(() => {
       setPublishingExerciseId(null);
-    }, 1000);
+    }, 1500);
   };
 
   const handleCreateExercise = () => {

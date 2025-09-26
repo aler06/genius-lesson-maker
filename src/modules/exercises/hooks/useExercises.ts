@@ -81,7 +81,12 @@ export const useExercises = (userId?: string) => {
 
   // Publish exercise mutation
   const publishExerciseMutation = useMutation({
-    mutationFn: (exerciseId: string) => exerciseService.publishExercise(exerciseId, userId),
+    mutationFn: (exerciseId: string) => {
+      if (!userId) {
+        throw new Error('Usuario no autenticado');
+      }
+      return exerciseService.publishExercise(exerciseId, userId);
+    },
     onMutate: async (exerciseId: string) => {
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ['exercises', userId] });
@@ -113,10 +118,11 @@ export const useExercises = (userId?: string) => {
         description: error.message,
       });
     },
-    onSuccess: () => {
+    onSuccess: (data, exerciseId) => {
       // Invalidate and refetch to ensure we have the latest data
-      queryClient.invalidateQueries({ queryKey: ['exercises'] });
-      queryClient.invalidateQueries({ queryKey: ['exercise'] });
+      queryClient.invalidateQueries({ queryKey: ['exercises', userId] });
+      queryClient.invalidateQueries({ queryKey: ['exercise', exerciseId] });
+      
       toast({
         title: "¡Ejercicio publicado!",
         description: "El ejercicio ha sido publicado exitosamente y ahora está disponible públicamente.",

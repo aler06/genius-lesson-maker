@@ -121,12 +121,6 @@ const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: E
             </Badge>
           </div>
           
-          {exercise.isPublished && (
-            <div className="flex items-center justify-center gap-2 text-xs bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 px-4 py-2 rounded-full border border-green-300 group-hover:from-green-200 group-hover:to-emerald-200 transition-all duration-300 shadow-sm">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <span className="font-semibold">✓ Publicado</span>
-            </div>
-          )}
         </div>
       </CardHeader>
 
@@ -155,35 +149,35 @@ const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: E
             </Button>
           </div>
           
-          {/* Publish button with enhanced styling */}
-          <Button
-            variant={exercise.isPublished ? "secondary" : "default"}
-            size="sm"
-            onClick={() => onPublish(exercise.id)}
-            disabled={isPublishing || exercise.isPublished}
-            className={`w-full transition-all duration-200 ${
-              exercise.isPublished 
-                ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-300 cursor-default shadow-sm' 
-                : 'bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-600 text-white shadow-md hover:shadow-xl hover:scale-105'
-            }`}
-          >
-            {exercise.isPublished ? (
-              <>
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Publicado
-              </>
-            ) : isPublishing ? (
-              <>
-                <Clock className="h-4 w-4 mr-2 animate-spin" />
-                Publicando...
-              </>
-            ) : (
-              <>
-                <Share2 className="h-4 w-4 mr-2" />
-                Publicar
-              </>
-            )}
-          </Button>
+           {/* Publish button with enhanced styling */}
+           <Button
+             variant={exercise.isPublished ? "secondary" : "default"}
+             size="sm"
+             onClick={() => onPublish(exercise.id)}
+             disabled={isPublishing || exercise.isPublished}
+             className={`w-full transition-all duration-200 ${
+               exercise.isPublished 
+                 ? 'bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 border border-blue-300 cursor-default shadow-sm' 
+                 : 'bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-600 text-white shadow-md hover:shadow-xl hover:scale-105'
+             }`}
+           >
+             {exercise.isPublished ? (
+               <>
+                 <CheckCircle className="h-4 w-4 mr-2" />
+                 Publicado
+               </>
+             ) : isPublishing ? (
+               <>
+                 <Clock className="h-4 w-4 mr-2 animate-spin" />
+                 Publicando...
+               </>
+             ) : (
+               <>
+                 <Share2 className="h-4 w-4 mr-2" />
+                 Publicar
+               </>
+             )}
+           </Button>
         </div>
       </CardContent>
     </Card>
