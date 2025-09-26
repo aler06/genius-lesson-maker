@@ -142,7 +142,6 @@ const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: E
               size="sm"
               onClick={() => onDelete(exercise.id)}
               className="flex-1 text-destructive hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-all duration-200 hover:scale-105 hover:shadow-md bg-white/80 backdrop-blur-sm"
-              disabled={exercise.isPublished}
             >
               <Trash2 className="h-4 w-4 mr-1" />
               Eliminar

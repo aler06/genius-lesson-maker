@@ -4,14 +4,38 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExerciseResponse } from '../model/exercise-response.model';
 import { Game } from '../enum/game.enum';
-import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, CheckCircle2, XCircle } from 'lucide-react';
+import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, CheckCircle2, XCircle, Pencil, Trash2 } from 'lucide-react';
 import HangmanGame from './HangmanGame';
+import { useNavigate } from 'react-router-dom';
 
 interface ExerciseTemplateProps {
   exercise: ExerciseResponse;
+  onEdit?: (exerciseId: string) => void;
+  onDelete?: (exerciseId: string) => void;
+  showActions?: boolean;
 }
 
-const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({ exercise }) => {
+const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({ 
+  exercise,
+  onEdit,
+  onDelete,
+  showActions = true
+}) => {
+  const navigate = useNavigate();
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(exercise.id);
+    } else {
+      navigate(`/exercise/edit/${exercise.id}`);
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete && window.confirm('¿Estás seguro de que quieres eliminar este ejercicio?')) {
+      onDelete(exercise.id);
+    }
+  };
   const getGameIcon = (game: Game) => {
     switch (game) {
       case Game.QUIZ:
@@ -242,6 +266,33 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({ exercise }) => {
 
   return (
     <div className="space-y-6">
+      {showActions && (
+        <div className="flex justify-end gap-2 mb-4">
+          {onEdit && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEdit}
+              className="flex items-center gap-1"
+            >
+              <Pencil className="h-4 w-4" />
+              Editar
+            </Button>
+          )}
+          {onDelete && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDelete}
+              className="text-destructive hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive flex items-center gap-1"
+            >
+              <Trash2 className="h-4 w-4" />
+              Eliminar
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Exercise Header */}
       <Card className="bg-gradient-to-r from-primary/10 to-blue-500/10">
         <CardHeader>

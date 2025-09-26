@@ -184,39 +184,6 @@ const ExerciseDetail = () => {
                   Publicado
                 </div>
               )}
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleEditClick}
-                className={exercise.isPublished ? 'pointer-events-none hover:bg-background hover:text-foreground' : ''}
-              >
-                <Edit className={`h-4 w-4 mr-2 ${exercise.isPublished ? 'pointer-events-none' : ''}`} />
-                Editar
-              </Button>
-              
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm" className={`text-destructive ${exercise.isPublished ? 'pointer-events-none hover:bg-background hover:text-destructive' : 'hover:text-destructive'}`}>
-                    <Trash2 className={`h-4 w-4 mr-2 ${exercise.isPublished ? 'pointer-events-none' : ''}`} />
-                    Eliminar
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>¿Eliminar ejercicio?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta acción no se puede deshacer. El ejercicio será eliminado permanentemente.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteExercise} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                      Eliminar
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
             </div>
           </div>
 
@@ -228,7 +195,12 @@ const ExerciseDetail = () => {
               onCancel={handleCancelEdit}
             />
           ) : (
-            <ExerciseTemplate exercise={exercise} />
+            <ExerciseTemplate 
+              exercise={exercise} 
+              onEdit={handleEditClick}
+              onDelete={() => handleDeleteExercise()}
+              showActions={true}
+            />
           )}
 
           {/* Action buttons */}
