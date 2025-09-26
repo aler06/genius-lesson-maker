@@ -1,16 +1,18 @@
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NavHeader } from '@/components/ui/nav-header';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useExercises } from '@/modules/exercises/hooks/useExercises';
 import ExerciseCard from '@/modules/exercises/components/ExerciseCard';
-import { Plus, Target } from 'lucide-react';
+import { Plus, Target, Brain, CheckCircle } from 'lucide-react';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { exercises, isLoading, deleteExercise, publishExercise, isPublishing, error } = useExercises(user?.id);
+  const [publishingExerciseId, setPublishingExerciseId] = useState<string | null>(null);
 
   // Debug logs
   console.log('Dashboard - User:', user);
@@ -30,7 +32,13 @@ const Dashboard = () => {
   };
 
   const handlePublishExercise = (exerciseId: string) => {
+    setPublishingExerciseId(exerciseId);
     publishExercise(exerciseId);
+    
+    // Reset publishing state after a shorter delay since we have optimistic updates
+    setTimeout(() => {
+      setPublishingExerciseId(null);
+    }, 1000);
   };
 
   const handleCreateExercise = () => {
@@ -81,22 +89,62 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <NavHeader />
       <main className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard de Ejercicios</h1>
-            <p className="text-muted-foreground">
-              Gestiona tus ejercicios interactivos generados por IA
-            </p>
-            {exercises && exercises.length > 0 && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {exercises.length} ejercicio{exercises.length !== 1 ? 's' : ''} creado{exercises.length !== 1 ? 's' : ''}
-              </p>
-            )}
-          </div>
-          <Button onClick={handleCreateExercise} className="gap-2 bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600">
-            <Plus className="h-4 w-4" />
-            Crear Ejercicio
-          </Button>
+        <div className="mb-8">
+          {/* Header Card */}
+          <Card className="bg-gradient-to-r from-primary/10 via-blue-50 to-purple-50 border-primary/20 shadow-lg">
+            <CardContent className="p-8">
+              <div className="flex justify-between items-center">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-primary/20 rounded-xl">
+                      <Brain className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                        Dashboard de Ejercicios
+                      </h1>
+                      <p className="text-lg text-muted-foreground mt-1">
+                        Gestiona tus ejercicios interactivos generados por IA
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {exercises && exercises.length > 0 && (
+                    <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-2 bg-white/60 px-4 py-2 rounded-full border border-primary/20">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm font-medium text-foreground">
+                          {exercises.length} ejercicio{exercises.length !== 1 ? 's' : ''} creado{exercises.length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-white/60 px-4 py-2 rounded-full border border-primary/20">
+                        <Target className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-foreground">
+                          {exercises.filter(ex => ex.isPublished).length} publicado{exercises.filter(ex => ex.isPublished).length !== 1 ? 's' : ''}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex flex-col gap-3">
+                  <Button 
+                    onClick={handleCreateExercise} 
+                    size="lg"
+                    className="gap-3 bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200 px-6 py-3"
+                  >
+                    <Plus className="h-5 w-5" />
+                    Crear Ejercicio
+                  </Button>
+                  {exercises && exercises.length > 0 && (
+                    <p className="text-xs text-center text-muted-foreground">
+                      ¡Crea tu próximo ejercicio!
+                    </p>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {exercises.length === 0 ? (
@@ -115,7 +163,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {exercises.map((exercise) => (
               <ExerciseCard
                 key={exercise.id}
@@ -123,7 +171,7 @@ const Dashboard = () => {
                 onView={handleViewExercise}
                 onDelete={handleDeleteExercise}
                 onPublish={handlePublishExercise}
-                isPublishing={isPublishing}
+                isPublishing={publishingExerciseId === exercise.id}
               />
             ))}
           </div>

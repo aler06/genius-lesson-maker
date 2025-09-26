@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Gamepad2, RotateCcw, Trophy, Skull } from 'lucide-react';
+import { Gamepad2, RotateCcw, Trophy, Skull, CheckCircle } from 'lucide-react';
 
 interface HangmanGameProps {
   word: string;
@@ -249,6 +249,28 @@ const HangmanGame: React.FC<HangmanGameProps> = ({ word, hint, onGameComplete })
         </Card>
       </div>
 
+      {/* Answer Section - Always visible */}
+      <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200">
+        <CardHeader>
+          <CardTitle className="text-center text-lg text-amber-800 flex items-center justify-center gap-2">
+            <CheckCircle className="h-5 w-5" />
+            Respuesta Correcta
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center">
+            <div className="text-2xl md:text-3xl font-bold text-amber-900 bg-white p-4 rounded-lg border-2 border-amber-200 shadow-sm">
+              {displayWord}
+            </div>
+            {hint && (
+              <div className="mt-3 text-sm text-amber-700">
+                <strong>Pista:</strong> {hint}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Game Over Actions */}
       {gameState !== 'playing' && (
         <Card className={`border-2 ${gameState === 'won' ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'}`}>
@@ -264,7 +286,7 @@ const HangmanGame: React.FC<HangmanGameProps> = ({ word, hint, onGameComplete })
                 <div>
                   <Skull className="h-12 w-12 text-red-600 mx-auto mb-2" />
                   <h3 className="text-xl font-bold text-red-800">¡Mejor suerte la próxima vez!</h3>
-                  <p className="text-red-700">La palabra era: <strong>{displayWord}</strong></p>
+                  <p className="text-red-700">¡Inténtalo de nuevo!</p>
                 </div>
               )}
               <Button

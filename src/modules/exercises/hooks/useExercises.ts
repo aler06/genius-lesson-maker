@@ -82,19 +82,44 @@ export const useExercises = (userId?: string) => {
   // Publish exercise mutation
   const publishExerciseMutation = useMutation({
     mutationFn: (exerciseId: string) => exerciseService.publishExercise(exerciseId, userId),
+    onMutate: async (exerciseId: string) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['exercises', userId] });
+
+      // Snapshot the previous value
+      const previousExercises = queryClient.getQueryData(['exercises', userId]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(['exercises', userId], (old: ExerciseResponse[] | undefined) => {
+        if (!old) return old;
+        return old.map(exercise => 
+          exercise.id === exerciseId 
+            ? { ...exercise, isPublished: true }
+            : exercise
+        );
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousExercises };
+    },
+    onError: (error: Error, exerciseId: string, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.previousExercises) {
+        queryClient.setQueryData(['exercises', userId], context.previousExercises);
+      }
+      toast({
+        variant: "destructive",
+        title: "Error al publicar ejercicio",
+        description: error.message,
+      });
+    },
     onSuccess: () => {
+      // Invalidate and refetch to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: ['exercises'] });
       queryClient.invalidateQueries({ queryKey: ['exercise'] });
       toast({
         title: "¡Ejercicio publicado!",
         description: "El ejercicio ha sido publicado exitosamente y ahora está disponible públicamente.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        variant: "destructive",
-        title: "Error al publicar ejercicio",
-        description: error.message,
       });
     },
   });
