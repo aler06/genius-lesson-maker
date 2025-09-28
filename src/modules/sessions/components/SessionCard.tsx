@@ -160,7 +160,7 @@ const SessionCard = ({
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
-            <span>{session.participantCount}/{session.maxParticipants}</span>
+            <span>{session.participants?.length || 0}/{session.maxParticipants}</span>
           </div>
           <div className="flex items-center gap-2">
             <Timer className="h-4 w-4 text-muted-foreground" />
@@ -168,30 +168,26 @@ const SessionCard = ({
           </div>
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <span>{session.exercises.length} ejercicio{session.exercises.length !== 1 ? 's' : ''}</span>
+            <span>1 ejercicio ({session.exercise.game})</span>
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs">{formatDate(session.createdAt)}</span>
+            <span className="text-xs">{formatDate(new Date(session.createdAt))}</span>
           </div>
         </div>
 
-        {/* Exercises List */}
-        {session.exercises.length > 0 && (
+        {/* Exercise Info */}
+        {session.exercise && (
           <div className="space-y-1">
-            <span className="text-xs font-medium text-muted-foreground">Ejercicios:</span>
-            <div className="space-y-1">
-              {session.exercises.slice(0, 2).map((exercise) => (
-                <div key={exercise.id} className="text-xs bg-muted/50 rounded px-2 py-1">
-                  {exercise.name} ({exercise.game})
-                </div>
-              ))}
-              {session.exercises.length > 2 && (
-                <div className="text-xs text-muted-foreground">
-                  +{session.exercises.length - 2} más...
-                </div>
-              )}
+            <span className="text-xs font-medium text-muted-foreground">Ejercicio:</span>
+            <div className="text-xs bg-muted/50 rounded px-2 py-1">
+              {session.exercise.word || session.exercise.hint || `Ejercicio de ${session.exercise.game}`}
             </div>
+            {session.exercise.hint && session.exercise.word && (
+              <div className="text-xs text-muted-foreground">
+                Pista: {session.exercise.hint}
+              </div>
+            )}
           </div>
         )}
 
@@ -258,10 +254,10 @@ const SessionCard = ({
         {session.startTime && (
           <div className="text-xs text-muted-foreground border-t pt-2">
             {session.status === 'active' && (
-              <span>Iniciada: {formatDate(session.startTime)}</span>
+              <span>Iniciada: {formatDate(new Date(session.startTime))}</span>
             )}
             {session.status === 'finished' && session.endTime && (
-              <span>Finalizada: {formatDate(session.endTime)}</span>
+              <span>Finalizada: {formatDate(new Date(session.endTime))}</span>
             )}
           </div>
         )}

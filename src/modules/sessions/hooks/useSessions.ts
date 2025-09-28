@@ -1,166 +1,127 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/utils/api';
 
-// Mock data for sessions - replace with actual API calls
+// Session interface matching exact backend response
 interface Session {
   id: string;
+  teacher: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    role: string;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
+  exercise: {
+    id: string;
+    game: string;
+    questions: any[];
+    word?: string;
+    hint?: string;
+    cards: any[];
+    published: boolean;
+    createdAt: string;
+    updatedAt: string;
+  };
   name: string;
   description?: string;
   accessCode: string;
   status: 'waiting' | 'active' | 'finished' | 'cancelled';
   duration: number;
-  startTime?: Date;
-  endTime?: Date;
+  startTime?: string;
+  endTime?: string;
+  participants: any[];
   maxParticipants: number;
-  participantCount: number;
   shareableLink: string;
   allowLateJoin: boolean;
   showLeaderboard: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  exercises: Array<{
-    id: string;
-    name: string;
-    game: string;
-  }>;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Mock API functions - replace with actual API calls
 const mockSessions: Session[] = [
   {
-    id: '1',
-    name: 'Sesión de Matemáticas Básicas',
-    description: 'Ejercicios de suma y resta para principiantes',
-    accessCode: 'MATH01',
-    status: 'waiting',
-    duration: 30,
-    maxParticipants: 25,
-    participantCount: 0,
-    shareableLink: 'http://localhost:3001/session/join/MATH01',
-    allowLateJoin: true,
-    showLeaderboard: true,
-    createdAt: new Date('2024-01-15T10:00:00Z'),
-    updatedAt: new Date('2024-01-15T10:00:00Z'),
-    exercises: [
-      { id: '1', name: 'Sumas Básicas', game: 'quiz' },
-      { id: '2', name: 'Restas Simples', game: 'quiz' }
-    ]
-  },
-  {
-    id: '2',
-    name: 'Vocabulario en Inglés',
-    description: 'Juego del ahorcado con palabras en inglés',
-    accessCode: 'ENG123',
-    status: 'active',
-    duration: 45,
-    startTime: new Date('2024-01-15T14:00:00Z'),
-    maxParticipants: 30,
-    participantCount: 12,
-    shareableLink: 'http://localhost:3001/session/join/ENG123',
-    allowLateJoin: false,
-    showLeaderboard: true,
-    createdAt: new Date('2024-01-15T13:30:00Z'),
-    updatedAt: new Date('2024-01-15T14:00:00Z'),
-    exercises: [
-      { id: '3', name: 'Animales en Inglés', game: 'hangman' },
-      { id: '4', name: 'Colores Básicos', game: 'hangman' }
-    ]
-  },
-  {
-    id: '3',
-    name: 'Historia Universal',
-    description: 'Preguntas sobre eventos históricos importantes',
-    accessCode: 'HIST99',
+    id: '68d75771162164a7a9e24ba7',
+    teacher: {
+      _id: '68d08666310fa90890c2f346',
+      firstName: 'John',
+      lastName: 'Doe',
+      email: 'john.doe@gmail.com',
+      role: 'teacher',
+      isActive: true,
+      createdAt: '2025-09-21T23:12:38.717Z',
+      updatedAt: '2025-09-21T23:12:38.717Z'
+    },
+    exercise: {
+      id: '68d5d193c60063d50dd9dc5d',
+      game: 'hangman',
+      questions: [],
+      word: 'TCP/IP',
+      hint: 'Conjunto de protocolos fundamentales para la comunicación en Internet',
+      cards: [],
+      published: true,
+      createdAt: '2025-09-25T23:34:43.204Z',
+      updatedAt: '2025-09-26T01:17:31.133Z'
+    },
+    name: 'Redes - Sesión 1',
+    description: 'Sesión interactiva sobre Redes',
+    accessCode: 'LXQ7TM',
     status: 'finished',
-    duration: 60,
-    startTime: new Date('2024-01-14T16:00:00Z'),
-    endTime: new Date('2024-01-14T17:00:00Z'),
-    maxParticipants: 20,
-    participantCount: 18,
-    shareableLink: 'http://localhost:3001/session/join/HIST99',
+    duration: 30,
+    startTime: '2025-09-27T03:26:14.078Z',
+    endTime: '2025-09-27T03:43:39.053Z',
+    participants: [],
+    maxParticipants: 30,
+    shareableLink: 'http://localhost:3000/session/join/LXQ7TM',
     allowLateJoin: true,
     showLeaderboard: true,
-    createdAt: new Date('2024-01-14T15:30:00Z'),
-    updatedAt: new Date('2024-01-14T17:00:00Z'),
-    exercises: [
-      { id: '5', name: 'Edad Media', game: 'quiz' },
-      { id: '6', name: 'Revolución Industrial', game: 'quiz' }
-    ]
+    createdAt: '2025-09-27T03:18:09.711Z',
+    updatedAt: '2025-09-27T03:43:39.056Z'
   }
 ];
 
 const fetchSessions = async (teacherId: string): Promise<Session[]> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // In a real app, this would be an API call
-  // return await api.get(`/sessions?teacherId=${teacherId}`);
-  
-  return mockSessions;
+  try {
+    const response = await apiRequest(`/api/v1/sessions/teacher/${teacherId}`, {
+      method: 'GET',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error al obtener sesiones: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    // Fallback to mock data if API fails
+    console.warn('API call failed, using mock data:', error);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return mockSessions;
+  }
 };
 
-const createSession = async (sessionData: Partial<Session>): Promise<Session> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // In a real app, this would be an API call
-  // return await api.post('/sessions', sessionData);
-  
-  const newSession: Session = {
-    id: Date.now().toString(),
-    name: sessionData.name || 'Nueva Sesión',
-    description: sessionData.description,
-    accessCode: Math.random().toString(36).substring(2, 8).toUpperCase(),
-    status: 'waiting',
-    duration: sessionData.duration || 30,
-    maxParticipants: sessionData.maxParticipants || 25,
-    participantCount: 0,
-    shareableLink: `http://localhost:3001/session/join/${sessionData.accessCode}`,
-    allowLateJoin: sessionData.allowLateJoin ?? true,
-    showLeaderboard: sessionData.showLeaderboard ?? true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    exercises: sessionData.exercises || []
-  };
-  
-  return newSession;
+const createSession = async (sessionData: any): Promise<Session> => {
+  // TODO: Implement real API call
+  throw new Error('Create session not implemented yet');
 };
 
 const startSession = async (sessionId: string): Promise<Session> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const session = mockSessions.find(s => s.id === sessionId);
-  if (!session) throw new Error('Sesión no encontrada');
-  
-  return {
-    ...session,
-    status: 'active',
-    startTime: new Date(),
-    updatedAt: new Date()
-  };
+  // TODO: Implement real API call
+  throw new Error('Start session not implemented yet');
 };
 
 const endSession = async (sessionId: string): Promise<Session> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const session = mockSessions.find(s => s.id === sessionId);
-  if (!session) throw new Error('Sesión no encontrada');
-  
-  return {
-    ...session,
-    status: 'finished',
-    endTime: new Date(),
-    updatedAt: new Date()
-  };
+  // TODO: Implement real API call
+  throw new Error('End session not implemented yet');
 };
 
 const deleteSession = async (sessionId: string): Promise<void> => {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const index = mockSessions.findIndex(s => s.id === sessionId);
-  if (index === -1) throw new Error('Sesión no encontrada');
-  
-  mockSessions.splice(index, 1);
+  // TODO: Implement real API call
+  throw new Error('Delete session not implemented yet');
 };
 
 export const useSessions = (teacherId?: string) => {
