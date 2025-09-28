@@ -9,6 +9,8 @@ import ExerciseDetail from "./modules/exercises/pages/ExerciseDetail";
 import ExerciseTypeSelector from "./modules/exercises/pages/ExerciseTypeSelector";
 import Login from "./modules/auth/pages/Login";
 import Register from "./modules/auth/pages/Register";
+import JoinSession from "./modules/sessions/pages/JoinSession";
+import SessionRoom from "./modules/sessions/pages/SessionRoom";
 import ProtectedRoute from "./components/ui/protected-route";
 import { Role } from "./types/enums";
 import NotFound from "./pages/NotFound";
@@ -24,7 +26,17 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/" element={
+          
+          {/* Public routes for students */}
+          <Route path="/join-session" element={<JoinSession />} />
+          <Route path="/session/join/:accessCode" element={<JoinSession />} />
+          <Route path="/session/:sessionId" element={<SessionRoom />} />
+          
+          {/* Home route - redirect to join session for public access */}
+          <Route path="/" element={<JoinSession />} />
+          
+          {/* Protected routes for teachers */}
+          <Route path="/create-exercise" element={
             <ProtectedRoute>
               <CreateExercise />
             </ProtectedRoute>
