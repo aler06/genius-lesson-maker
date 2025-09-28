@@ -86,7 +86,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-gradient-to-br from-background to-muted">
         <NavHeader />
         <main className="container mx-auto px-4 py-8">
-          <Card className="text-center py-12 border-destructive">
+          <Card className="text-center py-12 border-destructive border-l-4 border-l-destructive">
             <CardContent>
               <div className="mx-auto w-24 h-24 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
                 <Target className="h-10 w-10 text-destructive" />
@@ -111,7 +111,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           {/* Header Card */}
-          <Card className="bg-gradient-to-r from-primary/10 via-blue-50 to-purple-50 border-primary/20 shadow-lg">
+          <Card className="bg-gradient-to-r from-primary/10 via-blue-50 to-purple-50 border-primary/20 shadow-lg border-l-4 border-l-primary">
             <CardContent className="p-8">
               <div className="flex justify-between items-center">
                 <div className="space-y-4">
@@ -202,7 +202,7 @@ const Dashboard = () => {
           {/* Exercises Tab */}
           <TabsContent value="exercises" className="mt-6">
             {!exercises || exercises.length === 0 ? (
-              <Card className="text-center py-12">
+              <Card className="text-center py-12 border-l-4 border-l-primary">
                 <CardContent>
                   <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
                     <Brain className="h-10 w-10 text-muted-foreground" />
@@ -248,7 +248,7 @@ const Dashboard = () => {
           {/* Sessions Tab */}
           <TabsContent value="sessions" className="mt-6">
             {!sessions || sessions.length === 0 ? (
-              <Card className="text-center py-12">
+              <Card className="text-center py-12 border-l-4 border-l-primary">
                 <CardContent>
                   <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
                     <Users className="h-10 w-10 text-muted-foreground" />

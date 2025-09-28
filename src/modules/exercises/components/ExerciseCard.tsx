@@ -92,7 +92,7 @@ const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: E
   const SubjectIcon = subjectInfo.icon;
 
   return (
-    <Card className="h-[380px] w-full min-w-[300px] transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 border-0 bg-gradient-to-br from-white/80 via-card/60 to-primary/5 backdrop-blur-sm flex flex-col group cursor-pointer overflow-hidden relative">
+    <Card className="h-[380px] w-full min-w-[300px] transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 border-l-4 border-l-primary bg-gradient-to-br from-white/80 via-card/60 to-primary/5 backdrop-blur-sm flex flex-col group cursor-pointer overflow-hidden relative">
       {/* Decorative gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       
