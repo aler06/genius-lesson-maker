@@ -8,9 +8,10 @@ interface HangmanGameProps {
   word: string;
   hint?: string;
   onGameComplete?: (won: boolean, attempts: number) => void;
+  studentMode?: boolean; // Hide restart button and correct answer for students
 }
 
-const HangmanGame: React.FC<HangmanGameProps> = ({ word, hint, onGameComplete }) => {
+const HangmanGame: React.FC<HangmanGameProps> = ({ word, hint, onGameComplete, studentMode = false }) => {
   const [guessedLetters, setGuessedLetters] = useState<Set<string>>(new Set());
   const [wrongGuesses, setWrongGuesses] = useState(0);
   const [gameState, setGameState] = useState<'playing' | 'won' | 'lost'>('playing');
@@ -136,15 +137,17 @@ const HangmanGame: React.FC<HangmanGameProps> = ({ word, hint, onGameComplete })
                 <p className="text-sm text-green-600">Adivina la palabra letra por letra</p>
               </div>
             </div>
-            <Button
-              onClick={resetGame}
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Reiniciar
-            </Button>
+            {!studentMode && (
+              <Button
+                onClick={resetGame}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reiniciar
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
       </Card>
@@ -249,27 +252,29 @@ const HangmanGame: React.FC<HangmanGameProps> = ({ word, hint, onGameComplete })
         </Card>
       </div>
 
-      {/* Answer Section - Always visible */}
-      <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200">
-        <CardHeader>
-          <CardTitle className="text-center text-lg text-amber-800 flex items-center justify-center gap-2">
-            <CheckCircle className="h-5 w-5" />
-            Respuesta Correcta
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center">
-            <div className="text-2xl md:text-3xl font-bold text-amber-900 bg-white p-4 rounded-lg border-2 border-amber-200 shadow-sm">
-              {displayWord}
-            </div>
-            {hint && (
-              <div className="mt-3 text-sm text-amber-700">
-                <strong>Pista:</strong> {hint}
+      {/* Answer Section - Only visible for teachers/preview mode */}
+      {!studentMode && (
+        <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200">
+          <CardHeader>
+            <CardTitle className="text-center text-lg text-amber-800 flex items-center justify-center gap-2">
+              <CheckCircle className="h-5 w-5" />
+              Respuesta Correcta
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center">
+              <div className="text-2xl md:text-3xl font-bold text-amber-900 bg-white p-4 rounded-lg border-2 border-amber-200 shadow-sm">
+                {displayWord}
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              {hint && (
+                <div className="mt-3 text-sm text-amber-700">
+                  <strong>Pista:</strong> {hint}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Game Over Actions */}
       {gameState !== 'playing' && (
@@ -289,14 +294,16 @@ const HangmanGame: React.FC<HangmanGameProps> = ({ word, hint, onGameComplete })
                   <p className="text-red-700">¡Inténtalo de nuevo!</p>
                 </div>
               )}
-              <Button
-                onClick={resetGame}
-                variant="outline"
-                className="gap-2 hover:bg-primary/10 hover:border-primary/20 transition-colors"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Jugar de Nuevo
-              </Button>
+              {!studentMode && (
+                <Button
+                  onClick={resetGame}
+                  variant="outline"
+                  className="gap-2 hover:bg-primary/10 hover:border-primary/20 transition-colors"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Jugar de Nuevo
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>

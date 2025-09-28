@@ -9,7 +9,7 @@ import { NavHeader } from '@/components/ui/nav-header';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useToast } from '@/hooks/use-toast';
-import HangmanGame from '@/components/exercises/HangmanGame';
+import HangmanGame from '@/modules/exercises/components/HangmanGame';
 import { 
   Users, 
   Wifi, 
@@ -390,19 +390,24 @@ const SessionRoom = () => {
               <HangmanGame
                 word={sessionData.exercise.word}
                 hint={sessionData.exercise.hint || 'Sin pista disponible'}
-                onGuess={(letter, isCorrect, timeSpent) => {
-                  console.log('Hangman guess:', { letter, isCorrect, timeSpent });
-                  // Here you can send the guess to the backend if needed
-                }}
-                onComplete={(success, totalTime) => {
-                  console.log('Hangman completed:', { success, totalTime });
-                  // Here you can send the final result to the backend
+                studentMode={true}
+                onGameComplete={(won, attempts) => {
+                  console.log('Hangman completed:', { won, attempts });
+                  
+                  // Send result to backend via WebSocket if needed
+                  const userToUse = currentUser || user;
+                  if (sessionId && userToUse) {
+                    // You can implement a method to send hangman results
+                    // submitAnswer(sessionId, userToUse.id || userToUse._id, 'hangman-result', won ? 'correct' : 'incorrect', 0);
+                  }
+                  
+                  // Show completion toast
                   toast({
-                    title: success ? "¡Felicitaciones!" : "Juego terminado",
-                    description: success 
-                      ? `¡Has completado el juego en ${Math.round(totalTime / 1000)} segundos!`
+                    title: won ? "¡Felicitaciones!" : "Juego terminado",
+                    description: won 
+                      ? `¡Has adivinado la palabra con ${attempts} errores!`
                       : "¡Mejor suerte la próxima vez!",
-                    variant: success ? "default" : "destructive",
+                    variant: won ? "default" : "destructive",
                   });
                 }}
               />
