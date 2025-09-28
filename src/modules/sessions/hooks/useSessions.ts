@@ -153,18 +153,93 @@ const createSession = async (sessionData: CreateSessionRequest): Promise<Session
 };
 
 const startSession = async (sessionId: string): Promise<Session> => {
-  // TODO: Implement real API call
-  throw new Error('Start session not implemented yet');
+  try {
+    console.log('Starting session:', sessionId);
+    
+    const response = await apiRequest(`/api/v1/sessions/${sessionId}/start`, {
+      method: 'PUT',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Session start failed:', response.status, errorText);
+      throw new Error(`Error ${response.status}: ${errorText || 'Error al iniciar la sesión'}`);
+    }
+
+    const sessionResponse = await response.json();
+    console.log('Session started successfully:', sessionResponse);
+    return sessionResponse as Session;
+  } catch (error) {
+    console.error('Error starting session:', error);
+    throw error;
+  }
 };
 
 const endSession = async (sessionId: string): Promise<Session> => {
-  // TODO: Implement real API call
-  throw new Error('End session not implemented yet');
+  try {
+    console.log('Ending session:', sessionId);
+    
+    const response = await apiRequest(`/api/v1/sessions/${sessionId}/end`, {
+      method: 'PUT',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Session end failed:', response.status, errorText);
+      throw new Error(`Error ${response.status}: ${errorText || 'Error al finalizar la sesión'}`);
+    }
+
+    const sessionResponse = await response.json();
+    console.log('Session ended successfully:', sessionResponse);
+    return sessionResponse as Session;
+  } catch (error) {
+    console.error('Error ending session:', error);
+    throw error;
+  }
+};
+
+const cancelSession = async (sessionId: string): Promise<Session> => {
+  try {
+    console.log('Cancelling session:', sessionId);
+    
+    const response = await apiRequest(`/api/v1/sessions/${sessionId}/cancel`, {
+      method: 'PUT',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Session cancel failed:', response.status, errorText);
+      throw new Error(`Error ${response.status}: ${errorText || 'Error al cancelar la sesión'}`);
+    }
+
+    const sessionResponse = await response.json();
+    console.log('Session cancelled successfully:', sessionResponse);
+    return sessionResponse as Session;
+  } catch (error) {
+    console.error('Error cancelling session:', error);
+    throw error;
+  }
 };
 
 const deleteSession = async (sessionId: string): Promise<void> => {
-  // TODO: Implement real API call
-  throw new Error('Delete session not implemented yet');
+  try {
+    console.log('Deleting session:', sessionId);
+    
+    const response = await apiRequest(`/api/v1/sessions/${sessionId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Session delete failed:', response.status, errorText);
+      throw new Error(`Error ${response.status}: ${errorText || 'Error al eliminar la sesión'}`);
+    }
+
+    console.log('Session deleted successfully');
+  } catch (error) {
+    console.error('Error deleting session:', error);
+    throw error;
+  }
 };
 
 export const useSessions = (teacherId?: string) => {
@@ -260,6 +335,30 @@ export const useSessions = (teacherId?: string) => {
     }
   });
 
+  // Cancel session mutation
+  const cancelSessionMutation = useMutation({
+    mutationFn: cancelSession,
+    onSuccess: (updatedSession) => {
+      queryClient.setQueryData(['sessions', teacherId], (old: Session[] = []) =>
+        old.map(session => 
+          session.id === updatedSession.id ? updatedSession : session
+        )
+      );
+      
+      toast({
+        title: "Sesión cancelada",
+        description: `La sesión "${updatedSession.name}" ha sido cancelada.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo cancelar la sesión",
+        variant: "destructive",
+      });
+    }
+  });
+
   // Delete session mutation
   const deleteSessionMutation = useMutation({
     mutationFn: deleteSession,
@@ -290,10 +389,12 @@ export const useSessions = (teacherId?: string) => {
     createSession: createSessionMutation.mutate,
     startSession: startSessionMutation.mutate,
     endSession: endSessionMutation.mutate,
+    cancelSession: cancelSessionMutation.mutate,
     deleteSession: deleteSessionMutation.mutate,
     isCreating: createSessionMutation.isPending,
     isStarting: startSessionMutation.isPending,
     isEnding: endSessionMutation.isPending,
+    isCancelling: cancelSessionMutation.isPending,
     isDeleting: deleteSessionMutation.isPending,
   };
 };

@@ -27,7 +27,7 @@ export function NavHeader() {
         <div className="flex items-center justify-between">
           <div 
             className="flex items-center gap-2 cursor-pointer"
-            onClick={() => navigate(user ? '/dashboard' : '/login')}
+            onClick={() => navigate('/')}
           >
             <div className="p-2 rounded-lg bg-gradient-to-r from-primary to-blue-500">
               <GraduationCap className="h-6 w-6 text-white" />
@@ -39,12 +39,12 @@ export function NavHeader() {
           </div>
 
           <div className="flex items-center gap-4">
-            {user && (
+            {user && location.pathname !== '/' && location.pathname !== '/join-session' && (
               <nav className="flex items-center gap-2">
                 <Button
-                  variant={location.pathname === '/' ? 'default' : 'ghost'}
-                  onClick={() => navigate('/')}
-                  className={location.pathname === '/' ? 
+                  variant={location.pathname === '/create-exercise' ? 'default' : 'ghost'}
+                  onClick={() => navigate('/create-exercise')}
+                  className={location.pathname === '/create-exercise' ? 
                     "gap-2 bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600" : 
                     "gap-2 hover:bg-gradient-to-r hover:from-primary hover:to-blue-500 hover:text-white"
                   }

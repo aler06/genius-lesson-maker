@@ -13,7 +13,8 @@ import {
   Timer,
   BookOpen,
   CheckCircle,
-  Loader2
+  Loader2,
+  XCircle
 } from 'lucide-react';
 import { Session } from '../hooks/useSessions';
 import { useToast } from '@/hooks/use-toast';
@@ -22,9 +23,11 @@ interface SessionCardProps {
   session: Session;
   onStart?: (sessionId: string) => void;
   onEnd?: (sessionId: string) => void;
+  onCancel?: (sessionId: string) => void;
   onDelete?: (sessionId: string) => void;
   isStarting?: boolean;
   isEnding?: boolean;
+  isCancelling?: boolean;
   isDeleting?: boolean;
 }
 
@@ -32,9 +35,11 @@ const SessionCard = ({
   session, 
   onStart, 
   onEnd, 
+  onCancel,
   onDelete,
   isStarting = false,
   isEnding = false,
+  isCancelling = false,
   isDeleting = false
 }: SessionCardProps) => {
   const { toast } = useToast();
@@ -208,40 +213,76 @@ const SessionCard = ({
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2">
           {session.status === 'waiting' && (
-            <Button
-              onClick={() => onStart?.(session.id)}
-              disabled={isStarting}
-              className="flex-1 bg-green-600 hover:bg-green-700"
-              size="sm"
-            >
-              {isStarting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-1" />
-                  Iniciar
-                </>
-              )}
-            </Button>
+            <>
+              <Button
+                onClick={() => onStart?.(session.id)}
+                disabled={isStarting}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                size="sm"
+              >
+                {isStarting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-1" />
+                    Iniciar
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => onCancel?.(session.id)}
+                disabled={isCancelling}
+                variant="outline"
+                className="flex-1 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                size="sm"
+              >
+                {isCancelling ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Cancelar
+                  </>
+                )}
+              </Button>
+            </>
           )}
           
           {session.status === 'active' && (
-            <Button
-              onClick={() => onEnd?.(session.id)}
-              disabled={isEnding}
-              variant="destructive"
-              className="flex-1"
-              size="sm"
-            >
-              {isEnding ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Square className="h-4 w-4 mr-1" />
-                  Finalizar
-                </>
-              )}
-            </Button>
+            <>
+              <Button
+                onClick={() => onEnd?.(session.id)}
+                disabled={isEnding}
+                variant="destructive"
+                className="flex-1"
+                size="sm"
+              >
+                {isEnding ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <Square className="h-4 w-4 mr-1" />
+                    Finalizar
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => onCancel?.(session.id)}
+                disabled={isCancelling}
+                variant="outline"
+                className="flex-1 text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                size="sm"
+              >
+                {isCancelling ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Cancelar
+                  </>
+                )}
+              </Button>
+            </>
           )}
 
           {(session.status === 'finished' || session.status === 'cancelled') && (

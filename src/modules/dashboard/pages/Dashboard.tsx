@@ -16,7 +16,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { exercises, isLoading: exercisesLoading, deleteExercise, error: exercisesError } = useExercises(user?.id);
-  const { sessions, isLoading: sessionsLoading, startSession, endSession, deleteSession, isStarting, isEnding, isDeleting, error: sessionsError } = useSessions(user?.id);
+  const { sessions, isLoading: sessionsLoading, startSession, endSession, cancelSession, deleteSession, isStarting, isEnding, isCancelling, isDeleting, error: sessionsError } = useSessions(user?.id);
   const [activeTab, setActiveTab] = useState('exercises');
   const { toast } = useToast();
 
@@ -46,7 +46,15 @@ const Dashboard = () => {
   };
 
   const handleEndSession = (sessionId: string) => {
-    endSession(sessionId);
+    if (window.confirm('¿Estás seguro de que quieres finalizar esta sesión?')) {
+      endSession(sessionId);
+    }
+  };
+
+  const handleCancelSession = (sessionId: string) => {
+    if (window.confirm('¿Estás seguro de que quieres cancelar esta sesión?')) {
+      cancelSession(sessionId);
+    }
   };
 
   const handleDeleteSession = (sessionId: string) => {
@@ -254,9 +262,11 @@ const Dashboard = () => {
                         session={session}
                         onStart={handleStartSession}
                         onEnd={handleEndSession}
+                        onCancel={handleCancelSession}
                         onDelete={handleDeleteSession}
                         isStarting={isStarting}
                         isEnding={isEnding}
+                        isCancelling={isCancelling}
                         isDeleting={isDeleting}
                       />
                     ))}
