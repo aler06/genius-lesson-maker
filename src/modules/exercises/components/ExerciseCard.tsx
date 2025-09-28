@@ -10,19 +10,13 @@ import {
   PenTool, 
   RotateCcw, 
   Eye, 
-  Trash2,
-  Calendar,
-  Clock,
-  Share2,
-  CheckCircle
+  Trash2
 } from 'lucide-react';
 
 interface ExerciseCardProps {
   exercise: ExerciseResponse;
   onView: (id: string) => void;
   onDelete: (id: string) => void;
-  onPublish: (id: string) => void;
-  isPublishing?: boolean;
 }
 
 const getGameIcon = (game: Game) => {
@@ -70,7 +64,7 @@ const getGameColor = (game: Game) => {
   }
 };
 
-const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: ExerciseCardProps) => {
+const ExerciseCard = ({ exercise, onView, onDelete }: ExerciseCardProps) => {
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -92,29 +86,29 @@ const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: E
   const SubjectIcon = subjectInfo.icon;
 
   return (
-    <Card className="h-[380px] w-full min-w-[300px] transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 border-l-4 border-l-primary bg-gradient-to-br from-white/80 via-card/60 to-primary/5 backdrop-blur-sm flex flex-col group cursor-pointer overflow-hidden relative">
+    <Card className="h-[280px] w-full min-w-[280px] transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 border-l-4 border-l-primary bg-gradient-to-br from-white/80 via-card/60 to-primary/5 backdrop-blur-sm flex flex-col group cursor-pointer overflow-hidden relative">
       {/* Decorative gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       
-      <CardHeader className="pb-6 pt-8 flex-1 flex items-center justify-center relative z-10">
-        <div className="text-center space-y-5">
-           {/* Icon container with animation - larger size */}
+      <CardHeader className="pb-4 pt-6 flex-1 flex items-center justify-center relative z-10">
+        <div className="text-center space-y-3">
+           {/* Icon container with animation - smaller size */}
            <div className="flex justify-center">
-             <div className="p-4 bg-gradient-to-br from-primary/10 to-blue-500/10 rounded-3xl border border-primary/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm group-hover:shadow-lg">
-               <SubjectIcon className="h-12 w-12 text-primary group-hover:text-blue-600 transition-colors duration-300" />
+             <div className="p-3 bg-gradient-to-br from-primary/10 to-blue-500/10 rounded-2xl border border-primary/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm group-hover:shadow-lg">
+               <SubjectIcon className="h-8 w-8 text-primary group-hover:text-blue-600 transition-colors duration-300" />
              </div>
            </div>
           
-          {/* Badges with improved styling - compact */}
-          <div className="flex flex-col gap-2">
-            <Badge className={`${subjectInfo.color} pointer-events-none mx-auto shadow-sm group-hover:shadow-md transition-shadow duration-300 text-sm px-3 py-1`}>
-              <div className="flex items-center gap-1.5 pointer-events-none">
+          {/* Badges with improved styling - more compact */}
+          <div className="flex flex-col gap-1.5">
+            <Badge className={`${subjectInfo.color} pointer-events-none mx-auto shadow-sm group-hover:shadow-md transition-shadow duration-300 text-xs px-2 py-0.5`}>
+              <div className="flex items-center gap-1 pointer-events-none">
                 <span className="font-medium">{subjectInfo.name}</span>
               </div>
             </Badge>
             
-            <Badge className={`${getGameColor(exercise.game)} pointer-events-none mx-auto shadow-sm group-hover:shadow-md transition-shadow duration-300 px-3 py-1`}>
-              <div className="flex items-center gap-1.5 pointer-events-none">
+            <Badge className={`${getGameColor(exercise.game)} pointer-events-none mx-auto shadow-sm group-hover:shadow-md transition-shadow duration-300 px-2 py-0.5`}>
+              <div className="flex items-center gap-1 pointer-events-none">
                 {getGameIcon(exercise.game)}
                 <span className="text-xs font-medium">{getGameName(exercise.game)}</span>
               </div>
@@ -124,9 +118,9 @@ const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: E
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0 pb-6 px-6 flex-shrink-0 relative z-10">
-        <div className="space-y-4">
-          {/* Action buttons with enhanced styling */}
+      <CardContent className="pt-0 pb-4 px-4 flex-shrink-0 relative z-10">
+        <div className="space-y-2">
+          {/* Action buttons with enhanced styling - no publish button */}
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -134,7 +128,7 @@ const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: E
               onClick={() => onView(exercise.id)}
               className="flex-1 hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all duration-200 hover:scale-105 hover:shadow-md bg-white/80 backdrop-blur-sm"
             >
-              <Eye className="h-4 w-4 mr-1" />
+              <Eye className="h-3 w-3 mr-1" />
               Ver
             </Button>
             <Button
@@ -143,40 +137,10 @@ const ExerciseCard = ({ exercise, onView, onDelete, onPublish, isPublishing }: E
               onClick={() => onDelete(exercise.id)}
               className="flex-1 text-destructive hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-all duration-200 hover:scale-105 hover:shadow-md bg-white/80 backdrop-blur-sm"
             >
-              <Trash2 className="h-4 w-4 mr-1" />
+              <Trash2 className="h-3 w-3 mr-1" />
               Eliminar
             </Button>
           </div>
-          
-           {/* Publish button with enhanced styling */}
-           <Button
-             variant={exercise.isPublished ? "secondary" : "default"}
-             size="sm"
-             onClick={() => onPublish(exercise.id)}
-             disabled={isPublishing || exercise.isPublished}
-             className={`w-full transition-all duration-200 ${
-               exercise.isPublished 
-                 ? 'bg-gradient-to-r from-blue-100 to-blue-50 text-blue-800 border border-blue-300 cursor-default shadow-sm' 
-                 : 'bg-gradient-to-r from-primary to-blue-500 hover:from-primary/90 hover:to-blue-600 text-white shadow-md hover:shadow-xl hover:scale-105'
-             }`}
-           >
-             {exercise.isPublished ? (
-               <>
-                 <CheckCircle className="h-4 w-4 mr-2" />
-                 Publicado
-               </>
-             ) : isPublishing ? (
-               <>
-                 <Clock className="h-4 w-4 mr-2 animate-spin" />
-                 Publicando...
-               </>
-             ) : (
-               <>
-                 <Share2 className="h-4 w-4 mr-2" />
-                 Publicar
-               </>
-             )}
-           </Button>
         </div>
       </CardContent>
     </Card>

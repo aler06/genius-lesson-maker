@@ -24,11 +24,16 @@ export const apiRequest = async (
 ): Promise<Response> => {
   const url = `${API_BASE_URL}${endpoint}`;
   
+  // Get auth token from localStorage
+  const token = localStorage.getItem('token');
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+  
   const requestConfig: RequestInit = {
     ...DEFAULT_CONFIG,
     ...config,
     headers: {
       ...DEFAULT_HEADERS,
+      ...authHeaders, // Include token de autorización
       ...config.headers,
     },
   };

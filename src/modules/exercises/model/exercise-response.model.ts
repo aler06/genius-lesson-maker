@@ -12,6 +12,4 @@ export interface ExerciseResponse {
   updatedAt: Date;
   cards?: CardResponseModel[];
   instructions?: string;
-  isPublished?: boolean;
-  published?: boolean; // For API compatibility
 }

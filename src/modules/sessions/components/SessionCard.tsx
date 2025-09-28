@@ -168,7 +168,7 @@ const SessionCard = ({
           </div>
           <div className="flex items-center gap-2">
             <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <span>1 ejercicio ({session.exercise.game})</span>
+            <span>{session.exercises?.length || 0} ejercicio{(session.exercises?.length || 0) !== 1 ? 's' : ''}</span>
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -176,18 +176,32 @@ const SessionCard = ({
           </div>
         </div>
 
-        {/* Exercise Info */}
-        {session.exercise && (
-          <div className="space-y-1">
-            <span className="text-xs font-medium text-muted-foreground">Ejercicio:</span>
-            <div className="text-xs bg-muted/50 rounded px-2 py-1">
-              {session.exercise.word || session.exercise.hint || `Ejercicio de ${session.exercise.game}`}
+        {/* Exercises Info */}
+        {session.exercises && session.exercises.length > 0 && (
+          <div className="space-y-2">
+            <span className="text-xs font-medium text-muted-foreground">
+              Ejercicio{session.exercises.length !== 1 ? 's' : ''} ({session.exercises.length}):
+            </span>
+            <div className="space-y-1 max-h-20 overflow-y-auto">
+              {session.exercises.map((exercise, index) => (
+                <div key={exercise.id} className="text-xs bg-muted/50 rounded px-2 py-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{exercise.game}</span>
+                    <span className="text-muted-foreground">#{index + 1}</span>
+                  </div>
+                  {exercise.word && (
+                    <div className="text-muted-foreground mt-1">
+                      Palabra: {exercise.word}
+                    </div>
+                  )}
+                  {exercise.hint && (
+                    <div className="text-muted-foreground mt-1">
+                      Pista: {exercise.hint}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
-            {session.exercise.hint && session.exercise.word && (
-              <div className="text-xs text-muted-foreground">
-                Pista: {session.exercise.hint}
-              </div>
-            )}
           </div>
         )}
 

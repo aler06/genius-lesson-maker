@@ -9,15 +9,14 @@ import { useExercises } from '@/modules/exercises/hooks/useExercises';
 import { useSessions } from '@/modules/sessions/hooks/useSessions';
 import ExerciseCard from '@/modules/exercises/components/ExerciseCard';
 import SessionCard from '@/modules/sessions/components/SessionCard';
-import { Plus, Target, Brain, CheckCircle, Users, Calendar, Play } from 'lucide-react';
+import { Plus, Brain, CheckCircle, Users, Calendar, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { exercises, isLoading: exercisesLoading, deleteExercise, publishExercise, isPublishing, error: exercisesError } = useExercises(user?.id);
+  const { exercises, isLoading: exercisesLoading, deleteExercise, error: exercisesError } = useExercises(user?.id);
   const { sessions, isLoading: sessionsLoading, startSession, endSession, deleteSession, isStarting, isEnding, isDeleting, error: sessionsError } = useSessions(user?.id);
-  const [publishingExerciseId, setPublishingExerciseId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('exercises');
   const { toast } = useToast();
 
@@ -33,15 +32,6 @@ const Dashboard = () => {
     }
   };
 
-  const handlePublishExercise = (exerciseId: string) => {
-    setPublishingExerciseId(exerciseId);
-    publishExercise(exerciseId);
-    
-    // Reset publishing state after mutation completes
-    setTimeout(() => {
-      setPublishingExerciseId(null);
-    }, 1500);
-  };
 
   const handleCreateExercise = () => {
     navigate('/create-exercise');
@@ -89,7 +79,7 @@ const Dashboard = () => {
           <Card className="text-center py-12 border-destructive border-l-4 border-l-destructive">
             <CardContent>
               <div className="mx-auto w-24 h-24 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
-                <Target className="h-10 w-10 text-destructive" />
+                <Brain className="h-10 w-10 text-destructive" />
               </div>
               <h3 className="text-xl font-semibold mb-2 text-destructive">Error al cargar ejercicios</h3>
               <p className="text-muted-foreground mb-4">
@@ -134,12 +124,6 @@ const Dashboard = () => {
                       <Brain className="h-4 w-4 text-primary" />
                       <span className="text-sm font-medium text-foreground">
                         {exercises?.length || 0} ejercicio{(exercises?.length || 0) !== 1 ? 's' : ''}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 bg-white/60 px-4 py-2 rounded-full border border-primary/20">
-                      <Target className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-foreground">
-                        {exercises?.filter(ex => ex.isPublished).length || 0} publicado{(exercises?.filter(ex => ex.isPublished).length || 0) !== 1 ? 's' : ''}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 bg-white/60 px-4 py-2 rounded-full border border-primary/20">
@@ -226,8 +210,6 @@ const Dashboard = () => {
                         exercise={exercise}
                         onView={handleViewExercise}
                         onDelete={handleDeleteExercise}
-                        onPublish={handlePublishExercise}
-                        isPublishing={publishingExerciseId === exercise.id}
                       />
                     ))}
                   </div>

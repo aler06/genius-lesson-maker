@@ -15,17 +15,17 @@ interface Session {
     createdAt: string;
     updatedAt: string;
   };
-  exercise: {
+  // Updated to support multiple exercises
+  exercises: {
     id: string;
     game: string;
     questions: any[];
     word?: string;
     hint?: string;
     cards: any[];
-    published: boolean;
     createdAt: string;
     updatedAt: string;
-  };
+  }[];
   name: string;
   description?: string;
   accessCode: string;
@@ -42,6 +42,18 @@ interface Session {
   updatedAt: string;
 }
 
+// Interface for creating a session
+interface CreateSessionRequest {
+  teacherId: string;
+  exerciseIds: string[];
+  name: string;
+  description?: string;
+  duration: number;
+  maxParticipants?: number;
+  allowLateJoin?: boolean;
+  showLeaderboard?: boolean;
+}
+
 // Mock API functions - replace with actual API calls
 const mockSessions: Session[] = [
   {
@@ -56,17 +68,28 @@ const mockSessions: Session[] = [
       createdAt: '2025-09-21T23:12:38.717Z',
       updatedAt: '2025-09-21T23:12:38.717Z'
     },
-    exercise: {
-      id: '68d5d193c60063d50dd9dc5d',
-      game: 'hangman',
-      questions: [],
-      word: 'TCP/IP',
-      hint: 'Conjunto de protocolos fundamentales para la comunicación en Internet',
-      cards: [],
-      published: true,
-      createdAt: '2025-09-25T23:34:43.204Z',
-      updatedAt: '2025-09-26T01:17:31.133Z'
-    },
+    exercises: [
+      {
+        id: '68d5d193c60063d50dd9dc5d',
+        game: 'hangman',
+        questions: [],
+        word: 'TCP/IP',
+        hint: 'Conjunto de protocolos fundamentales para la comunicación en Internet',
+        cards: [],
+        createdAt: '2025-09-25T23:34:43.204Z',
+        updatedAt: '2025-09-26T01:17:31.133Z'
+      },
+      {
+        id: '68d5d18ac60063d50dd9dc5b',
+        game: 'hangman',
+        questions: [],
+        word: 'polimorfismo',
+        hint: 'Capacidad de un objeto para tomar muchas formas diferentes en programación orientada a objetos.',
+        cards: [],
+        createdAt: '2025-09-25T23:34:34.274Z',
+        updatedAt: '2025-09-25T23:34:34.274Z'
+      }
+    ],
     name: 'Redes - Sesión 1',
     description: 'Sesión interactiva sobre Redes',
     accessCode: 'LXQ7TM',
@@ -91,7 +114,8 @@ const fetchSessions = async (teacherId: string): Promise<Session[]> => {
     });
 
     if (!response.ok) {
-      throw new Error(`Error al obtener sesiones: ${response.status}`);
+      const errorText = await response.text();
+      throw new Error(`Error ${response.status}: ${errorText || 'Error al obtener sesiones'}`);
     }
 
     const data = await response.json();
@@ -104,9 +128,28 @@ const fetchSessions = async (teacherId: string): Promise<Session[]> => {
   }
 };
 
-const createSession = async (sessionData: any): Promise<Session> => {
-  // TODO: Implement real API call
-  throw new Error('Create session not implemented yet');
+const createSession = async (sessionData: CreateSessionRequest): Promise<Session> => {
+  try {
+    console.log('Creating session with data:', sessionData);
+    
+    const response = await apiRequest('/api/v1/sessions', {
+      method: 'POST',
+      body: JSON.stringify(sessionData),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Session creation failed:', response.status, errorText);
+      throw new Error(`Error ${response.status}: ${errorText || 'Error al crear la sesión'}`);
+    }
+
+    const sessionResponse = await response.json();
+    console.log('Session created successfully:', sessionResponse);
+    return sessionResponse as Session;
+  } catch (error) {
+    console.error('Error creating session:', error);
+    throw error;
+  }
 };
 
 const startSession = async (sessionId: string): Promise<Session> => {
@@ -255,4 +298,4 @@ export const useSessions = (teacherId?: string) => {
   };
 };
 
-export type { Session };
+export type { Session, CreateSessionRequest };

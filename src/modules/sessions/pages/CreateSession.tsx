@@ -16,7 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 const CreateSession = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { exercises } = useExercises(user?.id);
+  const { exercises, isLoading: exercisesLoading, error: exercisesError } = useExercises(user?.id);
   const { createSession, isCreating } = useSessions(user?.id);
   
   const [formData, setFormData] = useState({
@@ -29,7 +29,8 @@ const CreateSession = () => {
     selectedExercises: [] as string[]
   });
 
-  const availableExercises = exercises || []; // Mostrar todos los ejercicios, no solo publicados
+  // Show all exercises since published logic is removed from backend
+  const availableExercises = exercises || [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,23 +43,23 @@ const CreateSession = () => {
       return;
     }
 
-    const selectedExerciseData = availableExercises
-      .filter(ex => formData.selectedExercises.includes(ex.id))
-      .map(ex => ({
-        id: ex.id,
-        name: ex.instructions || 'Ejercicio sin nombre',
-        game: ex.game || 'quiz'
-      }));
+    if (!user?.id) {
+      return;
+    }
 
-    createSession({
+    // Create payload matching the new API structure
+    const payload = {
+      teacherId: user.id,
+      exerciseIds: formData.selectedExercises,
       name: formData.name,
       description: formData.description || undefined,
       duration: formData.duration,
       maxParticipants: formData.maxParticipants,
       allowLateJoin: formData.allowLateJoin,
-      showLeaderboard: formData.showLeaderboard,
-      exercises: selectedExerciseData
-    });
+      showLeaderboard: formData.showLeaderboard
+    };
+
+    createSession(payload);
 
     // Navigate back to dashboard after creation
     setTimeout(() => {
@@ -215,7 +216,7 @@ const CreateSession = () => {
                       Seleccionar Ejercicios
                     </CardTitle>
                     <CardDescription>
-                      Elige los ejercicios que incluirás en esta sesión (todos tus ejercicios disponibles)
+                      Elige los ejercicios que incluirás en esta sesión
                     </CardDescription>
                   </div>
                   {formData.selectedExercises.length > 0 && (
@@ -229,10 +230,34 @@ const CreateSession = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                {availableExercises.length === 0 ? (
+                {exercisesLoading ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="h-16 w-16 text-muted-foreground mx-auto mb-4 animate-spin" />
+                    <h3 className="text-xl font-semibold mb-2">Cargando ejercicios...</h3>
+                    <p className="text-muted-foreground">
+                      Obteniendo tus ejercicios disponibles
+                    </p>
+                  </div>
+                ) : exercisesError ? (
+                  <div className="text-center py-12">
+                    <BookOpen className="h-16 w-16 text-red-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold mb-2 text-red-600">Error al cargar ejercicios</h3>
+                    <p className="text-muted-foreground mb-6">
+                      {exercisesError.message || 'No se pudieron cargar los ejercicios'}
+                    </p>
+                    <Button 
+                      onClick={() => window.location.reload()} 
+                      variant="outline"
+                      className="gap-2"
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      Reintentar
+                    </Button>
+                  </div>
+                ) : availableExercises.length === 0 ? (
                   <div className="text-center py-12">
                     <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold mb-2">No hay ejercicios creados</h3>
+                    <h3 className="text-xl font-semibold mb-2">No hay ejercicios disponibles</h3>
                     <p className="text-muted-foreground mb-6">
                       Necesitas crear al menos un ejercicio para poder crear una sesión.
                     </p>
@@ -249,8 +274,7 @@ const CreateSession = () => {
                   <>
                     <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm text-blue-800">
-                        💡 <strong>Tip:</strong> Haz clic en los ejercicios que quieras incluir en tu sesión. 
-                        Puedes seleccionar uno o varios ejercicios para crear una experiencia más completa.
+                        💡 <strong>Tip:</strong> Haz clic en los ejercicios que quieras incluir para crear una experiencia completa.
                       </p>
                     </div>
                     
