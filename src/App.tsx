@@ -11,6 +11,7 @@ import Login from "./modules/auth/pages/Login";
 import Register from "./modules/auth/pages/Register";
 import JoinSession from "./modules/sessions/pages/JoinSession";
 import SessionRoom from "./modules/sessions/pages/SessionRoom";
+import CreateSession from "./modules/sessions/pages/CreateSession";
 import ProtectedRoute from "./components/ui/protected-route";
 import { Role } from "./types/enums";
 import NotFound from "./pages/NotFound";
@@ -44,6 +45,11 @@ const App = () => (
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/create-session" element={
+            <ProtectedRoute>
+              <CreateSession />
             </ProtectedRoute>
           } />
           <Route path="/exercise/:exerciseId" element={
