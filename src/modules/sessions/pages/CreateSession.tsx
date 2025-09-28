@@ -9,7 +9,8 @@ import { NavHeader } from '@/components/ui/nav-header';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useExercises } from '@/modules/exercises/hooks/useExercises';
 import { useSessions } from '../hooks/useSessions';
-import { ArrowLeft, Plus, BookOpen, Users, Timer, Loader2 } from 'lucide-react';
+import SelectableExerciseCard from '@/modules/exercises/components/SelectableExerciseCard';
+import { ArrowLeft, Plus, BookOpen, Users, Timer, Loader2, CheckCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const CreateSession = () => {
@@ -28,7 +29,7 @@ const CreateSession = () => {
     selectedExercises: [] as string[]
   });
 
-  const publishedExercises = exercises?.filter(ex => ex.isPublished) || [];
+  const availableExercises = exercises || []; // Mostrar todos los ejercicios, no solo publicados
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +42,7 @@ const CreateSession = () => {
       return;
     }
 
-    const selectedExerciseData = publishedExercises
+    const selectedExerciseData = availableExercises
       .filter(ex => formData.selectedExercises.includes(ex.id))
       .map(ex => ({
         id: ex.id,
@@ -74,6 +75,10 @@ const CreateSession = () => {
     }));
   };
 
+  const handleViewExercise = (exerciseId: string) => {
+    navigate(`/exercise/${exerciseId}`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <NavHeader />
@@ -100,7 +105,7 @@ const CreateSession = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               {/* Basic Information */}
-              <Card>
+              <Card className="border-l-4 border-l-primary">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BookOpen className="h-5 w-5" />
@@ -136,7 +141,7 @@ const CreateSession = () => {
               </Card>
 
               {/* Session Settings */}
-              <Card>
+              <Card className="border-l-4 border-l-primary">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
@@ -201,57 +206,92 @@ const CreateSession = () => {
             </div>
 
             {/* Exercise Selection */}
-            <Card>
+            <Card className="border-l-4 border-l-primary">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Timer className="h-5 w-5" />
-                  Seleccionar Ejercicios
-                </CardTitle>
-                <CardDescription>
-                  Elige los ejercicios que incluirás en esta sesión (solo ejercicios publicados)
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Timer className="h-5 w-5" />
+                      Seleccionar Ejercicios
+                    </CardTitle>
+                    <CardDescription>
+                      Elige los ejercicios que incluirás en esta sesión (todos tus ejercicios disponibles)
+                    </CardDescription>
+                  </div>
+                  {formData.selectedExercises.length > 0 && (
+                    <div className="flex items-center gap-2 bg-primary/10 px-3 py-1 rounded-full">
+                      <CheckCircle className="h-4 w-4 text-primary" />
+                      <span className="text-sm font-medium text-primary">
+                        {formData.selectedExercises.length} seleccionado{formData.selectedExercises.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
-                {publishedExercises.length === 0 ? (
-                  <div className="text-center py-8">
-                    <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No hay ejercicios publicados</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Necesitas tener al menos un ejercicio publicado para crear una sesión.
+                {availableExercises.length === 0 ? (
+                  <div className="text-center py-12">
+                    <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">No hay ejercicios creados</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Necesitas crear al menos un ejercicio para poder crear una sesión.
                     </p>
-                    <Button onClick={() => navigate('/dashboard')} variant="outline">
+                    <Button 
+                      onClick={() => navigate('/dashboard')} 
+                      variant="outline"
+                      className="gap-2"
+                    >
+                      <BookOpen className="h-4 w-4" />
                       Ir a Ejercicios
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {publishedExercises.map((exercise) => (
-                      <div
-                        key={exercise.id}
-                        className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                          formData.selectedExercises.includes(exercise.id)
-                            ? 'border-primary bg-primary/5'
-                            : 'border-muted hover:border-primary/50'
-                        }`}
-                        onClick={() => handleExerciseToggle(exercise.id)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            checked={formData.selectedExercises.includes(exercise.id)}
-                            onChange={() => {}} // Handled by parent onClick
-                          />
-                          <div className="flex-1">
-                            <h4 className="font-medium line-clamp-2">
-                              {exercise.instructions || 'Ejercicio sin nombre'}
-                            </h4>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Tipo: {exercise.game || 'Quiz'}
-                            </p>
-                          </div>
+                  <>
+                    <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        💡 <strong>Tip:</strong> Haz clic en los ejercicios que quieras incluir en tu sesión. 
+                        Puedes seleccionar uno o varios ejercicios para crear una experiencia más completa.
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {availableExercises.map((exercise) => (
+                        <SelectableExerciseCard
+                          key={exercise.id}
+                          exercise={exercise}
+                          isSelected={formData.selectedExercises.includes(exercise.id)}
+                          onToggle={handleExerciseToggle}
+                          onView={handleViewExercise}
+                        />
+                      ))}
+                    </div>
+
+                    {formData.selectedExercises.length > 0 && (
+                      <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <h4 className="font-medium text-green-800 mb-2">
+                          Ejercicios seleccionados ({formData.selectedExercises.length}):
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {availableExercises
+                            .filter(ex => formData.selectedExercises.includes(ex.id))
+                            .map((exercise) => (
+                              <div
+                                key={exercise.id}
+                                className="bg-white border border-green-300 rounded-full px-3 py-1 text-sm text-green-800 flex items-center gap-2"
+                              >
+                                <span>{exercise.instructions || 'Ejercicio sin nombre'}</span>
+                                <button
+                                  onClick={() => handleExerciseToggle(exercise.id)}
+                                  className="text-green-600 hover:text-green-800 transition-colors"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 )}
               </CardContent>
             </Card>
