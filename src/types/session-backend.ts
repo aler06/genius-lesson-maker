@@ -23,8 +23,9 @@ export interface Exercise {
 }
 
 export interface Question {
-  _id: string;
-  question: string;
+  _id?: string;
+  question?: string;
+  sentence?: string;
   options?: string[];
   correct_answer: string;
   explanation?: string;

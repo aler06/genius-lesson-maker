@@ -198,28 +198,6 @@ const endSession = async (sessionId: string): Promise<Session> => {
   }
 };
 
-const cancelSession = async (sessionId: string): Promise<Session> => {
-  try {
-    console.log('Cancelling session:', sessionId);
-    
-    const response = await apiRequest(`/api/v1/sessions/${sessionId}/cancel`, {
-      method: 'PUT',
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Session cancel failed:', response.status, errorText);
-      throw new Error(`Error ${response.status}: ${errorText || 'Error al cancelar la sesión'}`);
-    }
-
-    const sessionResponse = await response.json();
-    console.log('Session cancelled successfully:', sessionResponse);
-    return sessionResponse as Session;
-  } catch (error) {
-    console.error('Error cancelling session:', error);
-    throw error;
-  }
-};
 
 const deleteSession = async (sessionId: string): Promise<void> => {
   try {
@@ -241,6 +219,7 @@ const deleteSession = async (sessionId: string): Promise<void> => {
     throw error;
   }
 };
+
 
 export const useSessions = (teacherId?: string) => {
   const queryClient = useQueryClient();
@@ -311,6 +290,7 @@ export const useSessions = (teacherId?: string) => {
     }
   });
 
+
   // End session mutation
   const endSessionMutation = useMutation({
     mutationFn: endSession,
@@ -335,29 +315,6 @@ export const useSessions = (teacherId?: string) => {
     }
   });
 
-  // Cancel session mutation
-  const cancelSessionMutation = useMutation({
-    mutationFn: cancelSession,
-    onSuccess: (updatedSession) => {
-      queryClient.setQueryData(['sessions', teacherId], (old: Session[] = []) =>
-        old.map(session => 
-          session.id === updatedSession.id ? updatedSession : session
-        )
-      );
-      
-      toast({
-        title: "Sesión cancelada",
-        description: `La sesión "${updatedSession.name}" ha sido cancelada.`,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "No se pudo cancelar la sesión",
-        variant: "destructive",
-      });
-    }
-  });
 
   // Delete session mutation
   const deleteSessionMutation = useMutation({
@@ -389,12 +346,10 @@ export const useSessions = (teacherId?: string) => {
     createSession: createSessionMutation.mutate,
     startSession: startSessionMutation.mutate,
     endSession: endSessionMutation.mutate,
-    cancelSession: cancelSessionMutation.mutate,
     deleteSession: deleteSessionMutation.mutate,
     isCreating: createSessionMutation.isPending,
     isStarting: startSessionMutation.isPending,
     isEnding: endSessionMutation.isPending,
-    isCancelling: cancelSessionMutation.isPending,
     isDeleting: deleteSessionMutation.isPending,
   };
 };

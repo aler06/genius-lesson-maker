@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { PenTool, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 
 interface FillInTheBlankQuestion {
-  sentence: string;
+  sentence?: string;
+  question?: string;
   options: string[];
   correct_answer: string;
   explanation?: string;
@@ -27,6 +28,25 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [gameCompleted, setGameCompleted] = useState(false);
+
+  // Debug: Log questions data
+  useEffect(() => {
+    console.log('FillInTheBlankGame - Questions received:', questions);
+    if (questions.length > 0) {
+      console.log('First question:', questions[0]);
+    }
+  }, [questions]);
+
+  // Early return if no questions
+  if (!questions || questions.length === 0) {
+    return (
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardContent className="text-center py-8">
+          <p className="text-muted-foreground">No hay preguntas disponibles para este ejercicio.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
@@ -81,11 +101,19 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
   };
 
   const renderSentenceWithBlank = (sentence: string, selectedOption?: string) => {
-    const parts = sentence.split('____');
+    const parts = sentence.split('______');
     if (parts.length !== 2) {
+      // Try with different blank format
+      const altParts = sentence.split('____');
+      if (altParts.length === 2) {
+        return renderBlankSentence(altParts, selectedOption);
+      }
       return sentence; // Fallback if no blank found
     }
+    return renderBlankSentence(parts, selectedOption);
+  };
 
+  const renderBlankSentence = (parts: string[], selectedOption?: string) => {
     return (
       <div className="text-lg leading-relaxed">
         {parts[0]}
@@ -98,7 +126,7 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
               : 'bg-primary/10 border-primary text-primary'
             : 'border-gray-300 text-gray-400'
         }`}>
-          {selectedOption || '____'}
+          {selectedOption || '______'}
         </span>
         {parts[1]}
       </div>
@@ -150,7 +178,7 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="p-6 bg-gray-50 rounded-lg border">
-          {renderSentenceWithBlank(currentQuestion.sentence, selectedAnswer)}
+          {renderSentenceWithBlank(currentQuestion.sentence || currentQuestion.question || '', selectedAnswer)}
         </div>
 
         <div>

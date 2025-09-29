@@ -119,22 +119,22 @@ const FlipCardsGame: React.FC<FlipCardsGameProps> = ({
         {/* Flip Card */}
         <div className="relative h-64 perspective-1000">
           <div 
-            className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d cursor-pointer ${
-              isFlipped ? 'rotate-y-180' : ''
-            }`}
+            className={`flip-card-inner ${isFlipped ? 'flipped' : ''} relative w-full h-full cursor-pointer`}
             onClick={handleFlipCard}
           >
             {/* Front of card */}
             <div className="absolute inset-0 w-full h-full backface-hidden">
-              <Card className="h-full border-2 border-primary/20 hover:border-primary/40 transition-colors">
+              <Card className="flip-card h-full border-2 border-primary/20 hover:border-primary/40 transition-all duration-300 shadow-lg hover:shadow-xl">
                 <CardContent className="h-full flex items-center justify-center p-6">
                   <div className="text-center space-y-4">
-                    <Eye className="h-8 w-8 text-primary mx-auto" />
-                    <p className="text-lg font-medium">
+                    <div className="p-3 bg-primary/10 rounded-full inline-block">
+                      <Eye className="h-8 w-8 text-primary" />
+                    </div>
+                    <p className="text-lg font-medium text-foreground">
                       {currentCard.front}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Haz clic para ver la respuesta
+                      💡 Haz clic para revelar la respuesta
                     </p>
                   </div>
                 </CardContent>
@@ -143,15 +143,17 @@ const FlipCardsGame: React.FC<FlipCardsGameProps> = ({
 
             {/* Back of card */}
             <div className="absolute inset-0 w-full h-full backface-hidden rotate-y-180">
-              <Card className="h-full border-2 border-green-500/20 bg-green-50">
+              <Card className="flip-card h-full border-2 border-green-500/30 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg hover:shadow-xl transition-all duration-300">
                 <CardContent className="h-full flex items-center justify-center p-6">
                   <div className="text-center space-y-4">
-                    <CheckCircle className="h-8 w-8 text-green-600 mx-auto" />
+                    <div className="p-3 bg-green-100 rounded-full inline-block">
+                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    </div>
                     <p className="text-lg font-medium text-green-800">
                       {currentCard.back}
                     </p>
                     <p className="text-sm text-green-600">
-                      Haz clic para volver al frente
+                      ✨ Haz clic para volver al frente
                     </p>
                   </div>
                 </CardContent>
@@ -175,17 +177,17 @@ const FlipCardsGame: React.FC<FlipCardsGameProps> = ({
               variant="ghost"
               size="sm"
               onClick={handleFlipCard}
-              className="text-xs"
+              className="text-xs bg-primary/5 hover:bg-primary/10 border border-primary/20 transition-all duration-200"
             >
               {isFlipped ? (
                 <>
                   <EyeOff className="h-3 w-3 mr-1" />
-                  Ocultar
+                  Ocultar Respuesta
                 </>
               ) : (
                 <>
                   <Eye className="h-3 w-3 mr-1" />
-                  Revelar
+                  Revelar Respuesta
                 </>
               )}
             </Button>

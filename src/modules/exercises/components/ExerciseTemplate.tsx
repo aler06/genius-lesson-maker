@@ -198,12 +198,38 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
           <CardContent>
             <div className="space-y-3">
               <div className="p-4 bg-gray-50 rounded-lg font-mono">
-                {question.question}
+                {question.sentence || question.question || 'Oración no disponible'}
               </div>
+              
+              {question.options && question.options.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700">Opciones:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {question.options.map((option, optionIndex) => (
+                      <div 
+                        key={optionIndex}
+                        className={`p-2 rounded border text-sm ${
+                          option === question.correct_answer 
+                            ? 'bg-green-50 border-green-200 text-green-800 font-medium' 
+                            : 'bg-gray-50 border-gray-200 text-gray-700'
+                        }`}
+                      >
+                        {option}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
               <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
                 <p className="text-sm text-orange-800">
-                  <strong>Respuesta:</strong> {question.correct_answer}
+                  <strong>Respuesta correcta:</strong> {question.correct_answer}
                 </p>
+                {question.explanation && (
+                  <p className="text-sm text-orange-700 mt-1">
+                    <strong>Explicación:</strong> {question.explanation}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>

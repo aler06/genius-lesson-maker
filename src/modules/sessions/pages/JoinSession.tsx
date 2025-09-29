@@ -82,12 +82,10 @@ const JoinSession = () => {
   useEffect(() => {
     if (urlAccessCode) {
       setAccessCode(urlAccessCode.toUpperCase());
-      // Auto-join if user is authenticated, but not if it's a temporary user
-      if (user && !tempUser) {
-        handleJoinSessionWithCode(urlAccessCode.toUpperCase());
-      }
+      // Always try to join with the URL access code
+      handleJoinSessionWithCode(urlAccessCode.toUpperCase());
     }
-  }, [urlAccessCode, user, tempUser]);
+  }, [urlAccessCode]);
 
   const handleJoinSession = async (e: React.FormEvent) => {
     e.preventDefault();
