@@ -7,7 +7,7 @@ import { Gamepad2, RotateCcw, Trophy, Skull, CheckCircle } from 'lucide-react';
 interface HangmanGameProps {
   word: string;
   hint?: string;
-  onGameComplete?: (won: boolean, attempts: number) => void;
+  onGameComplete?: (won: boolean, attempts: number, gameData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}) => void;
   studentMode?: boolean; // Hide restart button and correct answer for students
 }
 
@@ -56,12 +56,24 @@ const HangmanGame: React.FC<HangmanGameProps> = ({ word, hint, onGameComplete, s
     
     if (wordLetters.size === guessedWordLetters.size && wordLetters.size > 0) {
       setGameState('won');
-      onGameComplete?.(true, wrongGuesses);
+      const gameData = {
+        word: displayWord,
+        hint: hint,
+        guessedLetters: Array.from(guessedLetters),
+        wrongGuesses: wrongGuesses
+      };
+      onGameComplete?.(true, wrongGuesses, gameData);
     } else if (wrongGuesses >= maxWrongGuesses) {
       setGameState('lost');
-      onGameComplete?.(false, wrongGuesses);
+      const gameData = {
+        word: displayWord,
+        hint: hint,
+        guessedLetters: Array.from(guessedLetters),
+        wrongGuesses: wrongGuesses
+      };
+      onGameComplete?.(false, wrongGuesses, gameData);
     }
-  }, [guessedLetters, wrongGuesses, normalizedWord, onGameComplete]);
+  }, [guessedLetters, wrongGuesses, normalizedWord, onGameComplete, displayWord, hint]);
 
   // SVG Hangman Drawing
   const HangmanDrawing = () => {

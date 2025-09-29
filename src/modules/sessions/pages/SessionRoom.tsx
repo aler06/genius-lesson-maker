@@ -61,7 +61,7 @@ const SessionRoom = () => {
   const [participantCount, setParticipantCount] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exerciseCompleted, setExerciseCompleted] = useState<boolean[]>([]);
-  const [exerciseResults, setExerciseResults] = useState<Array<{score: number, total: number, type: string, answers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>}>>([]);
+  const [exerciseResults, setExerciseResults] = useState<Array<{score: number, total: number, type: string, answers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}}>>([]);
   const [allExercisesCompleted, setAllExercisesCompleted] = useState(false);
   const [answers, setAnswers] = useState<Record<string, AnswerResult>>({});
   const [isJoined, setIsJoined] = useState(false);
@@ -219,7 +219,7 @@ const SessionRoom = () => {
   const totalExercises = exercises.length;
   const completedExercises = exerciseCompleted.filter(Boolean).length;
 
-  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>) => {
+  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}) => {
     // Mark exercise as completed
     setExerciseCompleted(prev => {
       const newCompleted = [...prev];
@@ -234,7 +234,8 @@ const SessionRoom = () => {
         score: score || 0,
         total: total || 1,
         type: currentExercise?.game || 'unknown',
-        answers: quizAnswers // Store quiz answers for final review
+        answers: quizAnswers, // Store quiz answers for final review
+        hangmanData: hangmanData // Store hangman game data
       };
       return newResults;
     });
@@ -314,33 +315,145 @@ const SessionRoom = () => {
                   
                   {/* Show detailed answers for quiz and fill_in_the_blank */}
                   {(result.type === 'quiz' || result.type === 'fill_in_the_blank') && result.answers && (
-                    <div className="space-y-3 mt-4 border-t pt-4">
-                      <h4 className="font-medium text-sm text-muted-foreground">Revisión de Respuestas:</h4>
+                    <div className="space-y-4 mt-4 border-t pt-4">
+                      <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                        📋 Revisión Detallada de Respuestas
+                      </h4>
                       {result.answers.map((answer, qIndex) => (
-                        <div key={qIndex} className={`p-3 rounded border-l-4 ${
-                          answer.isCorrect ? 'border-l-green-500 bg-green-50' : 'border-l-red-500 bg-red-50'
+                        <div key={qIndex} className={`p-4 rounded-lg border-l-4 shadow-sm ${
+                          answer.isCorrect 
+                            ? 'border-l-green-500 bg-green-50 border border-green-200' 
+                            : 'border-l-red-500 bg-red-50 border border-red-200'
                         }`}>
-                          <div className="font-medium text-sm mb-2">
-                            {qIndex + 1}. {answer.question}
+                          <div className="font-semibold text-sm mb-3 text-gray-800">
+                            <span className="inline-flex items-center justify-center w-6 h-6 bg-gray-200 rounded-full text-xs font-bold mr-2">
+                              {qIndex + 1}
+                            </span>
+                            {answer.question}
                           </div>
-                          <div className="text-sm space-y-1">
-                            <div className={`${answer.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
-                              <strong>Tu respuesta:</strong> {answer.selectedAnswer} 
-                              {answer.isCorrect ? ' ✓' : ' ✗'}
+                          
+                          <div className="space-y-2">
+                            <div className={`flex items-center gap-2 p-2 rounded ${
+                              answer.isCorrect ? 'bg-green-100' : 'bg-red-100'
+                            }`}>
+                              <span className={`text-lg ${answer.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                                {answer.isCorrect ? '✅' : '❌'}
+                              </span>
+                              <div className="flex-1">
+                                <span className="font-medium text-sm text-gray-700">Tu respuesta:</span>
+                                <span className={`ml-2 font-semibold ${
+                                  answer.isCorrect ? 'text-green-700' : 'text-red-700'
+                                }`}>
+                                  {answer.selectedAnswer}
+                                </span>
+                              </div>
                             </div>
+                            
                             {!answer.isCorrect && (
-                              <div className="text-green-700">
-                                <strong>Respuesta correcta:</strong> {answer.correctAnswer}
+                              <div className="flex items-center gap-2 p-2 bg-green-100 rounded">
+                                <span className="text-lg text-green-600">✅</span>
+                                <div className="flex-1">
+                                  <span className="font-medium text-sm text-gray-700">Respuesta correcta:</span>
+                                  <span className="ml-2 font-semibold text-green-700">
+                                    {answer.correctAnswer}
+                                  </span>
+                                </div>
                               </div>
                             )}
+                            
                             {answer.explanation && (
-                              <div className="text-blue-700 mt-2 p-2 bg-blue-100 rounded text-xs">
-                                <strong>Explicación:</strong> {answer.explanation}
+                              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div className="flex items-start gap-2">
+                                  <span className="text-blue-600 text-sm">💡</span>
+                                  <div className="flex-1">
+                                    <div className="font-semibold text-sm text-blue-800 mb-1">Explicación:</div>
+                                    <div className="text-sm text-blue-700 leading-relaxed">
+                                      {answer.explanation}
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+                  
+                  {/* Show detailed results for hangman */}
+                  {result.type === 'hangman' && result.hangmanData && (
+                    <div className="space-y-4 mt-4 border-t pt-4">
+                      <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                        🎯 Detalles del Juego del Ahorcado
+                      </h4>
+                      <div className="p-4 rounded-lg border-l-4 shadow-sm bg-blue-50 border border-blue-200 border-l-blue-500">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 p-2 bg-white rounded">
+                            <span className="text-lg">🎯</span>
+                            <div className="flex-1">
+                              <span className="font-medium text-sm text-gray-700">Palabra:</span>
+                              <span className="ml-2 font-bold text-blue-700 text-lg">
+                                {result.hangmanData.word}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {result.hangmanData.hint && (
+                            <div className="flex items-start gap-2 p-2 bg-white rounded">
+                              <span className="text-lg">💡</span>
+                              <div className="flex-1">
+                                <span className="font-medium text-sm text-gray-700">Pista:</span>
+                                <span className="ml-2 text-gray-600">
+                                  {result.hangmanData.hint}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2 p-2 bg-white rounded">
+                            <span className={`text-lg ${result.score > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {result.score > 0 ? '✅' : '❌'}
+                            </span>
+                            <div className="flex-1">
+                              <span className="font-medium text-sm text-gray-700">Resultado:</span>
+                              <span className={`ml-2 font-semibold ${result.score > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                {result.score > 0 ? '¡Ganaste!' : 'Perdiste'}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 p-2 bg-white rounded">
+                            <span className="text-lg">🔤</span>
+                            <div className="flex-1">
+                              <span className="font-medium text-sm text-gray-700">Letras intentadas:</span>
+                              <div className="ml-2 mt-1 flex flex-wrap gap-1">
+                                {result.hangmanData.guessedLetters.map((letter, idx) => (
+                                  <span key={idx} className={`px-2 py-1 rounded text-xs font-medium ${
+                                    result.hangmanData!.word.toUpperCase().includes(letter) 
+                                      ? 'bg-green-100 text-green-700 border border-green-300'
+                                      : 'bg-red-100 text-red-700 border border-red-300'
+                                  }`}>
+                                    {letter}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 p-2 bg-white rounded">
+                            <span className="text-lg">⚠️</span>
+                            <div className="flex-1">
+                              <span className="font-medium text-sm text-gray-700">Errores cometidos:</span>
+                              <span className={`ml-2 font-semibold ${
+                                result.hangmanData.wrongGuesses <= 2 ? 'text-green-700' : 
+                                result.hangmanData.wrongGuesses <= 4 ? 'text-yellow-700' : 'text-red-700'
+                              }`}>
+                                {result.hangmanData.wrongGuesses} de 6
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -465,8 +578,8 @@ const SessionRoom = () => {
               word={currentExercise.word || ''}
               hint={currentExercise.hint || 'Sin pista disponible'}
               studentMode={true}
-              onGameComplete={(won, attempts) => {
-                handleExerciseComplete(currentExerciseIndex, won, won ? 1 : 0, 1);
+              onGameComplete={(won, attempts, gameData) => {
+                handleExerciseComplete(currentExerciseIndex, won, won ? 1 : 0, 1, undefined, gameData);
               }}
             />
           );
@@ -489,8 +602,8 @@ const SessionRoom = () => {
               key={`fill-${currentExerciseIndex}-${currentExercise.id}`}
               questions={currentExercise.questions || []}
               studentMode={true}
-              onGameComplete={(score, total) => {
-                handleExerciseComplete(currentExerciseIndex, score > 0, score, total);
+              onGameComplete={(score, total, answers) => {
+                handleExerciseComplete(currentExerciseIndex, score > 0, score, total, answers);
               }}
             />
           );

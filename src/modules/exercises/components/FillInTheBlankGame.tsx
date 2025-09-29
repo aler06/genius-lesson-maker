@@ -61,6 +61,7 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
     if (!selectedAnswer) return;
 
     const isCorrect = selectedAnswer === currentQuestion.correct_answer;
+    const newScore = score + (isCorrect ? 1 : 0);
     
     // Save user answer
     const answerData = {
@@ -75,13 +76,14 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
     setUserAnswers(updatedAnswers);
     
     if (isCorrect) {
-      setScore(prev => prev + 1);
+      setScore(newScore);
     }
 
     if (studentMode) {
       // In student mode, don't show feedback during exercise
       if (isLastQuestion) {
-        onGameComplete?.(score + (isCorrect ? 1 : 0), questions.length, updatedAnswers);
+        // Pass the final score and all answers for the report
+        onGameComplete?.(newScore, questions.length, updatedAnswers);
       } else {
         // Small delay to show selection, then advance without feedback
         setTimeout(() => {
@@ -96,7 +98,7 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
       setTimeout(() => {
         if (isLastQuestion) {
           setGameCompleted(true);
-          onGameComplete?.(score + (isCorrect ? 1 : 0), questions.length, updatedAnswers);
+          onGameComplete?.(newScore, questions.length, updatedAnswers);
         } else {
           setCurrentQuestionIndex(prev => prev + 1);
           setSelectedAnswer('');
