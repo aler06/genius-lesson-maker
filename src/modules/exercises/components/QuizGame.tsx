@@ -43,7 +43,6 @@ const QuizGame: React.FC<QuizGameProps> = ({ questions, onGameComplete, studentM
 
     const isCorrect = selectedAnswer === currentQuestion.correct_answer;
     
-    // Save user answer
     const answerData = {
       question: currentQuestion.question,
       selectedAnswer: selectedAnswer,
@@ -51,28 +50,27 @@ const QuizGame: React.FC<QuizGameProps> = ({ questions, onGameComplete, studentM
       explanation: currentQuestion.explanation,
       isCorrect: isCorrect
     };
-    
-    setUserAnswers(prev => [...prev, answerData]);
+    const updatedAnswers = [...userAnswers, answerData];
+    setUserAnswers(updatedAnswers);
     
     if (isCorrect) {
       setScore(prev => prev + 1);
     }
 
-    // In student mode, don't show result, just advance
     if (studentMode) {
+      // In student mode, don't show feedback during exercise
       if (isLastQuestion) {
-        // Don't show completion screen, just call onGameComplete immediately
-        onGameComplete?.(score + (isCorrect ? 1 : 0), questions.length, [...userAnswers, answerData]);
+        onGameComplete?.(score + (isCorrect ? 1 : 0), questions.length, updatedAnswers);
       } else {
-        // Small delay to show selection, then advance
+        // Small delay to show selection, then advance without feedback
         setTimeout(() => {
           setCurrentQuestionIndex(prev => prev + 1);
           setSelectedAnswer('');
           setShowResult(false);
-        }, 500);
+        }, 300);
       }
     } else {
-      // Teacher mode - show result
+      // Teacher mode - show result for each question
       setShowResult(true);
       setTimeout(() => {
         if (isLastQuestion) {
@@ -83,13 +81,12 @@ const QuizGame: React.FC<QuizGameProps> = ({ questions, onGameComplete, studentM
           setSelectedAnswer('');
           setShowResult(false);
         }
-      }, 2000);
+      }, 2500);
     }
   };
 
   const resetGame = () => {
     setCurrentQuestionIndex(0);
-    setSelectedAnswer('');
     setShowResult(false);
     setScore(0);
     setGameCompleted(false);
@@ -147,7 +144,7 @@ const QuizGame: React.FC<QuizGameProps> = ({ questions, onGameComplete, studentM
             const isWrong = showResult && isSelected && !isCorrect;
             const showCorrect = showResult && isCorrect;
             
-            // In student mode, don't show correct/incorrect colors
+            // In student mode, don't show feedback during exercise
             const shouldShowResult = showResult && !studentMode;
 
             return (

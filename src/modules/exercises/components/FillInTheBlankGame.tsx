@@ -14,7 +14,7 @@ interface FillInTheBlankQuestion {
 
 interface FillInTheBlankGameProps {
   questions: FillInTheBlankQuestion[];
-  onGameComplete?: (score: number, totalQuestions: number) => void;
+  onGameComplete?: (score: number, totalQuestions: number, answers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>) => void;
   studentMode?: boolean;
 }
 
@@ -28,6 +28,7 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [gameCompleted, setGameCompleted] = useState(false);
+  const [userAnswers, setUserAnswers] = useState<Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>>([]);
 
   // Debug: Log questions data
   useEffect(() => {
@@ -61,28 +62,41 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
 
     const isCorrect = selectedAnswer === currentQuestion.correct_answer;
     
+    // Save user answer
+    const answerData = {
+      question: currentQuestion.sentence || currentQuestion.question || '',
+      selectedAnswer: selectedAnswer,
+      correctAnswer: currentQuestion.correct_answer,
+      explanation: currentQuestion.explanation,
+      isCorrect: isCorrect
+    };
+    
+    const updatedAnswers = [...userAnswers, answerData];
+    setUserAnswers(updatedAnswers);
+    
     if (isCorrect) {
       setScore(prev => prev + 1);
     }
 
-    // In student mode, advance immediately without showing result
     if (studentMode) {
+      // In student mode, don't show feedback during exercise
       if (isLastQuestion) {
-        onGameComplete?.(score + (isCorrect ? 1 : 0), questions.length);
+        onGameComplete?.(score + (isCorrect ? 1 : 0), questions.length, updatedAnswers);
       } else {
+        // Small delay to show selection, then advance without feedback
         setTimeout(() => {
           setCurrentQuestionIndex(prev => prev + 1);
           setSelectedAnswer('');
           setShowResult(false);
-        }, 500);
+        }, 300);
       }
     } else {
-      // Teacher mode - show result
+      // Teacher mode - show result for each question
       setShowResult(true);
       setTimeout(() => {
         if (isLastQuestion) {
           setGameCompleted(true);
-          onGameComplete?.(score + (isCorrect ? 1 : 0), questions.length);
+          onGameComplete?.(score + (isCorrect ? 1 : 0), questions.length, updatedAnswers);
         } else {
           setCurrentQuestionIndex(prev => prev + 1);
           setSelectedAnswer('');
@@ -98,6 +112,7 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
     setShowResult(false);
     setScore(0);
     setGameCompleted(false);
+    setUserAnswers([]);
   };
 
   const renderSentenceWithBlank = (sentence: string, selectedOption?: string) => {
@@ -191,14 +206,17 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
               const isCorrect = option === currentQuestion.correct_answer;
               const isWrong = showResult && isSelected && !isCorrect;
               const showCorrect = showResult && isCorrect;
+              
+              // In student mode, don't show feedback during exercise
+              const shouldShowResult = showResult && !studentMode;
 
               return (
                 <Button
                   key={index}
                   variant={isSelected ? "default" : "outline"}
                   className={`p-4 h-auto text-left justify-start ${
-                    showCorrect ? 'bg-green-100 border-green-500 text-green-800' :
-                    isWrong ? 'bg-red-100 border-red-500 text-red-800' :
+                    shouldShowResult && showCorrect ? 'bg-green-100 border-green-500 text-green-800' :
+                    shouldShowResult && isWrong ? 'bg-red-100 border-red-500 text-red-800' :
                     isSelected ? 'bg-primary text-primary-foreground' : ''
                   }`}
                   onClick={() => handleAnswerSelect(option)}
@@ -206,7 +224,7 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
                 >
                   <div className="flex items-center gap-2 w-full">
                     <span className="flex-1">{option}</span>
-                    {showResult && (
+                    {shouldShowResult && (
                       <>
                         {showCorrect && <CheckCircle className="h-4 w-4 text-green-600" />}
                         {isWrong && <XCircle className="h-4 w-4 text-red-600" />}
@@ -219,7 +237,7 @@ const FillInTheBlankGame: React.FC<FillInTheBlankGameProps> = ({
           </div>
         </div>
 
-        {showResult && currentQuestion.explanation && (
+        {showResult && currentQuestion.explanation && !studentMode && (
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
               <strong>Explicación:</strong> {currentQuestion.explanation}

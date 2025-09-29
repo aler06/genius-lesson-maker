@@ -312,8 +312,8 @@ const SessionRoom = () => {
                     </div>
                   </div>
                   
-                  {/* Show detailed quiz answers */}
-                  {result.type === 'quiz' && result.answers && (
+                  {/* Show detailed answers for quiz and fill_in_the_blank */}
+                  {(result.type === 'quiz' || result.type === 'fill_in_the_blank') && result.answers && (
                     <div className="space-y-3 mt-4 border-t pt-4">
                       <h4 className="font-medium text-sm text-muted-foreground">Revisión de Respuestas:</h4>
                       {result.answers.map((answer, qIndex) => (

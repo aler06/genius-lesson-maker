@@ -193,11 +193,11 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label>Pregunta</Label>
+              <Label>{exercise.game === 'fill_in_the_blank' ? 'Oración' : 'Pregunta'}</Label>
               <Textarea
-                value={question.question || ''}
-                onChange={(e) => handleQuestionChange(questionIndex, 'question', e.target.value)}
-                placeholder="Escribe tu pregunta aquí..."
+                value={question.sentence || question.question || ''}
+                onChange={(e) => handleQuestionChange(questionIndex, exercise.game === 'fill_in_the_blank' ? 'sentence' : 'question', e.target.value)}
+                placeholder={exercise.game === 'fill_in_the_blank' ? 'Escribe la oración con ______ para el espacio en blanco...' : 'Escribe tu pregunta aquí...'}
                 rows={2}
               />
             </div>
@@ -287,9 +287,16 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
     </Card>
   );
 
-  const renderFillBlankEditor = () => (
-    <div className="space-y-6">
-      {editedExercise.questions?.map((question, questionIndex) => (
+  const renderFillBlankEditor = () => {
+    // Debug: Log question data for fill in the blank
+    console.log('Fill in the blank editor - Questions:', editedExercise.questions);
+    if (editedExercise.questions && editedExercise.questions.length > 0) {
+      console.log('First question:', editedExercise.questions[0]);
+    }
+    
+    return (
+      <div className="space-y-6">
+        {editedExercise.questions?.map((question, questionIndex) => (
         <Card key={questionIndex} className="border-l-4 border-l-orange-500">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -313,9 +320,9 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
             <div>
               <Label>Oración con espacio en blanco</Label>
               <Textarea
-                value={question.question || ''}
-                onChange={(e) => handleQuestionChange(questionIndex, 'question', e.target.value)}
-                placeholder="Escribe la oración con _____ para el espacio en blanco..."
+                value={question.sentence || question.question || ''}
+                onChange={(e) => handleQuestionChange(questionIndex, 'sentence', e.target.value)}
+                placeholder="Escribe la oración con ______ para el espacio en blanco..."
                 rows={2}
               />
             </div>
@@ -340,12 +347,13 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         </Card>
       ))}
 
-      <Button onClick={addQuestion} variant="outline" className="w-full">
-        <Plus className="h-4 w-4 mr-2" />
-        Agregar Oración
-      </Button>
-    </div>
-  );
+        <Button onClick={addQuestion} variant="outline" className="w-full">
+          <Plus className="h-4 w-4 mr-2" />
+          Agregar Oración
+        </Button>
+      </div>
+    );
+  };
 
   const renderFlipCardsEditor = () => (
     <div className="space-y-6">
