@@ -180,6 +180,7 @@ const Dashboard = () => {
 
         {/* Tabs for Exercises and Sessions */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          {/* Tabs List */}
           <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
             <TabsTrigger value="exercises" className="flex items-center gap-2">
               <Brain className="h-4 w-4" />
@@ -190,7 +191,7 @@ const Dashboard = () => {
               Sesiones
             </TabsTrigger>
           </TabsList>
-
+          
           {/* Exercises Tab */}
           <TabsContent value="exercises" className="mt-6">
             {!exercises || exercises.length === 0 ? (

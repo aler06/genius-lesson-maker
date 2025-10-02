@@ -691,7 +691,7 @@ const SessionRoom = () => {
       <NavHeader />
       <main className="container mx-auto px-4 py-8">
 
-        {/* Connection Status */}
+        {/* Connection Status*/}
         <div className="mb-4">
           <Alert className={`${connectionStatus === 'connected' ? 'border-green-200 bg-green-50' : 
             connectionStatus === 'connecting' ? 'border-yellow-200 bg-yellow-50' : 
@@ -712,7 +712,7 @@ const SessionRoom = () => {
             </div>
           </Alert>
         </div>
-
+    
         {/* Session Header */}
         <Card className="mb-6 shadow-lg">
           <CardContent className="p-6">
