@@ -77,8 +77,10 @@ export const detectSubject = (exercise: ExerciseResponse): Subject => {
     exercise.instructions || '',
     exercise.hint || '',
     exercise.word || '',
+    exercise.explanation || '',
     ...(exercise.questions?.map(q => `${q.question} ${q.options?.join(' ') || ''} ${q.explanation || ''}`) || []),
-    ...(exercise.cards?.map(c => `${c.front} ${c.back}`) || [])
+    ...(exercise.cards?.map(c => `${c.front} ${c.back}`) || []),
+    ...(exercise.elements?.map(e => e.texto || '') || [])
   ].join(' ').toLowerCase();
 
   // Contar coincidencias para cada categoría

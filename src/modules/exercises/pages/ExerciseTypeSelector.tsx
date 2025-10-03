@@ -4,10 +4,11 @@ import { NavHeader } from "@/components/ui/nav-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, BookOpen, HelpCircle, RotateCcw, Gamepad2, PuzzleIcon, FlipHorizontal, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, BookOpen, HelpCircle, RotateCcw, Gamepad2, PuzzleIcon, FlipHorizontal, Loader2, Move } from "lucide-react";
 import { exerciseService } from "../services/exercise.service";
 import { Game } from "../enum/game.enum";
 import { useToast } from "@/hooks/use-toast";
+
 
 const ExerciseTypeSelector = () => {
   const navigate = useNavigate();
@@ -74,6 +75,14 @@ const ExerciseTypeSelector = () => {
       icon: PuzzleIcon,
       color: 'bg-orange-500',
       points: 12
+    },
+    {
+      id: Game.DRAG_AND_DROP,
+      name: 'Arrastrar y Soltar',
+      description: 'Elementos para ordenar arrastrando y soltando en secuencia correcta',
+      icon: Move,
+      color: 'bg-indigo-500',
+      points: 15
     }
   ];
 
@@ -151,11 +160,11 @@ const ExerciseTypeSelector = () => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/create-exercise')}
               className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Volver al Dashboard
+              Retroceder
             </Button>
           </div>
 
@@ -228,10 +237,10 @@ const ExerciseTypeSelector = () => {
           <div className="flex justify-center gap-4">
             <Button
               variant="outline"
-              onClick={() => navigate('/')}
+              onClick={() => navigate('/create-exercise')}
               className="px-6"
             >
-              Volver al Inicio
+              Volver al atras
             </Button>
             
             <Button

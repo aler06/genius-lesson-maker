@@ -23,6 +23,8 @@ const getGameIcon = (game: Game) => {
       return '✏️';
     case Game.FLIP_CARDS:
       return '🔄';
+    case Game.DRAG_AND_DROP:
+      return '🔀';
     default:
       return '📝';
   }
@@ -38,6 +40,8 @@ const getGameName = (game: Game) => {
       return 'Rellenar espacios';
     case Game.FLIP_CARDS:
       return 'Tarjetas giratorias';
+    case Game.DRAG_AND_DROP:
+      return 'Arrastrar y soltar';
     default:
       return 'Ejercicio';
   }
@@ -53,6 +57,8 @@ const getGameColor = (game: Game) => {
       return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300';
     case Game.FLIP_CARDS:
       return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
+    case Game.DRAG_AND_DROP:
+      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
   }

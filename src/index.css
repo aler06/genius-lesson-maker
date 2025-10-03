@@ -145,7 +145,6 @@ All colors MUST be HSL.
   .bg-purple-100:hover,
   .bg-orange-100:hover,
   .bg-gray-100:hover {
-    background-color: inherit !important;
     transform: none !important;
     box-shadow: inherit !important;
   }

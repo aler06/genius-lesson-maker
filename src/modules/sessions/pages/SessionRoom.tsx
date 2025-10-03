@@ -13,6 +13,7 @@ import HangmanGame from '@/modules/exercises/components/HangmanGame';
 import QuizGame from '@/modules/exercises/components/QuizGame';
 import FillInTheBlankGame from '@/modules/exercises/components/FillInTheBlankGame';
 import FlipCardsGame from '@/modules/exercises/components/FlipCardsGame';
+import DragAndDropGame from '@/modules/exercises/components/DragAndDropGame';
 import { 
   Users, 
   Wifi, 
@@ -61,7 +62,7 @@ const SessionRoom = () => {
   const [participantCount, setParticipantCount] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exerciseCompleted, setExerciseCompleted] = useState<boolean[]>([]);
-  const [exerciseResults, setExerciseResults] = useState<Array<{score: number, total: number, type: string, answers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}}>>([]);
+  const [exerciseResults, setExerciseResults] = useState<Array<{score: number, total: number, type: string, answers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}}>>([]);
   const [allExercisesCompleted, setAllExercisesCompleted] = useState(false);
   const [answers, setAnswers] = useState<Record<string, AnswerResult>>({});
   const [isJoined, setIsJoined] = useState(false);
@@ -219,7 +220,7 @@ const SessionRoom = () => {
   const totalExercises = exercises.length;
   const completedExercises = exerciseCompleted.filter(Boolean).length;
 
-  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}) => {
+  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}) => {
     // Mark exercise as completed
     setExerciseCompleted(prev => {
       const newCompleted = [...prev];
@@ -235,7 +236,8 @@ const SessionRoom = () => {
         total: total || 1,
         type: currentExercise?.game || 'unknown',
         answers: quizAnswers, // Store quiz answers for final review
-        hangmanData: hangmanData // Store hangman game data
+        hangmanData: hangmanData, // Store hangman game data
+        dragDropData: dragDropData // Store drag and drop game data
       };
       return newResults;
     });
@@ -456,6 +458,90 @@ const SessionRoom = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Show detailed results for drag and drop */}
+                  {result.type === 'drag_and_drop' && result.dragDropData && (
+                    <div className="space-y-4 mt-4 border-t pt-4">
+                      <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                        🔄 Detalles del Arrastrar y Soltar
+                      </h4>
+                      <div className="p-4 rounded-lg border-l-4 shadow-sm bg-indigo-50 border border-indigo-200 border-l-indigo-500">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2 p-2 bg-white rounded">
+                            <span className={`text-lg ${result.score > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {result.score > 0 ? '✅' : '❌'}
+                            </span>
+                            <div className="flex-1">
+                              <span className="font-medium text-sm text-gray-700">Resultado:</span>
+                              <span className={`ml-2 font-semibold ${result.score > 0 ? 'text-green-700' : 'text-red-700'}`}>
+                                {result.score > 0 ? '¡Orden Correcto!' : 'Orden Incorrecto'}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="font-medium text-sm text-gray-700">Tu orden:</div>
+                            <div className="space-y-1">
+                              {result.dragDropData.userOrder.map((elementId, index) => {
+                                const element = result.dragDropData!.elements.find(el => el.id === elementId);
+                                const isCorrect = result.dragDropData!.correctOrder[index] === elementId;
+                                return (
+                                  <div key={index} className={`flex items-center gap-3 p-2 rounded ${
+                                    isCorrect ? 'bg-green-100' : 'bg-red-100'
+                                  }`}>
+                                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                                      isCorrect ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+                                    }`}>
+                                      {index + 1}
+                                    </span>
+                                    <span className={`text-sm ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                                      {element?.texto || 'Elemento no encontrado'}
+                                    </span>
+                                    <span className={`text-lg ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                                      {isCorrect ? '✅' : '❌'}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="font-medium text-sm text-gray-700">Orden correcto:</div>
+                            <div className="space-y-1">
+                              {result.dragDropData.correctOrder.map((elementId, index) => {
+                                const element = result.dragDropData!.elements.find(el => el.id === elementId);
+                                return (
+                                  <div key={index} className="flex items-center gap-3 p-2 bg-green-50 rounded border border-green-200">
+                                    <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                      {index + 1}
+                                    </span>
+                                    <span className="text-sm text-green-700">
+                                      {element?.texto || 'Elemento no encontrado'}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          
+                          {result.dragDropData.explanation && (
+                            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <span className="text-blue-600 text-sm">💡</span>
+                                <div className="flex-1">
+                                  <div className="font-semibold text-sm text-blue-800 mb-1">Explicación:</div>
+                                  <div className="text-sm text-blue-700 leading-relaxed">
+                                    {result.dragDropData.explanation}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -617,6 +703,27 @@ const SessionRoom = () => {
               studentMode={true}
               onGameComplete={(viewed, total) => {
                 handleExerciseComplete(currentExerciseIndex, viewed === total, viewed, total);
+              }}
+            />
+          );
+
+        case 'drag_and_drop':
+          return (
+            <DragAndDropGame
+              key={`dragdrop-${currentExerciseIndex}-${currentExercise.id}`}
+              elements={currentExercise.elements || []}
+              correctOrder={currentExercise.correctOrder || []}
+              instructions={currentExercise.instructions || 'Arrastra y ordena los elementos en el orden correcto.'}
+              explanation={currentExercise.explanation}
+              studentMode={true}
+              onGameComplete={(score, totalElements, answers) => {
+                const dragDropGameData = {
+                  elements: currentExercise.elements || [],
+                  userOrder: answers?.map(a => a.userPosition) || [],
+                  correctOrder: currentExercise.correctOrder || [],
+                  explanation: currentExercise.explanation
+                };
+                handleExerciseComplete(currentExerciseIndex, score > 0, score, totalElements, undefined, undefined, dragDropGameData);
               }}
             />
           );

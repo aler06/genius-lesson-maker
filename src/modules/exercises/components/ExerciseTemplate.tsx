@@ -4,8 +4,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExerciseResponse } from '../model/exercise-response.model';
 import { Game } from '../enum/game.enum';
-import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, CheckCircle2, XCircle, Pencil, Trash2 } from 'lucide-react';
+import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, CheckCircle2, XCircle, Pencil, Trash2, Move } from 'lucide-react';
 import HangmanGame from './HangmanGame';
+import DragAndDropGame from './DragAndDropGame';
 import { useNavigate } from 'react-router-dom';
 
 interface ExerciseTemplateProps {
@@ -46,6 +47,8 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
         return <PuzzleIcon className="h-5 w-5" />;
       case Game.FLIP_CARDS:
         return <FlipHorizontal className="h-5 w-5" />;
+      case Game.DRAG_AND_DROP:
+        return <Move className="h-5 w-5" />;
       default:
         return <HelpCircle className="h-5 w-5" />;
     }
@@ -61,6 +64,8 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
         return 'Rellenar Espacios';
       case Game.FLIP_CARDS:
         return 'Tarjetas Giratorias';
+      case Game.DRAG_AND_DROP:
+        return 'Arrastrar y Soltar';
       default:
         return 'Ejercicio';
     }
@@ -267,6 +272,30 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
     </div>
   );
 
+  const renderDragAndDropTemplate = () => {
+    if (!exercise.elements || !exercise.correctOrder) {
+      return (
+        <Card className="border-l-4 border-l-red-500">
+          <CardContent className="p-6 text-center">
+            <p className="text-red-600">Error: No se han configurado elementos o el orden correcto para el ejercicio de arrastrar y soltar.</p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <DragAndDropGame 
+        elements={exercise.elements}
+        correctOrder={exercise.correctOrder}
+        instructions={exercise.instructions || 'Arrastra y ordena los elementos en el orden correcto.'}
+        explanation={exercise.explanation}
+        onGameComplete={(isCorrect, userOrder, score) => {
+          console.log(`Drag and Drop completed: ${isCorrect ? 'Correct' : 'Incorrect'} order, Score: ${score}`);
+        }}
+      />
+    );
+  };
+
   const renderExerciseContent = () => {
     switch (exercise.game) {
       case Game.QUIZ:
@@ -277,6 +306,8 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
         return renderFillBlankTemplate();
       case Game.FLIP_CARDS:
         return renderFlipCardsTemplate();
+      case Game.DRAG_AND_DROP:
+        return renderDragAndDropTemplate();
       default:
         return (
           <Card>

@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ExerciseResponse } from '../model/exercise-response.model';
 import { Game } from '../enum/game.enum';
-import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, Save, Plus, Trash2, CheckCircle2 } from 'lucide-react';
+import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, Save, Plus, Trash2, CheckCircle2, Move, ArrowUp, ArrowDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ExerciseEditorProps {
@@ -30,6 +30,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return <PuzzleIcon className="h-5 w-5" />;
       case Game.FLIP_CARDS:
         return <FlipHorizontal className="h-5 w-5" />;
+      case Game.DRAG_AND_DROP:
+        return <Move className="h-5 w-5" />;
       default:
         return <HelpCircle className="h-5 w-5" />;
     }
@@ -45,6 +47,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return 'Rellenar Espacios';
       case Game.FLIP_CARDS:
         return 'Tarjetas Giratorias';
+      case Game.DRAG_AND_DROP:
+        return 'Arrastrar y Soltar';
       default:
         return 'Ejercicio';
     }
@@ -127,6 +131,63 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
     setEditedExercise({ ...editedExercise, hint: value });
   };
 
+  // Drag and Drop handlers
+  const handleElementChange = (elementIndex: number, field: string, value: string | number) => {
+    const updatedElements = [...(editedExercise.elements || [])];
+    updatedElements[elementIndex] = {
+      ...updatedElements[elementIndex],
+      [field]: value
+    };
+    setEditedExercise({ ...editedExercise, elements: updatedElements });
+  };
+
+  const addElement = () => {
+    const newElement = {
+      id: (editedExercise.elements?.length || 0) + 1,
+      texto: ''
+    };
+    setEditedExercise({
+      ...editedExercise,
+      elements: [...(editedExercise.elements || []), newElement]
+    });
+  };
+
+  const removeElement = (elementIndex: number) => {
+    const updatedElements = editedExercise.elements?.filter((_, index) => index !== elementIndex) || [];
+    // Reorder IDs
+    const reorderedElements = updatedElements.map((element, index) => ({
+      ...element,
+      id: index + 1
+    }));
+    setEditedExercise({ ...editedExercise, elements: reorderedElements });
+  };
+
+  const moveElement = (elementIndex: number, direction: 'up' | 'down') => {
+    const elements = [...(editedExercise.elements || [])];
+    const newIndex = direction === 'up' ? elementIndex - 1 : elementIndex + 1;
+    
+    if (newIndex >= 0 && newIndex < elements.length) {
+      // Swap elements
+      [elements[elementIndex], elements[newIndex]] = [elements[newIndex], elements[elementIndex]];
+      
+      // Update IDs to match new positions
+      const reorderedElements = elements.map((element, index) => ({
+        ...element,
+        id: index + 1
+      }));
+      
+      setEditedExercise({ ...editedExercise, elements: reorderedElements });
+    }
+  };
+
+  const handleInstructionsChange = (value: string) => {
+    setEditedExercise({ ...editedExercise, instructions: value });
+  };
+
+  const handleExplanationChange = (value: string) => {
+    setEditedExercise({ ...editedExercise, explanation: value });
+  };
+
   const handleSave = () => {
     // Validations
     if (editedExercise.game === Game.QUIZ) {
@@ -160,6 +221,26 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         toast({
           title: "Error de validación",
           description: "Todas las tarjetas deben tener contenido en ambos lados.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    if (editedExercise.game === Game.DRAG_AND_DROP) {
+      const hasEmptyElements = editedExercise.elements?.some(e => !e.texto?.trim());
+      if (hasEmptyElements || !editedExercise.elements?.length) {
+        toast({
+          title: "Error de validación",
+          description: "Todos los elementos deben tener texto y debe haber al menos un elemento.",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (!editedExercise.instructions?.trim()) {
+        toast({
+          title: "Error de validación",
+          description: "Las instrucciones son obligatorias para ejercicios de arrastrar y soltar.",
           variant: "destructive"
         });
         return;
@@ -407,6 +488,135 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
     </div>
   );
 
+  const renderDragAndDropEditor = () => (
+    <div className="space-y-6">
+      {/* Instructions */}
+      <Card className="border-l-4 border-l-indigo-500">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Move className="h-5 w-5 text-indigo-600" />
+            Instrucciones del Ejercicio
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div>
+            <Label>Instrucciones</Label>
+            <Textarea
+              value={editedExercise.instructions || ''}
+              onChange={(e) => handleInstructionsChange(e.target.value)}
+              placeholder="Describe qué deben hacer los estudiantes (ej: Arrastra y ordena los pasos...)"
+              rows={3}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Elements */}
+      {editedExercise.elements?.map((element, elementIndex) => (
+        <Card key={elementIndex} className="border-l-4 border-l-indigo-500">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <span className="bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                  {element.id}
+                </span>
+                Elemento {element.id}
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => moveElement(elementIndex, 'up')}
+                  disabled={elementIndex === 0}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  <ArrowUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => moveElement(elementIndex, 'down')}
+                  disabled={elementIndex === (editedExercise.elements?.length || 0) - 1}
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  <ArrowDown className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => removeElement(elementIndex)}
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <Label>Texto del elemento</Label>
+              <Textarea
+                value={element.texto || ''}
+                onChange={(e) => handleElementChange(elementIndex, 'texto', e.target.value)}
+                placeholder="Describe este paso o elemento..."
+                rows={2}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      <Button onClick={addElement} variant="outline" className="w-full">
+        <Plus className="h-4 w-4 mr-2" />
+        Agregar Elemento
+      </Button>
+
+      {/* Explanation */}
+      <Card className="border-l-4 border-l-indigo-500">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <span className="bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+              ?
+            </span>
+            Explicación (Opcional)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div>
+            <Label>Explicación del orden correcto</Label>
+            <Textarea
+              value={editedExercise.explanation || ''}
+              onChange={(e) => handleExplanationChange(e.target.value)}
+              placeholder="Explica por qué este es el orden correcto..."
+              rows={3}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Order Preview */}
+      {editedExercise.elements && editedExercise.elements.length > 0 && (
+        <Card className="bg-indigo-50 border-indigo-200">
+          <CardHeader>
+            <CardTitle className="text-lg text-indigo-800">Orden Correcto (Actual)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {editedExercise.elements.map((element, index) => (
+                <div key={element.id} className="flex items-center gap-3 p-2 bg-white rounded border">
+                  <span className="bg-indigo-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm">{element.texto}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+
   const renderEditor = () => {
     switch (editedExercise.game) {
       case Game.QUIZ:
@@ -417,6 +627,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return renderFillBlankEditor();
       case Game.FLIP_CARDS:
         return renderFlipCardsEditor();
+      case Game.DRAG_AND_DROP:
+        return renderDragAndDropEditor();
       default:
         return <div>Tipo de ejercicio no soportado para edición</div>;
     }

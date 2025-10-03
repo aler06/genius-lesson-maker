@@ -10,6 +10,11 @@ export interface QuestionUpdateModel {
     front: string;
     back: string;
   }
+
+  export interface DragDropElementUpdateModel {
+    id: number;
+    texto: string;
+  }
   
   export interface ExerciseUpdateRequestModel {
     exerciseId: string;
@@ -22,4 +27,7 @@ export interface QuestionUpdateModel {
     targetAudience?: string;
     cards?: CardUpdateModel[];
     instructions?: string;
+    elements?: DragDropElementUpdateModel[];
+    correctOrder?: number[];
+    explanation?: string;
   }
