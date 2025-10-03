@@ -14,6 +14,7 @@ import QuizGame from '@/modules/exercises/components/QuizGame';
 import FillInTheBlankGame from '@/modules/exercises/components/FillInTheBlankGame';
 import FlipCardsGame from '@/modules/exercises/components/FlipCardsGame';
 import DragAndDropGame from '@/modules/exercises/components/DragAndDropGame';
+import TrueFalseGame from '@/modules/exercises/components/TrueFalseGame';
 import { 
   Users, 
   Wifi, 
@@ -62,7 +63,7 @@ const SessionRoom = () => {
   const [participantCount, setParticipantCount] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exerciseCompleted, setExerciseCompleted] = useState<boolean[]>([]);
-  const [exerciseResults, setExerciseResults] = useState<Array<{score: number, total: number, type: string, answers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}}>>([]);
+  const [exerciseResults, setExerciseResults] = useState<Array<{score: number, total: number, type: string, answers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>}>>([]);
   const [allExercisesCompleted, setAllExercisesCompleted] = useState(false);
   const [answers, setAnswers] = useState<Record<string, AnswerResult>>({});
   const [isJoined, setIsJoined] = useState(false);
@@ -220,7 +221,7 @@ const SessionRoom = () => {
   const totalExercises = exercises.length;
   const completedExercises = exerciseCompleted.filter(Boolean).length;
 
-  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}) => {
+  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>) => {
     // Mark exercise as completed
     setExerciseCompleted(prev => {
       const newCompleted = [...prev];
@@ -237,7 +238,8 @@ const SessionRoom = () => {
         type: currentExercise?.game || 'unknown',
         answers: quizAnswers, // Store quiz answers for final review
         hangmanData: hangmanData, // Store hangman game data
-        dragDropData: dragDropData // Store drag and drop game data
+        dragDropData: dragDropData, // Store drag and drop game data
+        trueFalseData: trueFalseData // Store true or false game data
       };
       return newResults;
     });
@@ -542,6 +544,96 @@ const SessionRoom = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Show detailed results for true or false */}
+                  {result.type === 'true_or_false' && result.trueFalseData && (
+                    <div className="space-y-4 mt-4 border-t pt-4">
+                      <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                        ✅ Detalles del Verdadero o Falso
+                      </h4>
+                      
+                      <div className="bg-white rounded-lg border border-gray-200 p-4">
+                        <div className="space-y-4">
+                          {result.trueFalseData.map((answer, answerIndex) => (
+                            <div key={answerIndex} className={`p-4 rounded-lg border-2 ${
+                              answer.isCorrect 
+                                ? 'bg-green-50 border-green-200' 
+                                : 'bg-red-50 border-red-200'
+                            }`}>
+                              <div className="space-y-3">
+                                <div className="flex items-start gap-3">
+                                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                                    answer.isCorrect 
+                                      ? 'bg-green-600 text-white' 
+                                      : 'bg-red-600 text-white'
+                                  }`}>
+                                    {answerIndex + 1}
+                                  </span>
+                                  <div className="flex-1">
+                                    <div className="font-medium text-sm text-gray-800 mb-2">
+                                      {answer.statement}
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                      <div>
+                                        <span className="font-medium text-gray-600">Tu respuesta:</span>
+                                        <div className={`mt-1 flex items-center gap-2 ${
+                                          answer.isCorrect ? 'text-green-700' : 'text-red-700'
+                                        }`}>
+                                          {answer.selectedAnswer ? (
+                                            <>
+                                              <CheckCircle className="h-4 w-4" />
+                                              Verdadero
+                                            </>
+                                          ) : (
+                                            <>
+                                              <XCircle className="h-4 w-4" />
+                                              Falso
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                      
+                                      <div>
+                                        <span className="font-medium text-gray-600">Respuesta correcta:</span>
+                                        <div className="mt-1 flex items-center gap-2 text-green-700">
+                                          {answer.correctAnswer ? (
+                                            <>
+                                              <CheckCircle className="h-4 w-4" />
+                                              Verdadero
+                                            </>
+                                          ) : (
+                                            <>
+                                              <XCircle className="h-4 w-4" />
+                                              Falso
+                                            </>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    {answer.explanation && (
+                                      <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                        <div className="flex items-start gap-2">
+                                          <span className="text-blue-600 text-sm">💡</span>
+                                          <div className="flex-1">
+                                            <div className="font-semibold text-sm text-blue-800 mb-1">Explicación:</div>
+                                            <div className="text-sm text-blue-700 leading-relaxed">
+                                              {answer.explanation}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -724,6 +816,18 @@ const SessionRoom = () => {
                   explanation: currentExercise.explanation
                 };
                 handleExerciseComplete(currentExerciseIndex, score > 0, score, totalElements, undefined, undefined, dragDropGameData);
+              }}
+            />
+          );
+
+        case 'true_or_false':
+          return (
+            <TrueFalseGame
+              key={`truefalse-${currentExerciseIndex}-${currentExercise.id}`}
+              trueFalseQuestions={currentExercise.trueFalseQuestions || []}
+              studentMode={true}
+              onGameComplete={(score, total, answers) => {
+                handleExerciseComplete(currentExerciseIndex, score > 0, score, total, undefined, undefined, undefined, answers);
               }}
             />
           );

@@ -11,7 +11,8 @@ import {
   RotateCcw, 
   Eye, 
   Trash2,
-  Move
+  Move,
+  CheckSquare
 } from 'lucide-react';
 
 interface ExerciseCardProps {
@@ -32,6 +33,8 @@ const getGameIcon = (game: Game) => {
       return <RotateCcw className="h-4 w-4" />;
     case Game.DRAG_AND_DROP:
       return <Move className="h-4 w-4" />;
+    case Game.TRUE_OR_FALSE:
+      return <CheckSquare className="h-4 w-4" />;
     default:
       return <Brain className="h-4 w-4" />;
   }
@@ -49,6 +52,8 @@ const getGameName = (game: Game) => {
       return 'Tarjetas giratorias';
     case Game.DRAG_AND_DROP:
       return 'Arrastrar y soltar';
+    case Game.TRUE_OR_FALSE:
+      return 'Verdadero o falso';
     default:
       return 'Ejercicio';
   }
@@ -66,6 +71,8 @@ const getGameColor = (game: Game) => {
       return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300';
     case Game.DRAG_AND_DROP:
       return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300';
+    case Game.TRUE_OR_FALSE:
+      return 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
   }
@@ -84,6 +91,7 @@ const ExerciseCard = ({ exercise, onView, onDelete }: ExerciseCardProps) => {
     if (exercise.questions?.length) return exercise.questions.length;
     if (exercise.cards?.length) return exercise.cards.length;
     if (exercise.elements?.length) return exercise.elements.length;
+    if (exercise.trueFalseQuestions?.length) return exercise.trueFalseQuestions.length;
     if (exercise.word) return 1;
     return 0;
   };

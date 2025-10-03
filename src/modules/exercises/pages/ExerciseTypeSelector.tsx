@@ -4,7 +4,7 @@ import { NavHeader } from "@/components/ui/nav-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, BookOpen, HelpCircle, RotateCcw, Gamepad2, PuzzleIcon, FlipHorizontal, Loader2, Move } from "lucide-react";
+import { ArrowLeft, Plus, BookOpen, HelpCircle, RotateCcw, Gamepad2, PuzzleIcon, FlipHorizontal, Loader2, Move, CheckSquare } from "lucide-react";
 import { exerciseService } from "../services/exercise.service";
 import { Game } from "../enum/game.enum";
 import { useToast } from "@/hooks/use-toast";
@@ -83,6 +83,14 @@ const ExerciseTypeSelector = () => {
       icon: Move,
       color: 'bg-indigo-500',
       points: 15
+    },
+    {
+      id: Game.TRUE_OR_FALSE,
+      name: 'Verdadero o Falso',
+      description: 'Declaraciones que los estudiantes deben evaluar como verdaderas o falsas',
+      icon: CheckSquare,
+      color: 'bg-teal-500',
+      points: 8
     }
   ];
 

@@ -15,6 +15,12 @@ export interface QuestionUpdateModel {
     id: number;
     texto: string;
   }
+
+  export interface TrueFalseQuestionUpdateModel {
+    statement: string;
+    correct_answer: boolean;
+    explanation: string;
+  }
   
   export interface ExerciseUpdateRequestModel {
     exerciseId: string;
@@ -30,4 +36,5 @@ export interface QuestionUpdateModel {
     elements?: DragDropElementUpdateModel[];
     correctOrder?: number[];
     explanation?: string;
+    trueFalseQuestions?: TrueFalseQuestionUpdateModel[];
   }

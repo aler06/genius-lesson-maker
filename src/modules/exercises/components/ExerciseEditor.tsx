@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ExerciseResponse } from '../model/exercise-response.model';
 import { Game } from '../enum/game.enum';
-import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, Save, Plus, Trash2, CheckCircle2, Move, ArrowUp, ArrowDown } from 'lucide-react';
+import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, Save, Plus, Trash2, CheckCircle2, Move, ArrowUp, ArrowDown, CheckSquare, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ExerciseEditorProps {
@@ -32,6 +32,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return <FlipHorizontal className="h-5 w-5" />;
       case Game.DRAG_AND_DROP:
         return <Move className="h-5 w-5" />;
+      case Game.TRUE_OR_FALSE:
+        return <CheckSquare className="h-5 w-5" />;
       default:
         return <HelpCircle className="h-5 w-5" />;
     }
@@ -49,6 +51,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return 'Tarjetas Giratorias';
       case Game.DRAG_AND_DROP:
         return 'Arrastrar y Soltar';
+      case Game.TRUE_OR_FALSE:
+        return 'Verdadero o Falso';
       default:
         return 'Ejercicio';
     }
@@ -188,6 +192,33 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
     setEditedExercise({ ...editedExercise, explanation: value });
   };
 
+  // True or False handlers
+  const handleTrueFalseQuestionChange = (questionIndex: number, field: string, value: string | boolean) => {
+    const updatedQuestions = [...(editedExercise.trueFalseQuestions || [])];
+    updatedQuestions[questionIndex] = {
+      ...updatedQuestions[questionIndex],
+      [field]: value
+    };
+    setEditedExercise({ ...editedExercise, trueFalseQuestions: updatedQuestions });
+  };
+
+  const addTrueFalseQuestion = () => {
+    const newQuestion = {
+      statement: '',
+      correct_answer: true,
+      explanation: ''
+    };
+    setEditedExercise({
+      ...editedExercise,
+      trueFalseQuestions: [...(editedExercise.trueFalseQuestions || []), newQuestion]
+    });
+  };
+
+  const removeTrueFalseQuestion = (questionIndex: number) => {
+    const updatedQuestions = editedExercise.trueFalseQuestions?.filter((_, index) => index !== questionIndex) || [];
+    setEditedExercise({ ...editedExercise, trueFalseQuestions: updatedQuestions });
+  };
+
   const handleSave = () => {
     // Validations
     if (editedExercise.game === Game.QUIZ) {
@@ -241,6 +272,18 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         toast({
           title: "Error de validación",
           description: "Las instrucciones son obligatorias para ejercicios de arrastrar y soltar.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    if (editedExercise.game === Game.TRUE_OR_FALSE) {
+      const hasEmptyStatements = editedExercise.trueFalseQuestions?.some(q => !q.statement?.trim());
+      if (hasEmptyStatements || !editedExercise.trueFalseQuestions?.length) {
+        toast({
+          title: "Error de validación",
+          description: "Todas las declaraciones deben tener texto y debe haber al menos una pregunta.",
           variant: "destructive"
         });
         return;
@@ -617,6 +660,83 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
     </div>
   );
 
+  const renderTrueFalseEditor = () => (
+    <div className="space-y-6">
+      {editedExercise.trueFalseQuestions?.map((question, questionIndex) => (
+        <Card key={questionIndex} className="border-l-4 border-l-teal-500">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <span className="bg-teal-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                  {questionIndex + 1}
+                </span>
+                Declaración {questionIndex + 1}
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => removeTrueFalseQuestion(questionIndex)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Declaración</Label>
+              <Textarea
+                value={question.statement || ''}
+                onChange={(e) => handleTrueFalseQuestionChange(questionIndex, 'statement', e.target.value)}
+                placeholder="Escribe una declaración que pueda ser verdadera o falsa..."
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label>Respuesta Correcta</Label>
+              <div className="flex gap-3 mt-2">
+                <Button
+                  type="button"
+                  variant={question.correct_answer === true ? "default" : "outline"}
+                  onClick={() => handleTrueFalseQuestionChange(questionIndex, 'correct_answer', true)}
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle2 className="h-4 w-4" />
+                  Verdadero
+                </Button>
+                <Button
+                  type="button"
+                  variant={question.correct_answer === false ? "default" : "outline"}
+                  onClick={() => handleTrueFalseQuestionChange(questionIndex, 'correct_answer', false)}
+                  className="flex items-center gap-2"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Falso
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <Label>Explicación</Label>
+              <Textarea
+                value={question.explanation || ''}
+                onChange={(e) => handleTrueFalseQuestionChange(questionIndex, 'explanation', e.target.value)}
+                placeholder="Explica por qué esta declaración es verdadera o falsa..."
+                rows={2}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      <Button onClick={addTrueFalseQuestion} variant="outline" className="w-full">
+        <Plus className="h-4 w-4 mr-2" />
+        Agregar Declaración
+      </Button>
+    </div>
+  );
+
   const renderEditor = () => {
     switch (editedExercise.game) {
       case Game.QUIZ:
@@ -629,6 +749,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return renderFlipCardsEditor();
       case Game.DRAG_AND_DROP:
         return renderDragAndDropEditor();
+      case Game.TRUE_OR_FALSE:
+        return renderTrueFalseEditor();
       default:
         return <div>Tipo de ejercicio no soportado para edición</div>;
     }
