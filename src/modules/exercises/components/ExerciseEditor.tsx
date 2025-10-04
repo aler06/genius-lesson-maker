@@ -814,7 +814,7 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
               <Textarea
                 value={phrase.text || ''}
                 onChange={(e) => handlePhraseChange(phraseIndex, e.target.value)}
-                placeholder="Escribe una frase para reflexionar sobre el tema..."
+                placeholder="Escribe una frase para agregar a la Ruleta"
                 rows={3}
               />
             </div>
@@ -843,7 +843,7 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
             <Textarea
               value={editedExercise.instructions || ''}
               onChange={(e) => setEditedExercise({ ...editedExercise, instructions: e.target.value })}
-              placeholder="Gira la ruleta y reflexiona sobre la frase que aparezca..."
+              placeholder="Gira la ruleta y descubre una frase..."
               rows={3}
             />
           </div>

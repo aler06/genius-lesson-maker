@@ -5,7 +5,7 @@ import { PhraseModel } from '../model/phrase.model';
 import { Play, RefreshCw, RotateCcw } from 'lucide-react';
 
 interface RouletteGameProps {
-  phrases: PhraseModel[];
+  phrases: PhraseModel[]; 
   instructions?: string;
   onGameComplete?: (selectedPhrase: string, phraseIndex: number) => void;
   studentMode?: boolean;
@@ -107,7 +107,7 @@ const RouletteGame: React.FC<RouletteGameProps> = ({
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
-          🎯 Ruleta de Reflexión
+          🎯 Ruleta
         </CardTitle>
         {instructions && (
           <p className="text-muted-foreground mt-2">{instructions}</p>
@@ -258,10 +258,6 @@ const RouletteGame: React.FC<RouletteGameProps> = ({
                 <p className="text-lg font-medium text-gray-800 leading-relaxed">
                   "{selectedPhrase}"
                 </p>
-              </div>
-              
-              <div className="text-sm text-gray-600 italic">
-                💡 Reflexiona sobre esta afirmación y relaciónala con los conceptos clave del tema.
               </div>
             </div>
           </div>
