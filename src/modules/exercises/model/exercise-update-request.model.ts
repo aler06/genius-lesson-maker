@@ -21,6 +21,10 @@ export interface QuestionUpdateModel {
     correct_answer: boolean;
     explanation: string;
   }
+
+  export interface PhraseUpdateModel {
+    text: string;
+  }
   
   export interface ExerciseUpdateRequestModel {
     exerciseId: string;
@@ -37,4 +41,5 @@ export interface QuestionUpdateModel {
     correctOrder?: number[];
     explanation?: string;
     trueFalseQuestions?: TrueFalseQuestionUpdateModel[];
+    phrases?: PhraseUpdateModel[];
   }

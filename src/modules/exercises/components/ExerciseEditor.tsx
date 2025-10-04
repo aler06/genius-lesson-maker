@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ExerciseResponse } from '../model/exercise-response.model';
 import { Game } from '../enum/game.enum';
-import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, Save, Plus, Trash2, CheckCircle2, Move, ArrowUp, ArrowDown, CheckSquare, XCircle } from 'lucide-react';
+import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, Save, Plus, Trash2, CheckCircle2, Move, ArrowUp, ArrowDown, CheckSquare, XCircle, Target } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ExerciseEditorProps {
@@ -34,6 +34,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return <Move className="h-5 w-5" />;
       case Game.TRUE_OR_FALSE:
         return <CheckSquare className="h-5 w-5" />;
+      case Game.ROULETTE:
+        return <Target className="h-5 w-5" />;
       default:
         return <HelpCircle className="h-5 w-5" />;
     }
@@ -53,6 +55,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return 'Arrastrar y Soltar';
       case Game.TRUE_OR_FALSE:
         return 'Verdadero o Falso';
+      case Game.ROULETTE:
+        return 'Ruleta de Reflexión';
       default:
         return 'Ejercicio';
     }
@@ -219,6 +223,31 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
     setEditedExercise({ ...editedExercise, trueFalseQuestions: updatedQuestions });
   };
 
+  // Roulette handlers
+  const handlePhraseChange = (phraseIndex: number, value: string) => {
+    const updatedPhrases = [...(editedExercise.phrases || [])];
+    updatedPhrases[phraseIndex] = {
+      ...updatedPhrases[phraseIndex],
+      text: value
+    };
+    setEditedExercise({ ...editedExercise, phrases: updatedPhrases });
+  };
+
+  const addPhrase = () => {
+    const newPhrase = {
+      text: ''
+    };
+    setEditedExercise({
+      ...editedExercise,
+      phrases: [...(editedExercise.phrases || []), newPhrase]
+    });
+  };
+
+  const removePhrase = (phraseIndex: number) => {
+    const updatedPhrases = editedExercise.phrases?.filter((_, index) => index !== phraseIndex) || [];
+    setEditedExercise({ ...editedExercise, phrases: updatedPhrases });
+  };
+
   const handleSave = () => {
     // Validations
     if (editedExercise.game === Game.QUIZ) {
@@ -284,6 +313,26 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         toast({
           title: "Error de validación",
           description: "Todas las declaraciones deben tener texto y debe haber al menos una pregunta.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    if (editedExercise.game === Game.ROULETTE) {
+      const hasEmptyPhrases = editedExercise.phrases?.some(p => !p.text?.trim());
+      if (hasEmptyPhrases || !editedExercise.phrases?.length) {
+        toast({
+          title: "Error de validación",
+          description: "Todas las frases deben tener texto y debe haber al menos una frase.",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (editedExercise.phrases.length < 3) {
+        toast({
+          title: "Error de validación",
+          description: "La ruleta debe tener al menos 3 frases para funcionar correctamente.",
           variant: "destructive"
         });
         return;
@@ -737,6 +786,93 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
     </div>
   );
 
+  const renderRouletteEditor = () => (
+    <div className="space-y-6">
+      {editedExercise.phrases?.map((phrase, phraseIndex) => (
+        <Card key={phraseIndex} className="border-l-4 border-l-rose-500">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <span className="bg-rose-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                  {phraseIndex + 1}
+                </span>
+                Frase {phraseIndex + 1}
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => removePhrase(phraseIndex)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>Texto de la frase</Label>
+              <Textarea
+                value={phrase.text || ''}
+                onChange={(e) => handlePhraseChange(phraseIndex, e.target.value)}
+                placeholder="Escribe una frase para reflexionar sobre el tema..."
+                rows={3}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      <Button onClick={addPhrase} variant="outline" className="w-full">
+        <Plus className="h-4 w-4 mr-2" />
+        Agregar Frase
+      </Button>
+
+      {/* Instructions */}
+      <Card className="border-l-4 border-l-rose-500">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <span className="bg-rose-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+              ?
+            </span>
+            Instrucciones (Opcional)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div>
+            <Label>Instrucciones para el estudiante</Label>
+            <Textarea
+              value={editedExercise.instructions || ''}
+              onChange={(e) => setEditedExercise({ ...editedExercise, instructions: e.target.value })}
+              placeholder="Gira la ruleta y reflexiona sobre la frase que aparezca..."
+              rows={3}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Preview */}
+      {editedExercise.phrases && editedExercise.phrases.length > 0 && (
+        <Card className="bg-rose-50 border-rose-200">
+          <CardHeader>
+            <CardTitle className="text-lg text-rose-800">Vista Previa de Frases</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {editedExercise.phrases.map((phrase, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-white rounded border">
+                  <span className="bg-rose-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
+                    {index + 1}
+                  </span>
+                  <span className="text-sm flex-1">{phrase.text || 'Frase vacía'}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+
   const renderEditor = () => {
     switch (editedExercise.game) {
       case Game.QUIZ:
@@ -751,6 +887,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return renderDragAndDropEditor();
       case Game.TRUE_OR_FALSE:
         return renderTrueFalseEditor();
+      case Game.ROULETTE:
+        return renderRouletteEditor();
       default:
         return <div>Tipo de ejercicio no soportado para edición</div>;
     }

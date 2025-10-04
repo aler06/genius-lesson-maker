@@ -4,10 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExerciseResponse } from '../model/exercise-response.model';
 import { Game } from '../enum/game.enum';
-import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, CheckCircle2, XCircle, Pencil, Trash2, Move, CheckSquare } from 'lucide-react';
+import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, CheckCircle2, XCircle, Pencil, Trash2, Move, CheckSquare, Target } from 'lucide-react';
 import HangmanGame from './HangmanGame';
 import DragAndDropGame from './DragAndDropGame';
 import TrueFalseGame from './TrueFalseGame';
+import RouletteGame from './RouletteGame';
 import { useNavigate } from 'react-router-dom';
 
 interface ExerciseTemplateProps {
@@ -52,6 +53,8 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
         return <Move className="h-5 w-5" />;
       case Game.TRUE_OR_FALSE:
         return <CheckSquare className="h-5 w-5" />;
+      case Game.ROULETTE:
+        return <Target className="h-5 w-5" />;
       default:
         return <HelpCircle className="h-5 w-5" />;
     }
@@ -71,6 +74,8 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
         return 'Arrastrar y Soltar';
       case Game.TRUE_OR_FALSE:
         return 'Verdadero o Falso';
+      case Game.ROULETTE:
+        return 'Ruleta de Reflexión';
       default:
         return 'Ejercicio';
     }
@@ -322,6 +327,28 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
     );
   };
 
+  const renderRouletteTemplate = () => {
+    if (!exercise.phrases || exercise.phrases.length === 0) {
+      return (
+        <Card className="border-l-4 border-l-red-500">
+          <CardContent className="p-6 text-center">
+            <p className="text-red-600">Error: No se han configurado frases para la ruleta.</p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <RouletteGame 
+        phrases={exercise.phrases}
+        instructions={exercise.instructions}
+        onGameComplete={(selectedPhrase, phraseIndex) => {
+          console.log(`Roulette completed: Selected phrase "${selectedPhrase}" at index ${phraseIndex}`);
+        }}
+      />
+    );
+  };
+
   const renderExerciseContent = () => {
     switch (exercise.game) {
       case Game.QUIZ:
@@ -336,6 +363,8 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
         return renderDragAndDropTemplate();
       case Game.TRUE_OR_FALSE:
         return renderTrueFalseTemplate();
+      case Game.ROULETTE:
+        return renderRouletteTemplate();
       default:
         return (
           <Card>

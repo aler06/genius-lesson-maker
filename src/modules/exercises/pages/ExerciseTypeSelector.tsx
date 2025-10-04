@@ -4,7 +4,7 @@ import { NavHeader } from "@/components/ui/nav-header";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, BookOpen, HelpCircle, RotateCcw, Gamepad2, PuzzleIcon, FlipHorizontal, Loader2, Move, CheckSquare } from "lucide-react";
+import { ArrowLeft, Plus, BookOpen, HelpCircle, RotateCcw, Gamepad2, PuzzleIcon, FlipHorizontal, Loader2, Move, CheckSquare, Target } from "lucide-react";
 import { exerciseService } from "../services/exercise.service";
 import { Game } from "../enum/game.enum";
 import { useToast } from "@/hooks/use-toast";
@@ -87,10 +87,18 @@ const ExerciseTypeSelector = () => {
     {
       id: Game.TRUE_OR_FALSE,
       name: 'Verdadero o Falso',
-      description: 'Declaraciones que los estudiantes deben evaluar como verdaderas o falsas',
+      description: 'Preguntas de verdadero o falso con explicaciones detalladas',
       icon: CheckSquare,
       color: 'bg-teal-500',
       points: 8
+    },
+    {
+      id: Game.ROULETTE,
+      name: 'Ruleta de Reflexión',
+      description: 'Ruleta interactiva que selecciona frases aleatorias para reflexionar',
+      icon: Target,
+      color: 'bg-rose-500',
+      points: 6
     }
   ];
 

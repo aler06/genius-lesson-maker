@@ -27,6 +27,8 @@ const getGameIcon = (game: Game) => {
       return '🔀';
     case Game.TRUE_OR_FALSE:
       return '✅';
+    case Game.ROULETTE:
+      return '🎯';
     default:
       return '📝';
   }
@@ -46,6 +48,8 @@ const getGameName = (game: Game) => {
       return 'Arrastrar y soltar';
     case Game.TRUE_OR_FALSE:
       return 'Verdadero o falso';
+    case Game.ROULETTE:
+      return 'Ruleta de reflexión';
     default:
       return 'Ejercicio';
   }
@@ -65,6 +69,8 @@ const getGameColor = (game: Game) => {
       return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300';
     case Game.TRUE_OR_FALSE:
       return 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300';
+    case Game.ROULETTE:
+      return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
   }

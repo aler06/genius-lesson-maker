@@ -15,6 +15,7 @@ import FillInTheBlankGame from '@/modules/exercises/components/FillInTheBlankGam
 import FlipCardsGame from '@/modules/exercises/components/FlipCardsGame';
 import DragAndDropGame from '@/modules/exercises/components/DragAndDropGame';
 import TrueFalseGame from '@/modules/exercises/components/TrueFalseGame';
+import RouletteGame from '@/modules/exercises/components/RouletteGame';
 import { 
   Users, 
   Wifi, 
@@ -63,7 +64,7 @@ const SessionRoom = () => {
   const [participantCount, setParticipantCount] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exerciseCompleted, setExerciseCompleted] = useState<boolean[]>([]);
-  const [exerciseResults, setExerciseResults] = useState<Array<{score: number, total: number, type: string, answers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>}>>([]);
+  const [exerciseResults, setExerciseResults] = useState<Array<{score: number, total: number, type: string, answers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>, rouletteData?: {selectedPhrase: string, phraseIndex: number, allPhrases: Array<{text: string}>}}>>([]);
   const [allExercisesCompleted, setAllExercisesCompleted] = useState(false);
   const [answers, setAnswers] = useState<Record<string, AnswerResult>>({});
   const [isJoined, setIsJoined] = useState(false);
@@ -221,7 +222,7 @@ const SessionRoom = () => {
   const totalExercises = exercises.length;
   const completedExercises = exerciseCompleted.filter(Boolean).length;
 
-  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>) => {
+  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>, rouletteData?: {selectedPhrase: string, phraseIndex: number, allPhrases: Array<{text: string}>}) => {
     // Mark exercise as completed
     setExerciseCompleted(prev => {
       const newCompleted = [...prev];
@@ -239,7 +240,8 @@ const SessionRoom = () => {
         answers: quizAnswers, // Store quiz answers for final review
         hangmanData: hangmanData, // Store hangman game data
         dragDropData: dragDropData, // Store drag and drop game data
-        trueFalseData: trueFalseData // Store true or false game data
+        trueFalseData: trueFalseData, // Store true or false game data
+        rouletteData: rouletteData // Store roulette game data
       };
       return newResults;
     });
@@ -634,6 +636,82 @@ const SessionRoom = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Show detailed results for roulette */}
+                  {result.type === 'roulette' && result.rouletteData && (
+                    <div className="space-y-4 mt-4 border-t pt-4">
+                      <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                        🎯 Detalles de la Ruleta de Reflexión
+                      </h4>
+                      
+                      <div className="bg-white rounded-lg border border-gray-200 p-4">
+                        <div className="space-y-4">
+                          <div className="p-4 rounded-lg border-2 bg-rose-50 border-rose-200">
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-3">
+                                <span className="w-8 h-8 bg-rose-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                                  🎯
+                                </span>
+                                <div className="flex-1">
+                                  <div className="font-medium text-sm text-gray-800 mb-2">
+                                    Frase seleccionada por la ruleta:
+                                  </div>
+                                  
+                                  <div className="p-4 bg-white rounded-lg border-2 border-rose-300">
+                                    <div className="flex items-start gap-3">
+                                      <span className="bg-rose-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-1">
+                                        {result.rouletteData.phraseIndex + 1}
+                                      </span>
+                                      <p className="text-gray-800 font-medium leading-relaxed">
+                                        "{result.rouletteData.selectedPhrase}"
+                                      </p>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="mt-3 text-sm text-rose-700">
+                                    💡 Esta frase fue seleccionada aleatoriamente para tu reflexión
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Show all available phrases */}
+                          <div className="mt-4">
+                            <h5 className="font-medium text-sm text-gray-700 mb-3">
+                              Todas las frases disponibles en la ruleta:
+                            </h5>
+                            <div className="grid gap-2">
+                              {result.rouletteData.allPhrases.map((phrase, index) => (
+                                <div 
+                                  key={index}
+                                  className={`p-3 rounded-lg border ${
+                                    index === result.rouletteData!.phraseIndex
+                                      ? 'bg-rose-100 border-rose-300 font-medium' 
+                                      : 'bg-gray-50 border-gray-200'
+                                  }`}
+                                >
+                                  <div className="flex items-start gap-3">
+                                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                                      index === result.rouletteData!.phraseIndex
+                                        ? 'bg-rose-600 text-white'
+                                        : 'bg-gray-400 text-white'
+                                    }`}>
+                                      {index + 1}
+                                    </span>
+                                    <p className="text-sm flex-1">{phrase.text}</p>
+                                    {index === result.rouletteData!.phraseIndex && (
+                                      <span className="text-rose-600 text-xs font-bold">SELECCIONADA</span>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -828,6 +906,24 @@ const SessionRoom = () => {
               studentMode={true}
               onGameComplete={(score, total, answers) => {
                 handleExerciseComplete(currentExerciseIndex, score > 0, score, total, undefined, undefined, undefined, answers);
+              }}
+            />
+          );
+
+        case 'roulette':
+          return (
+            <RouletteGame
+              key={`roulette-${currentExerciseIndex}-${currentExercise.id}`}
+              phrases={currentExercise.phrases || []}
+              instructions={currentExercise.instructions}
+              studentMode={true}
+              onGameComplete={(selectedPhrase, phraseIndex) => {
+                const rouletteGameData = {
+                  selectedPhrase: selectedPhrase,
+                  phraseIndex: phraseIndex,
+                  allPhrases: currentExercise.phrases || []
+                };
+                handleExerciseComplete(currentExerciseIndex, true, 1, 1, undefined, undefined, undefined, undefined, rouletteGameData);
               }}
             />
           );
