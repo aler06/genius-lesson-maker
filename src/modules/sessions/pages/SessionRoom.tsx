@@ -16,6 +16,7 @@ import FlipCardsGame from '@/modules/exercises/components/FlipCardsGame';
 import DragAndDropGame from '@/modules/exercises/components/DragAndDropGame';
 import TrueFalseGame from '@/modules/exercises/components/TrueFalseGame';
 import RouletteGame from '@/modules/exercises/components/RouletteGame';
+import MatchingGame from '@/modules/exercises/components/MatchingGame';
 import { 
   Users, 
   Wifi, 
@@ -64,7 +65,17 @@ const SessionRoom = () => {
   const [participantCount, setParticipantCount] = useState(0);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
   const [exerciseCompleted, setExerciseCompleted] = useState<boolean[]>([]);
-  const [exerciseResults, setExerciseResults] = useState<Array<{score: number, total: number, type: string, answers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>, rouletteData?: {selectedPhrase: string, phraseIndex: number, allPhrases: Array<{text: string}>}}>>([]);
+  const [exerciseResults, setExerciseResults] = useState<Array<{
+    score: number;
+    total: number;
+    type: string;
+    answers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>;
+    hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number};
+    dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string};
+    trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>;
+    rouletteData?: {selectedPhrase: string, phraseIndex: number, allPhrases: Array<{text: string}>};
+    matchingData?: {matchedPairs: Array<{term: string, match: string, correct: boolean}>, totalPairs: number};
+  }>>([]);
   const [allExercisesCompleted, setAllExercisesCompleted] = useState(false);
   const [answers, setAnswers] = useState<Record<string, AnswerResult>>({});
   const [isJoined, setIsJoined] = useState(false);
@@ -222,7 +233,7 @@ const SessionRoom = () => {
   const totalExercises = exercises.length;
   const completedExercises = exerciseCompleted.filter(Boolean).length;
 
-  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>, rouletteData?: {selectedPhrase: string, phraseIndex: number, allPhrases: Array<{text: string}>}) => {
+  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>, rouletteData?: {selectedPhrase: string, phraseIndex: number, allPhrases: Array<{text: string}>}, matchingData?: {matchedPairs: Array<{term: string, match: string, correct: boolean}>, totalPairs: number}) => {
     // Mark exercise as completed
     setExerciseCompleted(prev => {
       const newCompleted = [...prev];
@@ -241,7 +252,8 @@ const SessionRoom = () => {
         hangmanData: hangmanData, // Store hangman game data
         dragDropData: dragDropData, // Store drag and drop game data
         trueFalseData: trueFalseData, // Store true or false game data
-        rouletteData: rouletteData // Store roulette game data
+        rouletteData: rouletteData, // Store roulette game data
+        matchingData: matchingData // Store matching game data
       };
       return newResults;
     });
@@ -712,6 +724,83 @@ const SessionRoom = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Show detailed results for matching */}
+                  {result.type === 'matching' && result.matchingData && (
+                    <div className="space-y-4 mt-4 border-t pt-4">
+                      <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
+                        🔗 Detalles del Emparejamiento
+                      </h4>
+                      
+                      <div className="bg-white rounded-lg border border-gray-200 p-4">
+                        <div className="space-y-4">
+                          <div className="grid gap-3">
+                            {result.matchingData.matchedPairs.map((pair, index) => (
+                              <div 
+                                key={index}
+                                className={`p-4 rounded-lg border-2 ${
+                                  pair.correct 
+                                    ? 'bg-green-50 border-green-200' 
+                                    : 'bg-red-50 border-red-200'
+                                }`}
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                                    pair.correct ? 'bg-green-600' : 'bg-red-600'
+                                  }`}>
+                                    {pair.correct ? '✓' : '✗'}
+                                  </div>
+                                  
+                                  <div className="flex-1 grid md:grid-cols-2 gap-4">
+                                    <div>
+                                      <span className={`text-xs font-medium uppercase tracking-wide ${
+                                        pair.correct ? 'text-green-600' : 'text-red-600'
+                                      }`}>
+                                        Término
+                                      </span>
+                                      <p className="text-sm font-medium text-gray-800 mt-1">
+                                        {pair.term}
+                                      </p>
+                                    </div>
+                                    
+                                    <div>
+                                      <span className={`text-xs font-medium uppercase tracking-wide ${
+                                        pair.correct ? 'text-green-600' : 'text-red-600'
+                                      }`}>
+                                        Tu emparejamiento
+                                      </span>
+                                      <p className="text-sm text-gray-700 mt-1">
+                                        {pair.match}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                    pair.correct 
+                                      ? 'bg-green-600 text-white' 
+                                      : 'bg-red-600 text-white'
+                                  }`}>
+                                    {pair.correct ? 'CORRECTO' : 'INCORRECTO'}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="mt-4 p-3 bg-cyan-50 border border-cyan-200 rounded-lg">
+                            <div className="flex items-center gap-2 text-cyan-800">
+                              <span className="text-cyan-600">📊</span>
+                              <span className="font-semibold text-sm">Resumen:</span>
+                              <span className="text-sm">
+                                {result.matchingData.matchedPairs.filter(p => p.correct).length} de {result.matchingData.totalPairs} emparejamientos correctos
+                                ({Math.round((result.matchingData.matchedPairs.filter(p => p.correct).length / result.matchingData.totalPairs) * 100)}%)
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -924,6 +1013,23 @@ const SessionRoom = () => {
                   allPhrases: currentExercise.phrases || []
                 };
                 handleExerciseComplete(currentExerciseIndex, true, 1, 1, undefined, undefined, undefined, undefined, rouletteGameData);
+              }}
+            />
+          );
+
+        case 'matching':
+          return (
+            <MatchingGame
+              key={`matching-${currentExerciseIndex}-${currentExercise.id}`}
+              pairs={currentExercise.pairs || []}
+              instructions={currentExercise.instructions}
+              studentMode={true}
+              onGameComplete={(score, totalPairs, matchedPairs) => {
+                const matchingGameData = {
+                  matchedPairs: matchedPairs,
+                  totalPairs: totalPairs
+                };
+                handleExerciseComplete(currentExerciseIndex, score > 0, score, totalPairs, undefined, undefined, undefined, undefined, undefined, matchingGameData);
               }}
             />
           );

@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ExerciseResponse } from '../model/exercise-response.model';
 import { Game } from '../enum/game.enum';
-import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, Save, Plus, Trash2, CheckCircle2, Move, ArrowUp, ArrowDown, CheckSquare, XCircle, Target } from 'lucide-react';
+import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, Save, Plus, Trash2, CheckCircle2, Move, ArrowUp, ArrowDown, CheckSquare, XCircle, Target, Link2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ExerciseEditorProps {
@@ -36,6 +36,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return <CheckSquare className="h-5 w-5" />;
       case Game.ROULETTE:
         return <Target className="h-5 w-5" />;
+      case Game.MATCHING:
+        return <Link2 className="h-5 w-5" />;
       default:
         return <HelpCircle className="h-5 w-5" />;
     }
@@ -57,6 +59,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return 'Verdadero o Falso';
       case Game.ROULETTE:
         return 'Ruleta de Reflexión';
+      case Game.MATCHING:
+        return 'Emparejamiento';
       default:
         return 'Ejercicio';
     }
@@ -248,6 +252,32 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
     setEditedExercise({ ...editedExercise, phrases: updatedPhrases });
   };
 
+  // Matching handlers
+  const handlePairChange = (pairIndex: number, field: 'term' | 'match', value: string) => {
+    const updatedPairs = [...(editedExercise.pairs || [])];
+    updatedPairs[pairIndex] = {
+      ...updatedPairs[pairIndex],
+      [field]: value
+    };
+    setEditedExercise({ ...editedExercise, pairs: updatedPairs });
+  };
+
+  const addPair = () => {
+    const newPair = {
+      term: '',
+      match: ''
+    };
+    setEditedExercise({
+      ...editedExercise,
+      pairs: [...(editedExercise.pairs || []), newPair]
+    });
+  };
+
+  const removePair = (pairIndex: number) => {
+    const updatedPairs = editedExercise.pairs?.filter((_, index) => index !== pairIndex) || [];
+    setEditedExercise({ ...editedExercise, pairs: updatedPairs });
+  };
+
   const handleSave = () => {
     // Validations
     if (editedExercise.game === Game.QUIZ) {
@@ -333,6 +363,34 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         toast({
           title: "Error de validación",
           description: "La ruleta debe tener al menos 3 frases para funcionar correctamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    if (editedExercise.game === Game.MATCHING) {
+      const hasEmptyPairs = editedExercise.pairs?.some(p => !p.term?.trim() || !p.match?.trim());
+      if (hasEmptyPairs || !editedExercise.pairs?.length) {
+        toast({
+          title: "Error de validación",
+          description: "Todos los pares deben tener término y definición, y debe haber al menos un par.",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (editedExercise.pairs.length < 3) {
+        toast({
+          title: "Error de validación",
+          description: "El juego de emparejamiento debe tener al menos 3 pares para funcionar correctamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (!editedExercise.instructions?.trim()) {
+        toast({
+          title: "Error de validación",
+          description: "Las instrucciones son obligatorias para ejercicios de emparejamiento.",
           variant: "destructive"
         });
         return;
@@ -873,6 +931,112 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
     </div>
   );
 
+  const renderMatchingEditor = () => (
+    <div className="space-y-6">
+      {editedExercise.pairs?.map((pair, pairIndex) => (
+        <Card key={pairIndex} className="border-l-4 border-l-cyan-500">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <span className="bg-cyan-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                  {pairIndex + 1}
+                </span>
+                Par {pairIndex + 1}
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => removePair(pairIndex)}
+                className="text-destructive hover:text-destructive"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>Término</Label>
+                <Input
+                  value={pair.term || ''}
+                  onChange={(e) => handlePairChange(pairIndex, 'term', e.target.value)}
+                  placeholder="Ej: Módulo"
+                />
+              </div>
+              <div>
+                <Label>Definición/Descripción</Label>
+                <Textarea
+                  value={pair.match || ''}
+                  onChange={(e) => handlePairChange(pairIndex, 'match', e.target.value)}
+                  placeholder="Ej: Organiza la estructura de la aplicación..."
+                  rows={2}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      <Button onClick={addPair} variant="outline" className="w-full">
+        <Plus className="h-4 w-4 mr-2" />
+        Agregar Par
+      </Button>
+
+      {/* Instructions */}
+      <Card className="border-l-4 border-l-cyan-500">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <span className="bg-cyan-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+              ?
+            </span>
+            Instrucciones (Obligatorio)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div>
+            <Label>Instrucciones para el estudiante</Label>
+            <Textarea
+              value={editedExercise.instructions || ''}
+              onChange={(e) => setEditedExercise({ ...editedExercise, instructions: e.target.value })}
+              placeholder="Empareja cada término con su definición correspondiente..."
+              rows={3}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Preview */}
+      {editedExercise.pairs && editedExercise.pairs.length > 0 && (
+        <Card className="bg-cyan-50 border-cyan-200">
+          <CardHeader>
+            <CardTitle className="text-lg text-cyan-800">Vista Previa de Pares</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {editedExercise.pairs.map((pair, index) => (
+                <div key={index} className="flex items-center gap-4 p-4 bg-white rounded border">
+                  <span className="bg-cyan-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
+                    {index + 1}
+                  </span>
+                  <div className="flex-1 grid md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-xs font-medium text-cyan-600 uppercase tracking-wide">Término</span>
+                      <p className="text-sm font-medium">{pair.term || 'Término vacío'}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-medium text-cyan-600 uppercase tracking-wide">Definición</span>
+                      <p className="text-sm">{pair.match || 'Definición vacía'}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+
   const renderEditor = () => {
     switch (editedExercise.game) {
       case Game.QUIZ:
@@ -889,6 +1053,8 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         return renderTrueFalseEditor();
       case Game.ROULETTE:
         return renderRouletteEditor();
+      case Game.MATCHING:
+        return renderMatchingEditor();
       default:
         return <div>Tipo de ejercicio no soportado para edición</div>;
     }

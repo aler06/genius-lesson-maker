@@ -25,6 +25,11 @@ export interface QuestionUpdateModel {
   export interface PhraseUpdateModel {
     text: string;
   }
+
+  export interface PairUpdateModel {
+    term: string;
+    match: string;
+  }
   
   export interface ExerciseUpdateRequestModel {
     exerciseId: string;
@@ -42,4 +47,5 @@ export interface QuestionUpdateModel {
     explanation?: string;
     trueFalseQuestions?: TrueFalseQuestionUpdateModel[];
     phrases?: PhraseUpdateModel[];
+    pairs?: PairUpdateModel[];
   }

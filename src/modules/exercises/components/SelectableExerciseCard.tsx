@@ -29,6 +29,8 @@ const getGameIcon = (game: Game) => {
       return '✅';
     case Game.ROULETTE:
       return '🎯';
+    case Game.MATCHING:
+      return '🔗';
     default:
       return '📝';
   }
@@ -50,6 +52,8 @@ const getGameName = (game: Game) => {
       return 'Verdadero o falso';
     case Game.ROULETTE:
       return 'Ruleta de reflexión';
+    case Game.MATCHING:
+      return 'Emparejamiento';
     default:
       return 'Ejercicio';
   }
@@ -71,6 +75,8 @@ const getGameColor = (game: Game) => {
       return 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300';
     case Game.ROULETTE:
       return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300';
+    case Game.MATCHING:
+      return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
   }

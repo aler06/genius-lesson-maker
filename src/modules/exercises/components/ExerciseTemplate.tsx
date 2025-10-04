@@ -4,11 +4,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ExerciseResponse } from '../model/exercise-response.model';
 import { Game } from '../enum/game.enum';
-import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, CheckCircle2, XCircle, Pencil, Trash2, Move, CheckSquare, Target } from 'lucide-react';
+import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, CheckCircle2, XCircle, Pencil, Trash2, Move, CheckSquare, Target, Link2 } from 'lucide-react';
 import HangmanGame from './HangmanGame';
 import DragAndDropGame from './DragAndDropGame';
 import TrueFalseGame from './TrueFalseGame';
 import RouletteGame from './RouletteGame';
+import MatchingGame from './MatchingGame';
 import { useNavigate } from 'react-router-dom';
 
 interface ExerciseTemplateProps {
@@ -55,6 +56,8 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
         return <CheckSquare className="h-5 w-5" />;
       case Game.ROULETTE:
         return <Target className="h-5 w-5" />;
+      case Game.MATCHING:
+        return <Link2 className="h-5 w-5" />;
       default:
         return <HelpCircle className="h-5 w-5" />;
     }
@@ -76,6 +79,8 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
         return 'Verdadero o Falso';
       case Game.ROULETTE:
         return 'Ruleta de Reflexión';
+      case Game.MATCHING:
+        return 'Emparejamiento';
       default:
         return 'Ejercicio';
     }
@@ -349,6 +354,28 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
     );
   };
 
+  const renderMatchingTemplate = () => {
+    if (!exercise.pairs || exercise.pairs.length === 0) {
+      return (
+        <Card className="border-l-4 border-l-red-500">
+          <CardContent className="p-6 text-center">
+            <p className="text-red-600">Error: No se han configurado pares para el juego de emparejamiento.</p>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <MatchingGame 
+        pairs={exercise.pairs}
+        instructions={exercise.instructions}
+        onGameComplete={(score, totalPairs, matchedPairs) => {
+          console.log(`Matching completed: ${score}/${totalPairs} correct matches`);
+        }}
+      />
+    );
+  };
+
   const renderExerciseContent = () => {
     switch (exercise.game) {
       case Game.QUIZ:
@@ -365,6 +392,8 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
         return renderTrueFalseTemplate();
       case Game.ROULETTE:
         return renderRouletteTemplate();
+      case Game.MATCHING:
+        return renderMatchingTemplate();
       default:
         return (
           <Card>

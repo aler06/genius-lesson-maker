@@ -13,7 +13,8 @@ import {
   Trash2,
   Move,
   CheckSquare,
-  Target
+  Target,
+  Link2
 } from 'lucide-react';
 
 interface ExerciseCardProps {
@@ -38,6 +39,8 @@ const getGameIcon = (game: Game) => {
       return <CheckSquare className="h-4 w-4" />;
     case Game.ROULETTE:
       return <Target className="h-4 w-4" />;
+    case Game.MATCHING:
+      return <Link2 className="h-4 w-4" />;
     default:
       return <Brain className="h-4 w-4" />;
   }
@@ -59,6 +62,8 @@ const getGameName = (game: Game) => {
       return 'Verdadero o falso';
     case Game.ROULETTE:
       return 'Ruleta de reflexión';
+    case Game.MATCHING:
+      return 'Emparejamiento';
     default:
       return 'Ejercicio';
   }
@@ -80,6 +85,8 @@ const getGameColor = (game: Game) => {
       return 'bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-300';
     case Game.ROULETTE:
       return 'bg-rose-100 text-rose-800 dark:bg-rose-900 dark:text-rose-300';
+    case Game.MATCHING:
+      return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-300';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
   }
@@ -100,6 +107,7 @@ const ExerciseCard = ({ exercise, onView, onDelete }: ExerciseCardProps) => {
     if (exercise.elements?.length) return exercise.elements.length;
     if (exercise.trueFalseQuestions?.length) return exercise.trueFalseQuestions.length;
     if (exercise.phrases?.length) return exercise.phrases.length;
+    if (exercise.pairs?.length) return exercise.pairs.length;
     if (exercise.word) return 1;
     return 0;
   };

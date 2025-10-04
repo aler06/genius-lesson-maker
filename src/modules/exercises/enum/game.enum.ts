@@ -6,4 +6,5 @@ export enum Game {
     DRAG_AND_DROP = 'drag_and_drop',
     TRUE_OR_FALSE = 'true_or_false',
     ROULETTE = 'roulette',
+    MATCHING = 'matching',
 }
