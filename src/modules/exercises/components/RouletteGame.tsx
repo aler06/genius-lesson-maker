@@ -109,9 +109,6 @@ const RouletteGame: React.FC<RouletteGameProps> = ({
         <CardTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
           🎯 Ruleta
         </CardTitle>
-        {instructions && (
-          <p className="text-muted-foreground mt-2">{instructions}</p>
-        )}
       </CardHeader>
       
       <CardContent className="space-y-6">
