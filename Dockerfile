@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including devDependencies for build)
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -26,6 +26,9 @@ ENV VITE_FRONTEND_URL=${VITE_FRONTEND_URL}
 
 # Build the application
 RUN npm run build
+
+# Clean up node_modules to reduce image size (optional)
+RUN rm -rf node_modules
 
 # Production stage
 FROM nginx:1.27-alpine
