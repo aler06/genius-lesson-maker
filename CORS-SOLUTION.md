@@ -2,8 +2,14 @@
 
 ## 🚨 Problema Actual
 ```
-Solicitud de origen cruzado bloqueada: La política de mismo origen no permite la lectura de recursos remotos en http://localhost:3001/api/v1/session/join/LXQ7TM. (Razón: Solicitud CORS sin éxito). Código de estado: (null).
+Error de conexión: Verifica que el backend esté ejecutándose y configurado correctamente para CORS.
 ```
+
+**Causa**: Tu frontend está desplegado en `https://taller-frontend-bhaobk-607ebf-173-212-248-96.traefik.me` pero tu backend no permite requests desde este dominio.
+
+## ⚡ Solución Rápida para Producción
+
+**En tu backend (API en la nube), actualiza la configuración CORS para incluir tu dominio de frontend:**
 
 ## 🔧 Solución en el Backend (NestJS)
 
@@ -27,8 +33,10 @@ async function bootstrap() {
     origin: [
       'http://localhost:3000',  // Frontend en desarrollo
       'http://localhost:5173',  // Vite dev server
+      'http://localhost:8081',  // Vite dev server alternativo
       'http://127.0.0.1:3000',
       'http://127.0.0.1:5173',
+      'https://taller-frontend-bhaobk-607ebf-173-212-248-96.traefik.me', // Frontend en producción
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: [
@@ -83,8 +91,10 @@ export class SessionController {
     origin: [
       'http://localhost:3000',
       'http://localhost:5173',
+      'http://localhost:8081',
       'http://127.0.0.1:3000',
       'http://127.0.0.1:5173',
+      'https://taller-frontend-bhaobk-607ebf-173-212-248-96.traefik.me',
     ],
     credentials: true,
   },
