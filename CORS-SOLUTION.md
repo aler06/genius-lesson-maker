@@ -11,6 +11,24 @@ Error de conexión: Verifica que el backend esté ejecutándose y configurado co
 
 **En tu backend (API en la nube), actualiza la configuración CORS para incluir tu dominio de frontend:**
 
+```typescript
+// En tu main.ts, actualiza la configuración CORS:
+app.enableCors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001', 
+    'http://localhost:8080',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:8080',
+    'https://taller-frontend-bhaobk-607ebf-173-212-248-96.traefik.me', // ← AGREGAR ESTA LÍNEA
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  credentials: true,
+});
+```
+
 ## 🔧 Solución en el Backend (NestJS)
 
 ### 1. Instalar el paquete CORS

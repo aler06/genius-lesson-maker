@@ -13,9 +13,9 @@ RUN npm ci
 COPY . .
 
 # Build arguments for environment variables
-ARG VITE_API_URL=http://taller-api-fw2kqq-703289-173-212-248-96.traefik.me
-ARG VITE_API_BASE_URL=http://taller-api-fw2kqq-703289-173-212-248-96.traefik.me/api/v1
-ARG VITE_WS_URL=http://taller-api-fw2kqq-703289-173-212-248-96.traefik.me
+ARG VITE_API_URL=http://taller-api-fw2kqq-703289-173-212-248-96.traefik.me:3010
+ARG VITE_API_BASE_URL=http://taller-api-fw2kqq-703289-173-212-248-96.traefik.me:3010/api/v1
+ARG VITE_WS_URL=http://taller-api-fw2kqq-703289-173-212-248-96.traefik.me:3010
 ARG VITE_FRONTEND_URL=http://localhost:3011
 
 # Set environment variables
