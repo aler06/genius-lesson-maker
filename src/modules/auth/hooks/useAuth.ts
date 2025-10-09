@@ -42,7 +42,7 @@ export const useAuth = () => {
   };
 
   const isAuthenticated = !!user;
-  const isProfessor = user?.role === 'professor';
+  const isProfessor = user?.role === 'teacher';
   const isStudent = user?.role === 'student';
 
   return {

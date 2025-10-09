@@ -7,7 +7,7 @@ export enum Game {
 
 export enum Role {
   STUDENT = 'student',
-  PROFESSOR = 'professor',
+  PROFESSOR = 'teacher',
   ADMIN = 'admin'
 }
 
