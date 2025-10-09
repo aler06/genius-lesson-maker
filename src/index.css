@@ -118,8 +118,8 @@ All colors MUST be HSL.
   }
   
   /* Global hover effects with light blue and low opacity */
-  button:hover:not(.no-hover),
-  [role="button"]:hover:not(.no-hover),
+  button:hover:not(.no-hover):not(.selected-button),
+  [role="button"]:hover:not(.no-hover):not(.selected-button),
   .hover-effect:hover {
     background-color: hsl(212 95% 85% / 0.3) !important;
     transition: background-color 0.2s ease-in-out;

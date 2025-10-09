@@ -450,7 +450,7 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
                       variant={option === question.correct_answer ? "default" : "outline"}
                       size="sm"
                       onClick={() => handleCorrectAnswerChange(questionIndex, option)}
-                      className={option === question.correct_answer ? "bg-green-600 hover:bg-green-700" : ""}
+                      className={option === question.correct_answer ? "bg-green-600 hover:bg-green-700 no-hover" : ""}
                     >
                       {option === question.correct_answer ? (
                         <CheckCircle2 className="h-4 w-4" />
@@ -1091,7 +1091,7 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         <Button onClick={onCancel} variant="outline">
           Cancelar
         </Button>
-        <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+        <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700 no-hover">
           <Save className="h-4 w-4 mr-2" />
           Guardar Cambios
         </Button>

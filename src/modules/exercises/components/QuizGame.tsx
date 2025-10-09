@@ -151,10 +151,11 @@ const QuizGame: React.FC<QuizGameProps> = ({ questions, onGameComplete, studentM
               <Button
                 key={index}
                 variant={isSelected ? "default" : "outline"}
-                className={`p-4 h-auto text-left justify-start ${
-                  shouldShowResult && showCorrect ? 'bg-green-100 border-green-500 text-green-800' :
-                  shouldShowResult && isWrong ? 'bg-red-100 border-red-500 text-red-800' :
-                  isSelected ? 'bg-primary text-primary-foreground' : ''
+                className={`p-4 h-auto text-left justify-start border-2 transition-all duration-200 ${
+                  shouldShowResult && showCorrect ? 'bg-green-100 border-green-500 text-green-800 hover:bg-green-100' :
+                  shouldShowResult && isWrong ? 'bg-red-100 border-red-500 text-red-800 hover:bg-red-100' :
+                  isSelected ? 'bg-primary text-primary-foreground border-primary selected-button' : 
+                  'border-border hover:border-primary/50 hover:bg-primary/5 hover:text-foreground'
                 }`}
                 onClick={() => handleAnswerSelect(option)}
                 disabled={showResult}

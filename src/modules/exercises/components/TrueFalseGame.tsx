@@ -149,7 +149,10 @@ const TrueFalseGame: React.FC<TrueFalseGameProps> = ({ trueFalseQuestions, onGam
               size="lg"
               onClick={() => handleAnswerSelect(true)}
               disabled={showResult}
-              className="flex items-center justify-center gap-2 h-14 text-base"
+              className={`flex items-center justify-center gap-2 h-14 text-base border-2 transition-all duration-200 ${
+                selectedAnswer === true ? 'bg-primary text-primary-foreground border-primary selected-button' : 
+                'border-border hover:border-primary/50 hover:bg-primary/5 hover:text-foreground'
+              }`}
             >
               <ThumbsUp className="h-5 w-5" />
               Verdadero
@@ -160,7 +163,10 @@ const TrueFalseGame: React.FC<TrueFalseGameProps> = ({ trueFalseQuestions, onGam
               size="lg"
               onClick={() => handleAnswerSelect(false)}
               disabled={showResult}
-              className="flex items-center justify-center gap-2 h-14 text-base"
+              className={`flex items-center justify-center gap-2 h-14 text-base border-2 transition-all duration-200 ${
+                selectedAnswer === false ? 'bg-primary text-primary-foreground border-primary selected-button' : 
+                'border-border hover:border-primary/50 hover:bg-primary/5 hover:text-foreground'
+              }`}
             >
               <ThumbsDown className="h-5 w-5" />
               Falso

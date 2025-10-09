@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { authService } from '../services/auth.service';
 import { Role } from '@/types/enums';
+import { NavHeader } from '@/components/ui/nav-header';
 import { BookOpen, User, Mail, Lock, UserCheck } from 'lucide-react';
 
 const Register = () => {
@@ -56,7 +57,9 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      <NavHeader />
+      <div className="flex items-center justify-center p-4 pt-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -165,6 +168,7 @@ const Register = () => {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

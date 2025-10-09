@@ -230,9 +230,9 @@ const HangmanGame: React.FC<HangmanGameProps> = ({ word, hint, onGameComplete, s
                       size="sm"
                       className={`aspect-square text-sm font-bold transition-all duration-200 ${
                         isCorrect 
-                          ? 'bg-green-500 hover:bg-green-600 text-white' 
+                          ? 'bg-green-500 hover:bg-green-600 text-white no-hover' 
                           : isWrong 
-                          ? 'bg-red-500 hover:bg-red-600 text-white'
+                          ? 'bg-red-500 hover:bg-red-600 text-white no-hover'
                           : 'hover:bg-blue-50 hover:border-blue-300'
                       }`}
                     >

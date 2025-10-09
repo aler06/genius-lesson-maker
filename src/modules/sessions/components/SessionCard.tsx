@@ -215,7 +215,7 @@ const SessionCard = ({
             <Button
               onClick={() => onStart?.(session.id)}
               disabled={isStarting}
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full bg-green-600 hover:bg-green-700 no-hover"
               size="sm"
             >
               {isStarting ? (

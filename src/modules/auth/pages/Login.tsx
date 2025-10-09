@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { authService } from '../services/auth.service';
+import { NavHeader } from '@/components/ui/nav-header';
 import { BookOpen, Mail, Lock } from 'lucide-react';
 
 const Login = () => {
@@ -46,7 +47,9 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+      <NavHeader />
+      <div className="flex items-center justify-center p-4 pt-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
@@ -105,6 +108,7 @@ const Login = () => {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };

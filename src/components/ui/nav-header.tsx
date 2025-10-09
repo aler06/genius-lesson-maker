@@ -18,7 +18,7 @@ export function NavHeader() {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   const handleLogoClick = () => {
@@ -94,7 +94,11 @@ export function NavHeader() {
               </DropdownMenu>
             ) : (
               <div className="flex items-center gap-2">
-                <Button variant="ghost" onClick={() => navigate('/login')}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/login')}
+                  className="border-primary/30 text-primary hover:bg-primary/0 hover:border-primary/50"
+                >
                   Iniciar Sesión
                 </Button>
                 <Button 
