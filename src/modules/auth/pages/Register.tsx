@@ -27,14 +27,19 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      await authService.register(formData);
+      const response = await authService.register(formData);
       
       toast({
         title: "¡Cuenta creada!",
         description: "Tu cuenta ha sido creada exitosamente.",
       });
       
-      navigate('/dashboard');
+      // Redirect based on user role
+      if (response.user.role === 'teacher') {
+        navigate('/dashboard');
+      } else {
+        navigate('/'); // Students go to join session page
+      }
     } catch (error) {
       toast({
         variant: "destructive",

@@ -24,7 +24,12 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (requiredRole && user?.role !== requiredRole) {
-    return <Navigate to="/dashboard" replace />;
+    // Redirect based on user role
+    if (user?.role === 'teacher') {
+      return <Navigate to="/dashboard" replace />;
+    } else {
+      return <Navigate to="/" replace />; // Students go to join session page
+    }
   }
 
   return <>{children}</>;

@@ -20,7 +20,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await authService.login({ email, password });
+      const response = await authService.login({ email, password });
       // Token and user are already stored by the auth service
       
       toast({
@@ -28,7 +28,12 @@ const Login = () => {
         description: "Has iniciado sesión correctamente.",
       });
       
-      navigate('/dashboard');
+      // Redirect based on user role
+      if (response.user.role === 'teacher') {
+        navigate('/dashboard');
+      } else {
+        navigate('/'); // Students go to join session page
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -51,7 +56,7 @@ const Login = () => {
           </div>
           <CardTitle className="text-2xl font-bold">Iniciar Sesión</CardTitle>
           <CardDescription>
-            Accede a tu cuenta para crear ejercicios interactivos
+            Accede a tu cuenta en la plataforma educativa
           </CardDescription>
         </CardHeader>
         <CardContent>

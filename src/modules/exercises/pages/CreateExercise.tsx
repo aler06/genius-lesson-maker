@@ -20,7 +20,7 @@ const Index = () => {
     difficulty: 'intermediate' as 'beginner' | 'intermediate' | 'advanced',
     targetAudience: '',
     additionalInstructions: '',
-    numberOfItems: 5
+    numberOfItems: 3
   });
   const navigate = useNavigate();
   const { toast } = useToast();

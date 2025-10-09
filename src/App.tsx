@@ -38,32 +38,32 @@ const App = () => (
           
           {/* Protected routes for teachers */}
           <Route path="/create-exercise" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole={Role.PROFESSOR}>
               <CreateExercise />
             </ProtectedRoute>
           } />
           <Route path="/dashboard" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole={Role.PROFESSOR}>
               <Dashboard />
             </ProtectedRoute>
           } />
           <Route path="/create-session" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole={Role.PROFESSOR}>
               <CreateSession />
             </ProtectedRoute>
           } />
           <Route path="/exercise/:exerciseId" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole={Role.PROFESSOR}>
               <ExerciseDetail />
             </ProtectedRoute>
           } />
           <Route path="/exercise-type-selector" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole={Role.PROFESSOR}>
               <ExerciseTypeSelector />
             </ProtectedRoute>
           } />
           <Route path="/exercise/:sessionId/select-types" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole={Role.PROFESSOR}>
               <ExerciseTypeSelector />
             </ProtectedRoute>
           } />

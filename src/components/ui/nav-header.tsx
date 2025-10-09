@@ -14,11 +14,19 @@ import {
 export function NavHeader() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, isProfessor } = useAuth();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleLogoClick = () => {
+    if (isProfessor) {
+      navigate('/create-exercise');
+    } else {
+      navigate('/');
+    }
   };
 
   return (
@@ -27,7 +35,7 @@ export function NavHeader() {
         <div className="flex items-center justify-between">
           <div 
             className="flex items-center gap-2 cursor-pointer"
-            onClick={() => navigate('/')}
+            onClick={handleLogoClick}
           >
             <div className="p-2 rounded-lg bg-gradient-to-r from-primary to-blue-500">
               <GraduationCap className="h-6 w-6 text-white" />
