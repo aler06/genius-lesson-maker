@@ -29,12 +29,12 @@ export function NavHeader() {
     }
   };
 
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/';
 
   return (
-    <header className={`border-b ${isAuthPage ? 'bg-white border-gray-200' : 'bg-card'} shadow-soft`}>
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+    <header className={`${isAuthPage ? 'bg-transparent' : 'border-b bg-card shadow-soft'}`}>
+      <div className={`container mx-auto px-4 py-4 ${isAuthPage ? 'pt-6' : ''}`}>
+        <div className={`flex items-center justify-between ${isAuthPage ? 'bg-white rounded-2xl shadow-lg px-6 py-4 border border-gray-200' : ''}`}>
           <div 
             className="flex items-center gap-2 cursor-pointer"
             onClick={handleLogoClick}

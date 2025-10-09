@@ -5,10 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NavHeader } from '@/components/ui/nav-header';
+import { AuthBackground } from '@/components/ui/auth-background';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useTemporaryUser } from '@/hooks/useTemporaryUser';
 import StudentNameModal from '@/components/StudentNameModal';
-import { Users, Wifi, AlertCircle, Loader2, BookOpen, GraduationCap, LogIn, UserPlus } from 'lucide-react';
+import { Users, Wifi, AlertCircle, Loader2, GraduationCap, LogIn, UserPlus, BookOpenCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatAccessCode, isValidAccessCode } from '@/utils/sessionHelpers';
@@ -132,36 +133,39 @@ const JoinSession = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen relative">
+      <AuthBackground />
       <NavHeader />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Main Header */}
           <div className="text-center mb-12">
-            <div className="flex justify-center mb-6">
-              <div className="p-6 bg-gradient-to-r from-primary to-blue-500 rounded-full shadow-lg">
-                <GraduationCap className="h-12 w-12 text-white" />
+            <div className="bg-white rounded-3xl shadow-2xl p-6 border border-white/20 backdrop-blur-sm">
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full shadow-lg">
+                  <GraduationCap className="h-8 w-8 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                  EduAI - Generador de Ejercicios
+                </h1>
               </div>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Únete a sesiones interactivas de aprendizaje o accede como profesor para crear y gestionar ejercicios
+              </p>
             </div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent mb-4">
-              EduAI - Generador de Ejercicios
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Únete a sesiones interactivas de aprendizaje o accede como profesor para crear y gestionar ejercicios
-            </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Join Session Card */}
-            <Card className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-primary/20 shadow-lg">
+            <Card className="bg-white rounded-3xl shadow-2xl border border-white/20 backdrop-blur-sm">
               <CardHeader className="text-center">
                 <div className="flex justify-center mb-4">
-                  <div className="p-4 bg-gradient-to-r from-primary to-blue-500 rounded-full">
+                  <div className="p-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full">
                     <Users className="h-8 w-8 text-white" />
                   </div>
                 </div>
-                <CardTitle className="text-2xl">Unirse a Sesión</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-2xl text-gray-900">Unirse a Sesión</CardTitle>
+                <CardDescription className="text-base text-gray-600">
                   Ingresa el código de 6 dígitos para participar en una sesión interactiva
                 </CardDescription>
               </CardHeader>
@@ -174,7 +178,7 @@ const JoinSession = () => {
                     <Input
                       id="accessCode"
                       type="text"
-                      placeholder="Ej: ABC123"
+                      placeholder="CODIGO"
                       value={accessCode}
                       onChange={handleAccessCodeChange}
                       className="text-center text-lg font-mono tracking-widest uppercase"
@@ -203,7 +207,7 @@ const JoinSession = () => {
 
                   <Button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600 shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
                     disabled={isLoading || !accessCode.trim()}
                   >
                     {isLoading ? (
@@ -223,15 +227,15 @@ const JoinSession = () => {
             </Card>
 
             {/* Teacher Access Card */}
-            <Card className="bg-gradient-to-r from-green-50 via-emerald-50 to-teal-50 border-green-200 shadow-lg">
+            <Card className="bg-white rounded-3xl shadow-2xl border border-white/20 backdrop-blur-sm">
               <CardHeader className="text-center">
                 <div className="flex justify-center mb-4">
                   <div className="p-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full">
-                    <GraduationCap className="h-8 w-8 text-white" />
+                    <BookOpenCheck className="h-8 w-8 text-white" />
                   </div>
                 </div>
-                <CardTitle className="text-2xl">Acceso para Profesores</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-2xl text-gray-900">Acceso para Profesores</CardTitle>
+                <CardDescription className="text-base text-gray-600">
                   Crea y gestiona ejercicios interactivos con IA
                 </CardDescription>
               </CardHeader>
@@ -239,7 +243,7 @@ const JoinSession = () => {
                 <div className="space-y-3">
                   <Button
                     onClick={() => navigate('/login')}
-                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
                   >
                     <LogIn className="mr-2 h-4 w-4" />
                     Iniciar Sesión
@@ -248,16 +252,16 @@ const JoinSession = () => {
                   <Button
                     onClick={() => navigate('/register')}
                     variant="outline"
-                    className="w-full border-green-200 hover:bg-green-50"
+                    className="w-full border-gray-300 hover:bg-gray-50 transition-all duration-200"
                   >
                     <UserPlus className="mr-2 h-4 w-4" />
                     Crear Cuenta
                   </Button>
                 </div>
 
-                <div className="pt-4 border-t border-green-200">
-                  <h4 className="font-medium text-green-900 mb-2">¿Qué puedes hacer?</h4>
-                  <ul className="text-sm text-green-700 space-y-1">
+                <div className="pt-4 border-t border-gray-200">
+                  <h4 className="font-medium text-gray-900 mb-2">¿Qué puedes hacer?</h4>
+                  <ul className="text-sm text-gray-700 space-y-1">
                     <li>• Generar ejercicios con IA</li>
                     <li>• Crear sesiones interactivas</li>
                     <li>• Gestionar estudiantes</li>
@@ -268,38 +272,6 @@ const JoinSession = () => {
             </Card>
           </div>
 
-          {/* Info Section */}
-          <div className="mt-12 grid md:grid-cols-2 gap-6">
-            <Card className="bg-blue-50/50 border-blue-200">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-3">
-                  <BookOpen className="h-6 w-6 text-blue-600 mt-0.5" />
-                  <div className="space-y-2">
-                    <h3 className="font-medium text-blue-900">Para Estudiantes</h3>
-                    <p className="text-sm text-blue-700">
-                      Solo necesitas el código de sesión que te proporcione tu profesor. 
-                      No es necesario crear una cuenta - solo ingresa tu nombre y comienza a aprender.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-green-50/50 border-green-200">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-3">
-                  <GraduationCap className="h-6 w-6 text-green-600 mt-0.5" />
-                  <div className="space-y-2">
-                    <h3 className="font-medium text-green-900">Para Profesores</h3>
-                    <p className="text-sm text-green-700">
-                      Crea una cuenta para acceder a todas las herramientas: generador de ejercicios con IA, 
-                      gestión de sesiones y análisis de resultados.
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </main>
 
