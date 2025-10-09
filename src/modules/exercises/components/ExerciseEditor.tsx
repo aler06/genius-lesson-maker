@@ -156,9 +156,12 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
         hint: generatedExercise.hint
       });
       
+      // Detectar si es un ejercicio fallback
+      const isFallback = generatedExercise.id.startsWith('fallback-');
+      
       toast({
-        title: "¡Ejercicio generado!",
-        description: `Palabra: ${generatedExercise.word}`,
+        title: isFallback ? "Ejercicio generado (modo offline)" : "¡Ejercicio generado con IA!",
+        description: `Palabra: ${generatedExercise.word}${isFallback ? ' - Generado localmente' : ''}`,
         variant: "default"
       });
     } catch (error) {
