@@ -7,8 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ExerciseResponse } from '../model/exercise-response.model';
 import { Game } from '../enum/game.enum';
-import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, Save, Plus, Trash2, CheckCircle2, Move, ArrowUp, ArrowDown, CheckSquare, XCircle, Target, Link2 } from 'lucide-react';
+import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, Save, Plus, Trash2, CheckCircle2, Move, ArrowUp, ArrowDown, CheckSquare, XCircle, Target, Link2, Wand2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { exerciseGeneratorService } from '../services/exercise-generator.service';
 
 interface ExerciseEditorProps {
   exercise: ExerciseResponse;
@@ -18,6 +19,7 @@ interface ExerciseEditorProps {
 
 const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCancel }) => {
   const [editedExercise, setEditedExercise] = useState<ExerciseResponse>({ ...exercise });
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
   const getGameIcon = (game: Game) => {
@@ -141,6 +143,34 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
 
   const handleHintChange = (value: string) => {
     setEditedExercise({ ...editedExercise, hint: value });
+  };
+
+  const handleGenerateHangman = async () => {
+    setIsGenerating(true);
+    try {
+      const generatedExercise = await exerciseGeneratorService.generateHangmanExercise();
+      
+      setEditedExercise({
+        ...editedExercise,
+        word: generatedExercise.word,
+        hint: generatedExercise.hint
+      });
+      
+      toast({
+        title: "¡Ejercicio generado!",
+        description: `Palabra: ${generatedExercise.word}`,
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Error generating hangman exercise:', error);
+      toast({
+        title: "Error al generar ejercicio",
+        description: error instanceof Error ? error.message : "No se pudo generar el ejercicio automáticamente",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Drag and Drop handlers
@@ -489,33 +519,71 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
   );
 
   const renderHangmanEditor = () => (
-    <Card className="border-l-4 border-l-green-500">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Gamepad2 className="h-5 w-5 text-green-600" />
-          Configurar Ahorcado
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <Label>Palabra a adivinar</Label>
-          <Input
-            value={editedExercise.word || ''}
-            onChange={(e) => handleWordChange(e.target.value)}
-            placeholder="Escribe la palabra..."
-          />
-        </div>
-        <div>
-          <Label>Pista (opcional)</Label>
-          <Textarea
-            value={editedExercise.hint || ''}
-            onChange={(e) => handleHintChange(e.target.value)}
-            placeholder="Escribe una pista para ayudar..."
-            rows={2}
-          />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      {/* AI Generator Card */}
+      <Card className="border-l-4 border-l-blue-500 bg-blue-50/50">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Wand2 className="h-5 w-5 text-blue-600" />
+            Generador con IA
+          </CardTitle>
+          <CardDescription>
+            Genera automáticamente una palabra y pista usando inteligencia artificial
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={handleGenerateHangman}
+            disabled={isGenerating}
+            className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generando ejercicio...
+              </>
+            ) : (
+              <>
+                <Wand2 className="mr-2 h-4 w-4" />
+                Generar Ejercicio con IA
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Manual Configuration Card */}
+      <Card className="border-l-4 border-l-green-500">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Gamepad2 className="h-5 w-5 text-green-600" />
+            Configuración Manual
+          </CardTitle>
+          <CardDescription>
+            O configura manualmente la palabra y pista
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Palabra a adivinar</Label>
+            <Input
+              value={editedExercise.word || ''}
+              onChange={(e) => handleWordChange(e.target.value)}
+              placeholder="Escribe la palabra..."
+            />
+          </div>
+          <div>
+            <Label>Pista (opcional)</Label>
+            <Textarea
+              value={editedExercise.hint || ''}
+              onChange={(e) => handleHintChange(e.target.value)}
+              placeholder="Escribe una pista para ayudar..."
+              rows={2}
+            />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderFillBlankEditor = () => {
