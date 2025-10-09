@@ -196,6 +196,7 @@ const FlipCardsGame: React.FC<FlipCardsGameProps> = ({
           <Button
             onClick={handleNextCard}
             disabled={!viewedCards.has(currentCardIndex)}
+            className="no-hover"
           >
             {isLastCard ? 'Finalizar' : 'Siguiente →'}
           </Button>

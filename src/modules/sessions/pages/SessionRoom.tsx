@@ -871,6 +871,7 @@ const SessionRoom = () => {
             variant="outline"
             onClick={() => setCurrentExerciseIndex(Math.max(0, currentExerciseIndex - 1))}
             disabled={currentExerciseIndex === 0 || !exerciseCompleted[currentExerciseIndex - 1]}
+            className="no-hover"
           >
             ← Ejercicio Anterior
           </Button>
@@ -881,6 +882,7 @@ const SessionRoom = () => {
             variant="outline"
             onClick={() => setCurrentExerciseIndex(Math.min(totalExercises - 1, currentExerciseIndex + 1))}
             disabled={currentExerciseIndex === totalExercises - 1 || !exerciseCompleted[currentExerciseIndex]}
+            className="no-hover"
           >
             Ejercicio Siguiente →
           </Button>

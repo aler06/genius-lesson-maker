@@ -225,12 +225,12 @@ const TrueFalseGame: React.FC<TrueFalseGameProps> = ({ trueFalseQuestions, onGam
             <Button 
               onClick={handleSubmitAnswer} 
               disabled={selectedAnswer === null}
-              className="min-w-24"
+              className="min-w-24 no-hover"
             >
               Confirmar
             </Button>
           ) : (
-            <Button onClick={handleNextQuestion} className="min-w-24">
+            <Button onClick={handleNextQuestion} className="min-w-24 no-hover">
               {isLastQuestion ? 'Finalizar' : 'Siguiente'}
             </Button>
           )}

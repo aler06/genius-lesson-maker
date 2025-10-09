@@ -186,7 +186,7 @@ const QuizGame: React.FC<QuizGameProps> = ({ questions, onGameComplete, studentM
           <Button 
             onClick={handleSubmitAnswer} 
             disabled={!selectedAnswer}
-            className="w-full"
+            className="w-full no-hover"
           >
             {isLastQuestion ? 'Finalizar Ejercicio' : 'Siguiente Pregunta'}
           </Button>
