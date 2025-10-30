@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Move, CheckCircle, XCircle, RotateCcw, Lightbulb } from 'lucide-react';
+import { Move, CheckCircle } from 'lucide-react';
 import { DragDropElementModel } from '../model/drag-drop-element.model';
 
 interface DragAndDropGameProps {
@@ -10,7 +10,7 @@ interface DragAndDropGameProps {
   correctOrder: number[];
   instructions?: string;
   explanation?: string;
-  onGameComplete?: (score: number, totalElements: number, answers?: Array<{element: string, userPosition: number, correctPosition: number, isCorrect: boolean}>) => void;
+  onGameComplete?: (score: number, totalElements: number, userOrder: number[]) => void;
   studentMode?: boolean;
 }
 
@@ -25,9 +25,6 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
   const [currentOrder, setCurrentOrder] = useState<number[]>([]);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const [showResult, setShowResult] = useState(false);
-  const [score, setScore] = useState(0);
-  const [userAnswers, setUserAnswers] = useState<Array<{element: string, userPosition: number, correctPosition: number, isCorrect: boolean}>>([]);
 
   useEffect(() => {
     // Initialize with shuffled order
@@ -76,121 +73,25 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
   };
 
   const handleSubmit = () => {
-    const answers = currentOrder.map((elementId, userPosition) => {
-      const element = elements.find(el => el.id === elementId);
-      const correctPosition = correctOrder.indexOf(elementId);
-      return {
-        element: element?.texto || '',
-        userPosition: userPosition + 1,
-        correctPosition: correctPosition + 1,
-        isCorrect: userPosition === correctPosition
-      };
-    });
-
-    const correctCount = answers.filter(answer => answer.isCorrect).length;
+    // Check if order is correct
+    const isCorrect = JSON.stringify(currentOrder) === JSON.stringify(correctOrder);
+    const score = isCorrect ? 1 : 0;
     
-    setScore(correctCount);
-    setUserAnswers(answers);
-    setShowResult(true);
     setGameCompleted(true);
 
     if (onGameComplete) {
-      onGameComplete(correctCount, elements.length, answers);
+      // Pass the user's order to be shown in the final report
+      onGameComplete(score, 1, currentOrder);
     }
   };
 
   const handleRestart = () => {
     const shuffled = [...elements.map(el => el.id)].sort(() => Math.random() - 0.5);
     setCurrentOrder(shuffled);
-    setShowResult(false);
     setGameCompleted(false);
-    setScore(0);
-    setUserAnswers([]);
   };
 
   const getElementById = (id: number) => elements.find(el => el.id === id);
-
-  if (showResult) {
-    const percentage = Math.round((score / elements.length) * 100);
-    
-    return (
-      <Card className="w-full max-w-4xl mx-auto">
-        <CardHeader className="text-center">
-          <CardTitle className="flex items-center justify-center gap-2">
-            {percentage >= 70 ? (
-              <CheckCircle className="h-6 w-6 text-green-500" />
-            ) : (
-              <XCircle className="h-6 w-6 text-red-500" />
-            )}
-            Resultado del Ejercicio
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="text-center">
-            <div className="text-4xl font-bold mb-2">
-              {score}/{elements.length}
-            </div>
-            <div className="text-lg text-muted-foreground">
-              {percentage}% correcto
-            </div>
-          </div>
-
-          {explanation && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-2">
-                <Lightbulb className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div>
-                  <h4 className="font-semibold text-blue-800 mb-2">Explicación:</h4>
-                  <p className="text-blue-700">{explanation}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-3">
-            <h4 className="font-semibold">Orden correcto:</h4>
-            {correctOrder.map((elementId, index) => {
-              const element = getElementById(elementId);
-              const userAnswer = userAnswers.find(a => a.element === element?.texto);
-              return (
-                <div key={elementId} className={`p-3 rounded-lg border-l-4 ${
-                  userAnswer?.isCorrect ? 'border-l-green-500 bg-green-50' : 'border-l-red-500 bg-red-50'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Badge variant="outline" className="font-bold">
-                        {index + 1}
-                      </Badge>
-                      <span>{element?.texto}</span>
-                    </div>
-                    {userAnswer?.isCorrect ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-red-600">
-                          Tu posición: {userAnswer?.userPosition}
-                        </span>
-                        <XCircle className="h-5 w-5 text-red-500" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {!studentMode && (
-            <div className="flex justify-center">
-              <Button onClick={handleRestart} variant="outline">
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Intentar de nuevo
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -265,7 +166,7 @@ const DragAndDropGame: React.FC<DragAndDropGameProps> = ({
             disabled={gameCompleted}
           >
             <CheckCircle className="h-4 w-4 mr-2" />
-            Verificar Orden
+            {studentMode ? 'Siguiente Ejercicio' : 'Verificar Orden'}
           </Button>
         </div>
       </CardContent>

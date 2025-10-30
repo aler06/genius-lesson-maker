@@ -977,10 +977,10 @@ const SessionRoom = () => {
               instructions={currentExercise.instructions || 'Arrastra y ordena los elementos en el orden correcto.'}
               explanation={currentExercise.explanation}
               studentMode={true}
-              onGameComplete={(score, totalElements, answers) => {
+              onGameComplete={(score, totalElements, userOrder) => {
                 const dragDropGameData = {
                   elements: currentExercise.elements || [],
-                  userOrder: answers?.map(a => a.userPosition) || [],
+                  userOrder: userOrder,
                   correctOrder: currentExercise.correctOrder || [],
                   explanation: currentExercise.explanation
                 };
