@@ -1,9 +1,9 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PairModel } from '../model/pair.model';
-import { CheckCircle2, XCircle, RefreshCw, Link2 } from 'lucide-react';
+import { CheckCircle2, RefreshCw, Link2, X, ArrowRight } from 'lucide-react';
 
 interface MatchingGameProps {
   pairs: PairModel[];
@@ -27,7 +27,6 @@ const MatchingGame: React.FC<MatchingGameProps> = ({
   const [draggedTerm, setDraggedTerm] = useState<string | null>(null);
   const [matchedPairs, setMatchedPairs] = useState<MatchedPair[]>([]);
   const [gameCompleted, setGameCompleted] = useState(false);
-  const [showResults, setShowResults] = useState(false);
 
   // Shuffle arrays for randomization
   const [shuffledTerms] = useState(() => 
@@ -75,22 +74,15 @@ const MatchingGame: React.FC<MatchingGameProps> = ({
     setMatchedPairs(newMatchedPairs);
     setDraggedTerm(null);
 
-    // Check if game is completed
+    // Check if all pairs are matched (but don't complete yet)
     if (newMatchedPairs.length === pairs.length) {
       setGameCompleted(true);
-      setShowResults(true);
-      
-      if (onGameComplete) {
-        const score = newMatchedPairs.filter(pair => pair.correct).length;
-        onGameComplete(score, pairs.length, newMatchedPairs);
-      }
     }
   };
 
   const resetGame = () => {
     setMatchedPairs([]);
     setGameCompleted(false);
-    setShowResults(false);
     setDraggedTerm(null);
   };
 
@@ -116,6 +108,21 @@ const MatchingGame: React.FC<MatchingGameProps> = ({
 
   const getMatchForTerm = (term: string) => {
     return matchedPairs.find(pair => pair.term === term);
+  };
+
+  const handleRemovePair = (index: number) => {
+    const newMatchedPairs = matchedPairs.filter((_, i) => i !== index);
+    setMatchedPairs(newMatchedPairs);
+    if (gameCompleted) {
+      setGameCompleted(false);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (onGameComplete) {
+      const score = matchedPairs.filter(pair => pair.correct).length;
+      onGameComplete(score, pairs.length, matchedPairs);
+    }
   };
 
   if (pairs.length === 0) {
@@ -195,7 +202,7 @@ const MatchingGame: React.FC<MatchingGameProps> = ({
           </div>
         </div>
 
-        {/* Matched Pairs Display */}
+        {/* Matched Pairs Display - Only show count, not correctness */}
         {matchedPairs.length > 0 && (
           <div className="mt-8">
             <h3 className="text-lg font-semibold mb-4 text-center">
@@ -205,25 +212,22 @@ const MatchingGame: React.FC<MatchingGameProps> = ({
               {matchedPairs.map((pair, index) => (
                 <div
                   key={index}
-                  className={`
-                    p-4 rounded-lg border-2 flex items-center justify-between
-                    ${pair.correct 
-                      ? 'bg-green-50 border-green-300 text-green-900' 
-                      : 'bg-red-50 border-red-300 text-red-900'
-                    }
-                  `}
+                  className="p-4 rounded-lg border-2 bg-gray-50 border-gray-300 text-gray-900 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-4 flex-1">
                     <div className="font-medium">{pair.term}</div>
                     <div className="text-gray-500">↔</div>
                     <div>{pair.match}</div>
                   </div>
-                  <div className="ml-4">
-                    {pair.correct ? (
-                      <CheckCircle2 className="h-6 w-6 text-green-600" />
-                    ) : (
-                      <XCircle className="h-6 w-6 text-red-600" />
-                    )}
+                  <div className="ml-4 flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleRemovePair(index)}
+                      className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -231,56 +235,22 @@ const MatchingGame: React.FC<MatchingGameProps> = ({
           </div>
         )}
 
-        {/* Results */}
-        {showResults && (
-          <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 rounded-lg">
-            <div className="text-center space-y-4">
-              <h3 className="text-2xl font-bold text-gray-800">
-                🎉 ¡Juego Completado!
-              </h3>
-              
-              <div className="flex justify-center gap-8">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600">
-                    {matchedPairs.filter(pair => pair.correct).length}
-                  </div>
-                  <div className="text-sm text-gray-600">Correctos</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-red-600">
-                    {matchedPairs.filter(pair => !pair.correct).length}
-                  </div>
-                  <div className="text-sm text-gray-600">Incorrectos</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">
-                    {Math.round((matchedPairs.filter(pair => pair.correct).length / pairs.length) * 100)}%
-                  </div>
-                  <div className="text-sm text-gray-600">Puntuación</div>
-                </div>
-              </div>
-
-              {/* Show correct answers for incorrect matches */}
-              {matchedPairs.some(pair => !pair.correct) && (
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-semibold text-blue-800 mb-3">📚 Respuestas Correctas:</h4>
-                  <div className="grid gap-2">
-                    {pairs.map((correctPair, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        <span className="font-medium text-blue-900">{correctPair.term}</span>
-                        <span className="text-gray-500">→</span>
-                        <span className="text-blue-800">{correctPair.match}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+        {/* Submit button when all pairs are matched */}
+        {gameCompleted && (
+          <div className="flex justify-center mt-6">
+            <Button
+              onClick={handleSubmit}
+              size="lg"
+              className="bg-gradient-to-r from-primary to-blue-500 hover:from-primary-hover hover:to-blue-600 flex items-center gap-2"
+            >
+              {studentMode ? 'Siguiente Ejercicio' : 'Finalizar'}
+              <ArrowRight className="h-5 w-5" />
+            </Button>
           </div>
         )}
 
         {/* Controls */}
-        {!studentMode && (
+        {!studentMode && !gameCompleted && (
           <div className="flex justify-center">
             <Button
               onClick={resetGame}

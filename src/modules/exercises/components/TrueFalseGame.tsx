@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Clock, RotateCcw, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { CheckCircle2, Clock, RotateCcw, ThumbsUp, ThumbsDown } from 'lucide-react';
 
 interface TrueFalseQuestion {
   statement: string;
@@ -19,8 +19,6 @@ interface TrueFalseGameProps {
 const TrueFalseGame: React.FC<TrueFalseGameProps> = ({ trueFalseQuestions, onGameComplete, studentMode = false }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [score, setScore] = useState(0);
   const [gameCompleted, setGameCompleted] = useState(false);
   const [startTime, setStartTime] = useState<number>(Date.now());
   const [userAnswers, setUserAnswers] = useState<Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>>([]);
@@ -33,7 +31,6 @@ const TrueFalseGame: React.FC<TrueFalseGameProps> = ({ trueFalseQuestions, onGam
   }, [currentQuestionIndex]);
 
   const handleAnswerSelect = (answer: boolean) => {
-    if (showResult) return;
     setSelectedAnswer(answer);
   };
 
@@ -50,38 +47,32 @@ const TrueFalseGame: React.FC<TrueFalseGameProps> = ({ trueFalseQuestions, onGam
       isCorrect: isCorrect
     };
 
-    setUserAnswers(prev => [...prev, answerData]);
+    const newUserAnswers = [...userAnswers, answerData];
+    setUserAnswers(newUserAnswers);
 
-    if (isCorrect) {
-      setScore(prev => prev + 1);
-    }
-
-    setShowResult(true);
-  };
-
-  const handleNextQuestion = () => {
+    // Move to next question or complete game
     if (isLastQuestion) {
       setGameCompleted(true);
       if (onGameComplete) {
-        onGameComplete(score, trueFalseQuestions.length, userAnswers);
+        const finalScore = newUserAnswers.filter(a => a.isCorrect).length;
+        onGameComplete(finalScore, trueFalseQuestions.length, newUserAnswers);
       }
     } else {
       setCurrentQuestionIndex(prev => prev + 1);
       setSelectedAnswer(null);
-      setShowResult(false);
     }
   };
 
   const handleRestart = () => {
     setCurrentQuestionIndex(0);
     setSelectedAnswer(null);
-    setShowResult(false);
-    setScore(0);
     setGameCompleted(false);
     setUserAnswers([]);
   };
 
-  if (gameCompleted) {
+  // Game completed - no intermediate screen in student mode
+  if (gameCompleted && !studentMode) {
+    const score = userAnswers.filter(a => a.isCorrect).length;
     const percentage = Math.round((score / trueFalseQuestions.length) * 100);
     
     return (
@@ -108,15 +99,18 @@ const TrueFalseGame: React.FC<TrueFalseGameProps> = ({ trueFalseQuestions, onGam
             </Badge>
           </div>
 
-          {!studentMode && (
-            <Button onClick={handleRestart} className="flex items-center gap-2">
-              <RotateCcw className="h-4 w-4" />
-              Jugar de nuevo
-            </Button>
-          )}
+          <Button onClick={handleRestart} className="flex items-center gap-2">
+            <RotateCcw className="h-4 w-4" />
+            Jugar de nuevo
+          </Button>
         </CardContent>
       </Card>
     );
+  }
+  
+  // In student mode, return null when completed (SessionRoom will handle it)
+  if (gameCompleted && studentMode) {
+    return null;
   }
 
   return (
@@ -133,7 +127,7 @@ const TrueFalseGame: React.FC<TrueFalseGameProps> = ({ trueFalseQuestions, onGam
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
-          Puntuación actual: {score}/{currentQuestionIndex + (showResult ? 1 : 0)}
+          Pregunta {currentQuestionIndex + 1} de {trueFalseQuestions.length}
         </div>
       </CardHeader>
       
@@ -148,7 +142,6 @@ const TrueFalseGame: React.FC<TrueFalseGameProps> = ({ trueFalseQuestions, onGam
               variant={selectedAnswer === true ? "default" : "outline"}
               size="lg"
               onClick={() => handleAnswerSelect(true)}
-              disabled={showResult}
               className={`flex items-center justify-center gap-2 h-14 text-base border-2 transition-all duration-200 ${
                 selectedAnswer === true ? 'bg-primary text-primary-foreground border-primary selected-button' : 
                 'border-border hover:border-primary/50 hover:bg-primary/5 hover:text-foreground'
@@ -162,7 +155,6 @@ const TrueFalseGame: React.FC<TrueFalseGameProps> = ({ trueFalseQuestions, onGam
               variant={selectedAnswer === false ? "default" : "outline"}
               size="lg"
               onClick={() => handleAnswerSelect(false)}
-              disabled={showResult}
               className={`flex items-center justify-center gap-2 h-14 text-base border-2 transition-all duration-200 ${
                 selectedAnswer === false ? 'bg-primary text-primary-foreground border-primary selected-button' : 
                 'border-border hover:border-primary/50 hover:bg-primary/5 hover:text-foreground'
@@ -174,66 +166,18 @@ const TrueFalseGame: React.FC<TrueFalseGameProps> = ({ trueFalseQuestions, onGam
           </div>
         </div>
 
-        {showResult && (
-          <div className="space-y-4 p-4 rounded-lg bg-muted">
-            <div className="flex items-center gap-2">
-              {selectedAnswer === currentQuestion.correct_answer ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
-              ) : (
-                <XCircle className="h-5 w-5 text-red-500" />
-              )}
-              <span className="font-medium">
-                {selectedAnswer === currentQuestion.correct_answer ? '¡Correcto!' : 'Incorrecto'}
-              </span>
-            </div>
-            
-            <div className="text-sm space-y-2">
-              <p>
-                <span className="font-medium">Respuesta correcta:</span>{' '}
-                <span className="flex items-center gap-1 inline-flex">
-                  {currentQuestion.correct_answer ? (
-                    <>
-                      <ThumbsUp className="h-4 w-4 text-green-500" />
-                      Verdadero
-                    </>
-                  ) : (
-                    <>
-                      <ThumbsDown className="h-4 w-4 text-red-500" />
-                      Falso
-                    </>
-                  )}
-                </span>
-              </p>
-              
-              {currentQuestion.explanation && (
-                <div className="mt-3 p-3 bg-blue-50 rounded-md border-l-4 border-blue-400">
-                  <p className="text-blue-800">
-                    <span className="font-medium">Explicación:</span> {currentQuestion.explanation}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         <div className="flex justify-between">
           <div className="text-sm text-muted-foreground">
             Pregunta {currentQuestionIndex + 1} de {trueFalseQuestions.length}
           </div>
           
-          {!showResult ? (
-            <Button 
-              onClick={handleSubmitAnswer} 
-              disabled={selectedAnswer === null}
-              className="min-w-24 no-hover"
-            >
-              Confirmar
-            </Button>
-          ) : (
-            <Button onClick={handleNextQuestion} className="min-w-24 no-hover">
-              {isLastQuestion ? 'Finalizar' : 'Siguiente'}
-            </Button>
-          )}
+          <Button 
+            onClick={handleSubmitAnswer} 
+            disabled={selectedAnswer === null}
+            className="min-w-24 no-hover"
+          >
+            {isLastQuestion ? (studentMode ? 'Siguiente Ejercicio' : 'Finalizar') : 'Siguiente Pregunta'}
+          </Button>
         </div>
       </CardContent>
     </Card>
