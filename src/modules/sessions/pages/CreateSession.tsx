@@ -10,8 +10,10 @@ import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useExercises } from '@/modules/exercises/hooks/useExercises';
 import { useSessions } from '../hooks/useSessions';
 import SelectableExerciseCard from '@/modules/exercises/components/SelectableExerciseCard';
+import ExerciseAnswersModal from '@/modules/exercises/components/ExerciseAnswersModal';
 import { ArrowLeft, Plus, BookOpen, Users, Timer, Loader2, CheckCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ExerciseResponse } from '@/modules/exercises/model/exercise-response.model';
 
 const CreateSession = () => {
   const navigate = useNavigate();
@@ -22,12 +24,15 @@ const CreateSession = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    duration: 30,
-    maxParticipants: 25,
+    duration: '',
+    maxParticipants: '',
     allowLateJoin: true,
     showLeaderboard: true,
     selectedExercises: [] as string[]
   });
+
+  const [selectedExercise, setSelectedExercise] = useState<ExerciseResponse | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Show all exercises since published logic is removed from backend
   const availableExercises = exercises || [];
@@ -53,8 +58,8 @@ const CreateSession = () => {
       exerciseIds: formData.selectedExercises,
       name: formData.name,
       description: formData.description || undefined,
-      duration: formData.duration,
-      maxParticipants: formData.maxParticipants,
+      duration: parseInt(formData.duration) || 30,
+      maxParticipants: parseInt(formData.maxParticipants) || 25,
       allowLateJoin: formData.allowLateJoin,
       showLeaderboard: formData.showLeaderboard
     };
@@ -77,7 +82,11 @@ const CreateSession = () => {
   };
 
   const handleViewExercise = (exerciseId: string) => {
-    navigate(`/exercise/${exerciseId}`);
+    const exercise = availableExercises.find(ex => ex.id === exerciseId);
+    if (exercise) {
+      setSelectedExercise(exercise);
+      setIsModalOpen(true);
+    }
   };
 
   return (
@@ -158,11 +167,10 @@ const CreateSession = () => {
                       <Label htmlFor="duration">Duración (minutos)</Label>
                       <Input
                         id="duration"
-                        type="number"
-                        min="5"
-                        max="180"
+                        type="text"
                         value={formData.duration}
-                        onChange={(e) => setFormData(prev => ({ ...prev, duration: parseInt(e.target.value) || 30 }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
+                        placeholder="Ej: 30"
                       />
                     </div>
 
@@ -170,11 +178,10 @@ const CreateSession = () => {
                       <Label htmlFor="maxParticipants">Máx. Participantes</Label>
                       <Input
                         id="maxParticipants"
-                        type="number"
-                        min="1"
-                        max="100"
+                        type="text"
                         value={formData.maxParticipants}
-                        onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: parseInt(e.target.value) || 25 }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: e.target.value }))}
+                        placeholder="Ej: 25"
                       />
                     </div>
                   </div>
@@ -348,6 +355,13 @@ const CreateSession = () => {
               </Button>
             </div>
           </form>
+          
+          {/* Exercise Preview Modal */}
+          <ExerciseAnswersModal
+            exercise={selectedExercise}
+            open={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+          />
         </div>
       </main>
     </div>

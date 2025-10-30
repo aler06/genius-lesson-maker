@@ -6,10 +6,7 @@ import { ExerciseResponse } from '../model/exercise-response.model';
 import { Game } from '../enum/game.enum';
 import { HelpCircle, Gamepad2, PuzzleIcon, FlipHorizontal, CheckCircle2, XCircle, Pencil, Trash2, Move, CheckSquare, Target, Link2 } from 'lucide-react';
 import HangmanGame from './HangmanGame';
-import DragAndDropGame from './DragAndDropGame';
-import TrueFalseGame from './TrueFalseGame';
 import RouletteGame from './RouletteGame';
-import MatchingGame from './MatchingGame';
 import { useNavigate } from 'react-router-dom';
 
 interface ExerciseTemplateProps {
@@ -193,13 +190,51 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
     }
 
     return (
-      <HangmanGame 
-        word={exercise.word} 
-        hint={exercise.hint}
-        onGameComplete={(won, attempts) => {
-          console.log(`Game completed: ${won ? 'Won' : 'Lost'} with ${attempts} wrong attempts`);
-        }}
-      />
+      <div className="space-y-6">
+        {/* Answer Card */}
+        <Card className="border-l-4 border-l-green-500 bg-green-50">
+          <CardHeader>
+            <CardTitle className="text-lg text-green-800 flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5" />
+              Respuesta Correcta
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="p-6 bg-white border border-green-200 rounded-lg text-center">
+                <p className="text-sm text-gray-600 mb-2">Palabra:</p>
+                <p className="text-4xl font-bold text-green-700 tracking-wider">
+                  {exercise.word}
+                </p>
+              </div>
+              {exercise.hint && (
+                <div className="p-4 bg-green-100 border-l-4 border-green-500 rounded">
+                  <p className="text-sm text-green-800">
+                    <strong>Pista:</strong> {exercise.hint}
+                  </p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Interactive Game */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Vista Previa del Juego</CardTitle>
+            <CardDescription>Así es como los estudiantes verán el ejercicio</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <HangmanGame 
+              word={exercise.word} 
+              hint={exercise.hint}
+              onGameComplete={(won, attempts) => {
+                console.log(`Game completed: ${won ? 'Won' : 'Lost'} with ${attempts} wrong attempts`);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
     );
   };
 
@@ -299,15 +334,36 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
     }
 
     return (
-      <DragAndDropGame 
-        elements={exercise.elements}
-        correctOrder={exercise.correctOrder}
-        instructions={exercise.instructions || 'Arrastra y ordena los elementos en el orden correcto.'}
-        explanation={exercise.explanation}
-        onGameComplete={(isCorrect, userOrder, score) => {
-          console.log(`Drag and Drop completed: ${isCorrect ? 'Correct' : 'Incorrect'} order, Score: ${score}`);
-        }}
-      />
+      <Card className="border-l-4 border-l-indigo-500 bg-indigo-50">
+        <CardHeader>
+          <CardTitle className="text-lg text-indigo-800 flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5" />
+            Orden Correcto
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {exercise.correctOrder.map((elementId, index) => {
+              const element = exercise.elements?.find(el => el.id === elementId);
+              return (
+                <div key={elementId} className="p-4 bg-white border border-indigo-200 rounded-lg flex items-center gap-3">
+                  <span className="bg-indigo-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    {index + 1}
+                  </span>
+                  <span className="text-gray-800">{element?.texto}</span>
+                </div>
+              );
+            })}
+          </div>
+          {exercise.explanation && (
+            <div className="mt-4 p-4 bg-indigo-100 border-l-4 border-indigo-500 rounded">
+              <p className="text-sm text-indigo-800">
+                <strong>Explicación:</strong> {exercise.explanation}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     );
   };
 
@@ -323,12 +379,50 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
     }
 
     return (
-      <TrueFalseGame 
-        trueFalseQuestions={exercise.trueFalseQuestions}
-        onGameComplete={(score, totalQuestions, answers) => {
-          console.log(`True or False completed: ${score}/${totalQuestions} correct`);
-        }}
-      />
+      <Card className="border-l-4 border-l-teal-500 bg-teal-50">
+        <CardHeader>
+          <CardTitle className="text-lg text-teal-800 flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5" />
+            Respuestas Correctas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {exercise.trueFalseQuestions.map((question, index) => (
+              <div key={index} className="p-4 bg-white border border-teal-200 rounded-lg">
+                <div className="flex items-start gap-3 mb-2">
+                  <span className="bg-teal-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">
+                    {index + 1}
+                  </span>
+                  <span className="text-gray-800 flex-1">{question.statement}</span>
+                </div>
+                <div className="ml-9 p-3 bg-green-100 border border-green-300 rounded">
+                  <div className="flex items-center gap-2">
+                    {question.correct_answer ? (
+                      <>
+                        <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        <span className="font-semibold text-green-800">Verdadero</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="h-5 w-5 text-red-600" />
+                        <span className="font-semibold text-red-800">Falso</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                {question.explanation && (
+                  <div className="ml-9 mt-2 p-3 bg-teal-100 border-l-4 border-teal-500 rounded">
+                    <p className="text-sm text-teal-800">
+                      <strong>Explicación:</strong> {question.explanation}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
@@ -344,13 +438,51 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
     }
 
     return (
-      <RouletteGame 
-        phrases={exercise.phrases}
-        instructions={exercise.instructions}
-        onGameComplete={(selectedPhrase, phraseIndex) => {
-          console.log(`Roulette completed: Selected phrase "${selectedPhrase}" at index ${phraseIndex}`);
-        }}
-      />
+      <div className="space-y-6">
+        {/* Phrases List Card */}
+        <Card className="border-l-4 border-l-rose-500 bg-rose-50">
+          <CardHeader>
+            <CardTitle className="text-lg text-rose-800 flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Frases de Reflexión
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {exercise.phrases.map((phrase, index) => (
+                <div key={index} className="p-4 bg-white border border-rose-200 rounded-lg flex items-start gap-3">
+                  <span className="bg-rose-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
+                    {index + 1}
+                  </span>
+                  <span className="text-gray-800">{phrase.text}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 p-3 bg-rose-100 border-l-4 border-rose-500 rounded">
+              <p className="text-sm text-rose-800">
+                💡 La ruleta seleccionará aleatoriamente una de estas frases para que el estudiante reflexione.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Interactive Game */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Vista Previa del Juego</CardTitle>
+            <CardDescription>Así es como los estudiantes verán el ejercicio</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RouletteGame 
+              phrases={exercise.phrases}
+              instructions={exercise.instructions}
+              onGameComplete={(selectedPhrase, phraseIndex) => {
+                console.log(`Roulette completed: Selected phrase "${selectedPhrase}" at index ${phraseIndex}`);
+              }}
+            />
+          </CardContent>
+        </Card>
+      </div>
     );
   };
 
@@ -366,13 +498,38 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
     }
 
     return (
-      <MatchingGame 
-        pairs={exercise.pairs}
-        instructions={exercise.instructions}
-        onGameComplete={(score, totalPairs, matchedPairs) => {
-          console.log(`Matching completed: ${score}/${totalPairs} correct matches`);
-        }}
-      />
+      <Card className="border-l-4 border-l-cyan-500 bg-cyan-50">
+        <CardHeader>
+          <CardTitle className="text-lg text-cyan-800 flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5" />
+            Emparejamientos Correctos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {exercise.pairs.map((pair, index) => (
+              <div key={index} className="p-4 bg-white border border-cyan-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="bg-cyan-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                    {index + 1}
+                  </span>
+                  <div className="flex-1 flex items-center gap-4">
+                    <div className="flex-1 p-3 bg-blue-100 border border-blue-200 rounded">
+                      <p className="text-xs text-gray-600 font-medium mb-1">Término:</p>
+                      <p className="text-gray-800 font-medium">{pair.term}</p>
+                    </div>
+                    <div className="text-cyan-600 font-bold text-xl">↔</div>
+                    <div className="flex-1 p-3 bg-green-100 border border-green-200 rounded">
+                      <p className="text-xs text-gray-600 font-medium mb-1">Definición:</p>
+                      <p className="text-gray-800">{pair.match}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   };
 
