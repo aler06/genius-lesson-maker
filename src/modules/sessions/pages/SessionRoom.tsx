@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { NavHeader } from '@/components/ui/nav-header';
 import { useAuth } from '@/modules/auth/hooks/useAuth';
+import { authService } from '@/modules/auth/services/auth.service';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useToast } from '@/hooks/use-toast';
 import HangmanGame from '@/modules/exercises/components/HangmanGame';
@@ -37,6 +38,7 @@ import {
 import { SessionResponse, AnswerResult } from '@/types/session-backend';
 import { getSubjectInfo } from '@/modules/exercises/utils/subject-detector';
 import { Subject } from '@/modules/exercises/enum/subject.enum';
+import { useSessionScores } from '@/modules/sessions/hooks/useSessionScores';
 
 interface LocationState {
   sessionData: SessionResponse;
@@ -57,7 +59,10 @@ const SessionRoom = () => {
   // Map initial session data if it exists
   const mappedInitialData = initialSessionData ? {
     ...initialSessionData,
-    exercises: (initialSessionData as any).exerciseIds || (initialSessionData as any).exercises || []
+    exercises: ((initialSessionData as any).exerciseIds || (initialSessionData as any).exercises || []).map((ex: any) => ({
+      ...ex,
+      id: ex.id || ex._id, // Ensure id property exists
+    }))
   } : null;
   
   // Local state
@@ -74,12 +79,18 @@ const SessionRoom = () => {
     dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string};
     trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>;
     rouletteData?: {selectedPhrase: string, phraseIndex: number, allPhrases: Array<{text: string}>};
-    matchingData?: {matchedPairs: Array<{term: string, match: string, correct: boolean}>, totalPairs: number};
+    matchingData?: {matchedPairs: Array<{term: string, match: string, correct: boolean, correctMatch?: string}>, totalPairs: number};
   }>>([]);
   const [allExercisesCompleted, setAllExercisesCompleted] = useState(false);
   const [answers, setAnswers] = useState<Record<string, AnswerResult>>({});
   const [isJoined, setIsJoined] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
+  const [sessionStartTime, setSessionStartTime] = useState<number>(Date.now());
+  const [scoreInitialized, setScoreInitialized] = useState(false);
+  const [guestTokenObtained, setGuestTokenObtained] = useState(false);
+
+  // Session scores hook
+  const { initializeScore, submitAnswer: submitScoreAnswer, completeSession: completeSessionScore } = useSessionScores(sessionId);
 
   const {
     isConnected,
@@ -96,10 +107,14 @@ const SessionRoom = () => {
       if (data.session) {
         // Map backend data structure to frontend expected structure
         const backendSession = data.session as any;
+        const exercises = (backendSession.exerciseIds || backendSession.exercises || []).map((ex: any) => ({
+          ...ex,
+          id: ex.id || ex._id, // Ensure id property exists
+        }));
         const mappedSession = {
           ...backendSession,
           teacher: backendSession.teacherId || backendSession.teacher,
-          exercises: backendSession.exerciseIds || backendSession.exercises || [], // Map exerciseIds to exercises
+          exercises: exercises,
         };
         console.log('Mapped session data:', mappedSession);
         setSessionData(mappedSession);
@@ -123,10 +138,14 @@ const SessionRoom = () => {
     onSessionStarted: (data) => {
       if (data.session) {
         const backendSession = data.session as any;
+        const exercises = (backendSession.exerciseIds || backendSession.exercises || []).map((ex: any) => ({
+          ...ex,
+          id: ex.id || ex._id, // Ensure id property exists
+        }));
         const mappedSession = {
           ...backendSession,
           teacher: backendSession.teacherId || backendSession.teacher,
-          exercises: backendSession.exerciseIds || backendSession.exercises || [],
+          exercises: exercises,
         };
         setSessionData(mappedSession);
       }
@@ -138,10 +157,14 @@ const SessionRoom = () => {
     onSessionEnded: (data) => {
       if (data.session) {
         const backendSession = data.session as any;
+        const exercises = (backendSession.exerciseIds || backendSession.exercises || []).map((ex: any) => ({
+          ...ex,
+          id: ex.id || ex._id, // Ensure id property exists
+        }));
         const mappedSession = {
           ...backendSession,
           teacher: backendSession.teacherId || backendSession.teacher,
-          exercises: backendSession.exerciseIds || backendSession.exercises || [],
+          exercises: exercises,
         };
         setSessionData(mappedSession);
       }
@@ -207,6 +230,43 @@ const SessionRoom = () => {
     }
   }, [isConnected, sessionId, currentUser, user, accessCode, isJoined]);
 
+  // Get guest token for temporary users
+  useEffect(() => {
+    const userToUse = currentUser || user;
+    const isTemporary = userToUse?.isTemporary;
+    const hasToken = !!localStorage.getItem('token');
+    
+    if (isTemporary && !hasToken && !guestTokenObtained && userToUse) {
+      console.log('Getting guest token for temporary user:', userToUse);
+      const nombre = userToUse.firstName ? `${userToUse.firstName} ${userToUse.lastName || ''}`.trim() : userToUse.name || 'Estudiante';
+      // Use the user's temporary ID to ensure consistent email across all requests
+      const correo = userToUse.email || `guest_${userToUse.id}@temp.com`;
+      
+      authService.guestLogin({ nombre, correo })
+        .then((response) => {
+          console.log('Guest token obtained successfully:', response);
+          setGuestTokenObtained(true);
+        })
+        .catch((error) => {
+          console.error('Error getting guest token:', error);
+          toast({
+            title: 'Error',
+            description: 'No se pudo obtener acceso como invitado. Intenta de nuevo.',
+            variant: 'destructive',
+          });
+        });
+    }
+  }, [currentUser, user, guestTokenObtained, toast]);
+
+  // Start timer when session is joined
+  useEffect(() => {
+    if (isJoined && sessionId && !scoreInitialized) {
+      console.log('Session joined - starting timer');
+      setScoreInitialized(true);
+      setSessionStartTime(Date.now());
+    }
+  }, [isJoined, sessionId, scoreInitialized]);
+
   useEffect(() => {
     setConnectionStatus(isConnected ? 'connected' : 'disconnected');
   }, [isConnected]);
@@ -233,7 +293,15 @@ const SessionRoom = () => {
   const totalExercises = exercises.length;
   const completedExercises = exerciseCompleted.filter(Boolean).length;
 
-  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>, rouletteData?: {selectedPhrase: string, phraseIndex: number, allPhrases: Array<{text: string}>}, matchingData?: {matchedPairs: Array<{term: string, match: string, correct: boolean}>, totalPairs: number}) => {
+  const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>, rouletteData?: {selectedPhrase: string, phraseIndex: number, allPhrases: Array<{text: string}>}, matchingData?: {matchedPairs: Array<{term: string, match: string, correct: boolean, correctMatch?: string}>, totalPairs: number}) => {
+    const userToUse = currentUser || user;
+    const exerciseId = currentExercise?.id || exercises[exerciseIndex]?.id;
+    const timeSpent = Math.floor((Date.now() - sessionStartTime) / 1000);
+
+    // NOTE: We no longer submit individual answers to the backend during the session
+    // All results will be submitted at the end when the session is completed
+    // This simplifies the system and avoids synchronization issues
+
     // Mark exercise as completed
     setExerciseCompleted(prev => {
       const newCompleted = [...prev];
@@ -241,20 +309,22 @@ const SessionRoom = () => {
       return newCompleted;
     });
 
-    // Save exercise result
+    // Save exercise result and get updated results
+    const currentResult = {
+      score: score || 0,
+      total: total || 1,
+      type: currentExercise?.game || 'unknown',
+      answers: quizAnswers, // Store quiz answers for final review
+      hangmanData: hangmanData, // Store hangman game data
+      dragDropData: dragDropData, // Store drag and drop game data
+      trueFalseData: trueFalseData, // Store true or false game data
+      rouletteData: rouletteData, // Store roulette game data
+      matchingData: matchingData // Store matching game data
+    };
+
     setExerciseResults(prev => {
       const newResults = [...prev];
-      newResults[exerciseIndex] = {
-        score: score || 0,
-        total: total || 1,
-        type: currentExercise?.game || 'unknown',
-        answers: quizAnswers, // Store quiz answers for final review
-        hangmanData: hangmanData, // Store hangman game data
-        dragDropData: dragDropData, // Store drag and drop game data
-        trueFalseData: trueFalseData, // Store true or false game data
-        rouletteData: rouletteData, // Store roulette game data
-        matchingData: matchingData // Store matching game data
-      };
+      newResults[exerciseIndex] = currentResult;
       return newResults;
     });
 
@@ -264,15 +334,130 @@ const SessionRoom = () => {
         // Just advance to next exercise without toast
         setCurrentExerciseIndex(exerciseIndex + 1);
       } else {
-        // All exercises completed - show toast only here
+        // All exercises completed - show toast and complete session
         setAllExercisesCompleted(true);
-        const totalScore = exerciseResults.reduce((sum, result) => sum + result.score, 0) + (score || 0);
-        const totalQuestions = exerciseResults.reduce((sum, result) => sum + result.total, 0) + (total || 0);
-        const finalPercentage = totalQuestions > 0 ? Math.round((totalScore / totalQuestions) * 100) : 0;
+        
+        // Build complete results array including current exercise
+        const completeResults = [...exerciseResults];
+        completeResults[exerciseIndex] = currentResult;
+        
+        // Calculate score out of 20 points
+        const totalCorrect = completeResults.reduce((sum, result) => sum + (result?.score || 0), 0);
+        const totalQuestions = completeResults.reduce((sum, result) => sum + (result?.total || 0), 0);
+        const MAX_SCORE = 20;
+        const finalScore = totalQuestions > 0 ? (totalCorrect / totalQuestions) * MAX_SCORE : 0;
+        const roundedFinalScore = Math.round(finalScore * 100) / 100; // Round to 2 decimals
+        const finalPercentage = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+        
+        // Submit final results to backend
+        if (sessionId && userToUse) {
+          const nombre = userToUse.firstName ? `${userToUse.firstName} ${userToUse.lastName || ''}`.trim() : userToUse.name || 'Estudiante';
+          const correo = userToUse.email || userToUse.correo || `guest_${userToUse.id}@temp.com`;
+          
+          console.log('📊 Submitting final session results:', {
+            totalCorrect,
+            totalQuestions,
+            finalScore: roundedFinalScore,
+            timeSpent,
+            exercisesCompleted: completeResults.filter(r => r).length,
+            nombre,
+            correo
+          });
+          
+          // Submit all answers at once
+          const allAnswers: any[] = [];
+          
+          // Process all completed exercises
+          completeResults.forEach((result, idx) => {
+            if (!result) return;
+            const exercise = exercises[idx];
+            console.log('🔍 Processing exercise:', { idx, exerciseId: exercise?.id, resultType: result.type, hasAnswers: !!result.answers, answersLength: result.answers?.length });
+            
+            if (!exercise?.id) {
+              console.log('⚠️ Skipping - no exercise ID');
+              return;
+            }
+            
+            const totalExercisesCompleted = completeResults.filter(r => r).length;
+            
+            // Quiz answers
+            if (result.answers && result.answers.length > 0) {
+              result.answers.forEach((answer: any, qIdx: number) => {
+                const question = exercise.questions?.[qIdx];
+                allAnswers.push({
+                  exerciseId: exercise.id,
+                  questionId: question?._id || `${exercise.id}-q${qIdx}`,
+                  answer: answer.selectedAnswer,
+                  isCorrect: answer.isCorrect,
+                  timeSpent: Math.floor(timeSpent / totalExercisesCompleted / result.answers.length)
+                });
+              });
+            }
+            // True/False answers
+            else if (result.trueFalseData && result.trueFalseData.length > 0) {
+              result.trueFalseData.forEach((answer: any, qIdx: number) => {
+                const question = exercise.trueFalseQuestions?.[qIdx];
+                allAnswers.push({
+                  exerciseId: exercise.id,
+                  questionId: question?._id || `${exercise.id}-tf${qIdx}`,
+                  answer: answer.selectedAnswer.toString(),
+                  isCorrect: answer.isCorrect,
+                  timeSpent: Math.floor(timeSpent / totalExercisesCompleted / result.trueFalseData.length)
+                });
+              });
+            }
+            // Hangman
+            else if (result.hangmanData) {
+              allAnswers.push({
+                exerciseId: exercise.id,
+                questionId: `${exercise.id}-hangman`,
+                answer: result.hangmanData.word,
+                isCorrect: result.hangmanData.wrongGuesses <= 6,
+                timeSpent: Math.floor(timeSpent / totalExercisesCompleted)
+              });
+            }
+            // Drag and Drop
+            else if (result.dragDropData) {
+              allAnswers.push({
+                exerciseId: exercise.id,
+                questionId: `${exercise.id}-dragdrop`,
+                answer: JSON.stringify(result.dragDropData.userOrder),
+                isCorrect: JSON.stringify(result.dragDropData.userOrder) === JSON.stringify(result.dragDropData.correctOrder),
+                timeSpent: Math.floor(timeSpent / totalExercisesCompleted)
+              });
+            }
+            // Matching
+            else if (result.matchingData) {
+              allAnswers.push({
+                exerciseId: exercise.id,
+                questionId: `${exercise.id}-matching`,
+                answer: JSON.stringify(result.matchingData.matchedPairs),
+                isCorrect: result.matchingData.matchedPairs.every((p: any) => p.correct),
+                timeSpent: Math.floor(timeSpent / totalExercisesCompleted)
+              });
+            }
+          });
+          
+          // Submit final score with all answers
+          console.log('📤 Sending to backend:', {
+            answersCount: allAnswers.length,
+            puntajeFinal: roundedFinalScore,
+            tiempoTotal: timeSpent
+          });
+          
+          completeSessionScore({
+            sessionId: sessionId,
+            nombre: nombre,
+            correo: correo,
+            puntajeFinal: roundedFinalScore,
+            tiempoTotal: timeSpent,
+            respuestas: allAnswers
+          });
+        }
         
         toast({
           title: "¡Sesión completada!",
-          description: `Has terminado todos los ejercicios. Puntuación final: ${totalScore}/${totalQuestions} (${finalPercentage}%)`,
+          description: `Has terminado todos los ejercicios. Puntuación final: ${roundedFinalScore}/20 (${finalPercentage}%)`,
         });
       }
     }, 500); // Quick transition between exercises
@@ -311,7 +496,14 @@ const SessionRoom = () => {
 
             <div className="space-y-6">
               <h3 className="text-lg font-semibold mb-4">Resumen por Ejercicio:</h3>
-              {exerciseResults.map((result, index) => (
+              {exerciseResults.map((result, index) => {
+                console.log('📋 Rendering result summary:', { 
+                  index, 
+                  type: result.type, 
+                  hasMatchingData: !!result.matchingData,
+                  matchingData: result.matchingData 
+                });
+                return (
                 <div key={index} className="bg-background rounded-lg border p-4">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -751,11 +943,9 @@ const SessionRoom = () => {
                                     {pair.correct ? '✓' : '✗'}
                                   </div>
                                   
-                                  <div className="flex-1 grid md:grid-cols-2 gap-4">
+                                  <div className="flex-1 space-y-3">
                                     <div>
-                                      <span className={`text-xs font-medium uppercase tracking-wide ${
-                                        pair.correct ? 'text-green-600' : 'text-red-600'
-                                      }`}>
+                                      <span className="text-xs font-medium uppercase tracking-wide text-gray-600">
                                         Término
                                       </span>
                                       <p className="text-sm font-medium text-gray-800 mt-1">
@@ -763,15 +953,30 @@ const SessionRoom = () => {
                                       </p>
                                     </div>
                                     
-                                    <div>
-                                      <span className={`text-xs font-medium uppercase tracking-wide ${
-                                        pair.correct ? 'text-green-600' : 'text-red-600'
-                                      }`}>
-                                        Tu emparejamiento
-                                      </span>
-                                      <p className="text-sm text-gray-700 mt-1">
-                                        {pair.match}
-                                      </p>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                      <div>
+                                        <span className={`text-xs font-medium uppercase tracking-wide ${
+                                          pair.correct ? 'text-green-600' : 'text-red-600'
+                                        }`}>
+                                          Tu emparejamiento
+                                        </span>
+                                        <p className={`text-sm mt-1 ${
+                                          pair.correct ? 'text-gray-700' : 'text-red-700 font-medium'
+                                        }`}>
+                                          {pair.match}
+                                        </p>
+                                      </div>
+                                      
+                                      {!pair.correct && pair.correctMatch && (
+                                        <div>
+                                          <span className="text-xs font-medium uppercase tracking-wide text-green-600">
+                                            Emparejamiento correcto
+                                          </span>
+                                          <p className="text-sm text-green-700 font-medium mt-1">
+                                            {pair.correctMatch}
+                                          </p>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                   
@@ -802,7 +1007,8 @@ const SessionRoom = () => {
                     </div>
                   )}
                 </div>
-              ))}
+              );
+              })}
             </div>
           </div>
 
@@ -912,7 +1118,9 @@ const SessionRoom = () => {
       id: currentExercise?.id,
       game: currentExercise?.game,
       questionsCount: currentExercise?.questions?.length,
-      questions: currentExercise?.questions
+      questions: currentExercise?.questions,
+      pairs: currentExercise?.pairs,
+      pairsCount: currentExercise?.pairs?.length
     });
 
     // Render specific exercise type
@@ -926,7 +1134,37 @@ const SessionRoom = () => {
               hint={currentExercise.hint || 'Sin pista disponible'}
               studentMode={true}
               onGameComplete={(won, attempts, gameData) => {
-                handleExerciseComplete(currentExerciseIndex, won, won ? 1 : 0, 1, undefined, gameData);
+                // Calculate score with penalties for hangman based on wrong guesses
+                const wrongGuesses = gameData?.wrongGuesses || 0;
+                let finalScore = 0;
+                
+                if (won) {
+                  // Penalty system based on errors:
+                  // 0-2 errors: full score (1.0)
+                  // 3 errors: 0.85
+                  // 4 errors: 0.70
+                  // 5 errors: 0.55
+                  // 6 errors: 0.40
+                  if (wrongGuesses <= 2) {
+                    finalScore = 1.0;
+                  } else if (wrongGuesses === 3) {
+                    finalScore = 0.85;
+                  } else if (wrongGuesses === 4) {
+                    finalScore = 0.70;
+                  } else if (wrongGuesses === 5) {
+                    finalScore = 0.55;
+                  } else if (wrongGuesses === 6) {
+                    finalScore = 0.40;
+                  }
+                }
+                
+                console.log('🎮 Hangman score calculation:', {
+                  won,
+                  wrongGuesses,
+                  finalScore
+                });
+                
+                handleExerciseComplete(currentExerciseIndex, won, finalScore, 1, undefined, gameData);
               }}
             />
           );
@@ -978,13 +1216,35 @@ const SessionRoom = () => {
               explanation={currentExercise.explanation}
               studentMode={true}
               onGameComplete={(score, totalElements, userOrder) => {
+                // Calculate score with penalties for drag and drop
+                const correctOrder = currentExercise.correctOrder || [];
+                let correctPositions = 0;
+                
+                userOrder.forEach((elementId, index) => {
+                  if (correctOrder[index] === elementId) {
+                    correctPositions++;
+                  }
+                });
+                
+                // Proportional score based on correct positions
+                const finalScore = correctPositions / totalElements;
+                
+                console.log('🔀 Drag & Drop score calculation:', {
+                  correctPositions,
+                  totalElements,
+                  rawScore: score,
+                  finalScore,
+                  userOrder,
+                  correctOrder
+                });
+                
                 const dragDropGameData = {
                   elements: currentExercise.elements || [],
                   userOrder: userOrder,
-                  correctOrder: currentExercise.correctOrder || [],
+                  correctOrder: correctOrder,
                   explanation: currentExercise.explanation
                 };
-                handleExerciseComplete(currentExerciseIndex, score > 0, score, totalElements, undefined, undefined, dragDropGameData);
+                handleExerciseComplete(currentExerciseIndex, finalScore > 0, finalScore, 1, undefined, undefined, dragDropGameData);
               }}
             />
           );
@@ -1020,18 +1280,49 @@ const SessionRoom = () => {
           );
 
         case 'matching':
+          console.log('🔗 Rendering MatchingGame with:', {
+            pairs: currentExercise.pairs,
+            pairsCount: currentExercise.pairs?.length,
+            instructions: currentExercise.instructions
+          });
+          
+          // Show loading if pairs are not loaded yet
+          if (!currentExercise.pairs || currentExercise.pairs.length === 0) {
+            return (
+              <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p className="text-muted-foreground">Cargando ejercicio de emparejamiento...</p>
+              </div>
+            );
+          }
+          
           return (
             <MatchingGame
               key={`matching-${currentExerciseIndex}-${currentExercise.id}`}
-              pairs={currentExercise.pairs || []}
+              pairs={currentExercise.pairs}
               instructions={currentExercise.instructions}
               studentMode={true}
               onGameComplete={(score, totalPairs, matchedPairs) => {
+                // Calculate score with penalties for matching
+                const correctPairs = matchedPairs.filter(p => p.correct).length;
+                const incorrectPairs = matchedPairs.filter(p => !p.correct).length;
+                
+                // Proportional score: correct pairs minus penalty for incorrect ones
+                const finalScore = Math.max(0, correctPairs - (incorrectPairs * 0.5));
+                
+                console.log('🔗 Matching score calculation:', {
+                  correctPairs,
+                  incorrectPairs,
+                  rawScore: score,
+                  finalScore,
+                  totalPairs
+                });
+                
                 const matchingGameData = {
                   matchedPairs: matchedPairs,
                   totalPairs: totalPairs
                 };
-                handleExerciseComplete(currentExerciseIndex, score > 0, score, totalPairs, undefined, undefined, undefined, undefined, undefined, matchingGameData);
+                handleExerciseComplete(currentExerciseIndex, finalScore > 0, finalScore, totalPairs, undefined, undefined, undefined, undefined, undefined, matchingGameData);
               }}
             />
           );

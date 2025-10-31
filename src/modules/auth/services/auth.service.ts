@@ -154,6 +154,32 @@ class AuthService {
   }
 
   /**
+   * Guest login - Get temporary token for non-registered users
+   */
+  async guestLogin(guestData: {
+    nombre: string;
+    correo?: string;
+  }): Promise<LoginResponse> {
+    try {
+      const response: AxiosResponse<LoginResponse> = await this.api.post('/auth/guest', guestData);
+      
+      // Store token and user data (same as regular login)
+      if (response.data.accessToken) {
+        localStorage.setItem('token', response.data.accessToken);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || 'Error al iniciar sesión como invitado';
+        throw new Error(Array.isArray(message) ? message.join(', ') : message);
+      }
+      throw new Error('Error de conexión');
+    }
+  }
+
+  /**
    * Logout user
    */
   logout(): void {

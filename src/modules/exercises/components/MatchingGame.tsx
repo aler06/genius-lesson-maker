@@ -8,7 +8,7 @@ import { CheckCircle2, RefreshCw, Link2, X, ArrowRight } from 'lucide-react';
 interface MatchingGameProps {
   pairs: PairModel[];
   instructions?: string;
-  onGameComplete?: (score: number, totalPairs: number, matchedPairs: { term: string; match: string; correct: boolean }[]) => void;
+  onGameComplete?: (score: number, totalPairs: number, matchedPairs: { term: string; match: string; correct: boolean; correctMatch?: string }[]) => void;
   studentMode?: boolean;
 }
 
@@ -16,6 +16,7 @@ interface MatchedPair {
   term: string;
   match: string;
   correct: boolean;
+  correctMatch?: string;
 }
 
 const MatchingGame: React.FC<MatchingGameProps> = ({ 
@@ -67,7 +68,8 @@ const MatchingGame: React.FC<MatchingGameProps> = ({
     const newMatch: MatchedPair = {
       term: draggedTerm,
       match: targetMatch,
-      correct: isCorrect
+      correct: isCorrect,
+      correctMatch: correctPair?.match // Always include the correct match
     };
 
     const newMatchedPairs = [...matchedPairs, newMatch];

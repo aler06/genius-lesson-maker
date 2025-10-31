@@ -12,6 +12,7 @@ import Register from "./modules/auth/pages/Register";
 import JoinSession from "./modules/sessions/pages/JoinSession";
 import SessionRoom from "./modules/sessions/pages/SessionRoom";
 import CreateSession from "./modules/sessions/pages/CreateSession";
+import SessionResults from "./modules/sessions/pages/SessionResults";
 import ProtectedRoute from "./components/ui/protected-route";
 import { Role } from "./types/enums";
 import NotFound from "./pages/NotFound";
@@ -50,6 +51,11 @@ const App = () => (
           <Route path="/create-session" element={
             <ProtectedRoute requiredRole={Role.PROFESSOR}>
               <CreateSession />
+            </ProtectedRoute>
+          } />
+          <Route path="/session/:sessionId/results" element={
+            <ProtectedRoute requiredRole={Role.PROFESSOR}>
+              <SessionResults />
             </ProtectedRoute>
           } />
           <Route path="/exercise/:exerciseId" element={
