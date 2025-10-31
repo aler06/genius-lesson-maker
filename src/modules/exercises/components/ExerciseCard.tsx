@@ -118,64 +118,62 @@ const ExerciseCard = ({ exercise, onView, onDelete }: ExerciseCardProps) => {
   const SubjectIcon = subjectInfo.icon;
 
   return (
-    <Card className="h-[280px] w-full min-w-[280px] transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 border-l-4 border-l-primary bg-gradient-to-br from-white/80 via-card/60 to-primary/5 backdrop-blur-sm flex flex-col group cursor-pointer overflow-hidden relative">
-      {/* Decorative gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-      
-      <CardHeader className="pb-4 pt-6 flex-1 flex items-center justify-center relative z-10">
-        <div className="text-center space-y-3">
-           {/* Icon container with animation - smaller size */}
-           <div className="flex justify-center">
-             <div className="p-3 bg-gradient-to-br from-primary/10 to-blue-500/10 rounded-2xl border border-primary/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm group-hover:shadow-lg">
-               <SubjectIcon className="h-8 w-8 text-primary group-hover:text-blue-600 transition-colors duration-300" />
-             </div>
-           </div>
-          
-          {/* Badges with improved styling - more compact */}
-          <div className="flex flex-col gap-1.5">
-            <Badge className={`${subjectInfo.color} pointer-events-none mx-auto shadow-sm group-hover:shadow-md transition-shadow duration-300 text-xs px-2 py-0.5`}>
-              <div className="flex items-center gap-1 pointer-events-none">
-                <span className="font-medium">{subjectInfo.name}</span>
-              </div>
-            </Badge>
-            
-            <Badge className={`${getGameColor(exercise.game)} pointer-events-none mx-auto shadow-sm group-hover:shadow-md transition-shadow duration-300 px-2 py-0.5`}>
-              <div className="flex items-center gap-1 pointer-events-none">
-                {getGameIcon(exercise.game)}
-                <span className="text-xs font-medium">{getGameName(exercise.game)}</span>
-              </div>
-            </Badge>
+    <div className="relative w-full overflow-hidden rounded-2xl border border-border/40 bg-white shadow-sm">
+      {/* Main content - vertical centered layout */}
+      <div className="flex flex-col items-center gap-4 p-6">
+        {/* Large circular icon */}
+        <div className={`flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-full ${getGameColor(exercise.game)}`}>
+          <div className="scale-150">
+            {getGameIcon(exercise.game)}
           </div>
-          
         </div>
-      </CardHeader>
+        
+        {/* Badges centered */}
+        <div className="flex flex-col items-center gap-2">
+          <div className={`inline-flex items-center rounded-full border-0 px-3 py-1 text-xs font-medium ${subjectInfo.color} pointer-events-none`}>
+            <SubjectIcon className="mr-1.5 h-3.5 w-3.5" />
+            {subjectInfo.name}
+          </div>
+          <div className="inline-flex items-center rounded-full border border-border/40 bg-background/60 px-3 py-1 text-xs font-medium pointer-events-none">
+            {getGameName(exercise.game)}
+          </div>
+        </div>
+        
+        {/* Stats centered */}
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <div className="h-1.5 w-1.5 rounded-full bg-primary/60" />
+            <span>{getItemCount()} {getItemCount() === 1 ? 'ítem' : 'ítems'}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30" />
+            <span>{formatDate(exercise.createdAt)}</span>
+          </div>
+        </div>
 
-      <CardContent className="pt-0 pb-4 px-4 flex-shrink-0 relative z-10">
-        <div className="space-y-2">
-          {/* Action buttons with enhanced styling - no publish button */}
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onView(exercise.id)}
-              className="flex-1 hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all duration-200 hover:scale-105 hover:shadow-md bg-white/80 backdrop-blur-sm"
-            >
-              <Eye className="h-3 w-3 mr-1" />
-              Ver
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onDelete(exercise.id)}
-              className="flex-1 text-destructive hover:bg-destructive/10 hover:border-destructive/30 hover:text-destructive transition-all duration-200 hover:scale-105 hover:shadow-md bg-white/80 backdrop-blur-sm"
-            >
-              <Trash2 className="h-3 w-3 mr-1" />
-              Eliminar
-            </Button>
-          </div>
+        {/* Action buttons - full width */}
+        <div className="flex w-full gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onView(exercise.id)}
+            className="flex-1 rounded-full border-border/50 bg-background/50 text-sm"
+          >
+            <Eye className="mr-1.5 h-4 w-4" />
+            Ver
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onDelete(exercise.id)}
+            className="flex-1 rounded-full border-border/50 bg-background/50 text-sm text-muted-foreground"
+          >
+            <Trash2 className="mr-1.5 h-4 w-4" />
+            Eliminar
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
