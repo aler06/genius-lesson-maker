@@ -75,7 +75,7 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
       case Game.TRUE_OR_FALSE:
         return 'Verdadero o Falso';
       case Game.ROULETTE:
-        return 'Ruleta de Reflexión';
+        return 'Ruleta';
       case Game.MATCHING:
         return 'Emparejamiento';
       default:
@@ -191,34 +191,7 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
 
     return (
       <div className="space-y-6">
-        {/* Answer Card */}
-        <Card className="border-l-4 border-l-green-500 bg-green-50">
-          <CardHeader>
-            <CardTitle className="text-lg text-green-800 flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5" />
-              Respuesta Correcta
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="p-6 bg-white border border-green-200 rounded-lg text-center">
-                <p className="text-sm text-gray-600 mb-2">Palabra:</p>
-                <p className="text-4xl font-bold text-green-700 tracking-wider">
-                  {exercise.word}
-                </p>
-              </div>
-              {exercise.hint && (
-                <div className="p-4 bg-green-100 border-l-4 border-green-500 rounded">
-                  <p className="text-sm text-green-800">
-                    <strong>Pista:</strong> {exercise.hint}
-                  </p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Interactive Game */}
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Vista Previa del Juego</CardTitle>
@@ -444,7 +417,7 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
           <CardHeader>
             <CardTitle className="text-lg text-rose-800 flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Frases de Reflexión
+              Frases
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -460,7 +433,7 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
             </div>
             <div className="mt-4 p-3 bg-rose-100 border-l-4 border-rose-500 rounded">
               <p className="text-sm text-rose-800">
-                💡 La ruleta seleccionará aleatoriamente una de estas frases para que el estudiante reflexione.
+                💡 La ruleta seleccionará aleatoriamente una de estas frases.
               </p>
             </div>
           </CardContent>

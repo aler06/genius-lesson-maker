@@ -267,7 +267,7 @@ const HangmanGame: React.FC<HangmanGameProps> = ({ word, hint, onGameComplete, s
       {/* Answer Section - Only visible for teachers/preview mode */}
       {!studentMode && (
         <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200">
-          <CardHeader>
+          <CardHeader> 
             <CardTitle className="text-center text-lg text-amber-800 flex items-center justify-center gap-2">
               <CheckCircle className="h-5 w-5" />
               Respuesta Correcta

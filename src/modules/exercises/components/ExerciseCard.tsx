@@ -61,7 +61,7 @@ const getGameName = (game: Game) => {
     case Game.TRUE_OR_FALSE:
       return 'Verdadero o falso';
     case Game.ROULETTE:
-      return 'Ruleta de reflexión';
+      return 'Ruleta';
     case Game.MATCHING:
       return 'Emparejamiento';
     default:

@@ -845,7 +845,7 @@ const SessionRoom = () => {
                   {result.type === 'roulette' && result.rouletteData && (
                     <div className="space-y-4 mt-4 border-t pt-4">
                       <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
-                        🎯 Detalles de la Ruleta de Reflexión
+                        Detalles de la Ruleta
                       </h4>
                       
                       <div className="bg-white rounded-lg border border-gray-200 p-4">
@@ -873,7 +873,7 @@ const SessionRoom = () => {
                                   </div>
                                   
                                   <div className="mt-3 text-sm text-rose-700">
-                                    💡 Esta frase fue seleccionada aleatoriamente para tu reflexión
+                                    💡 Esta frase fue seleccionada aleatoriamente
                                   </div>
                                 </div>
                               </div>

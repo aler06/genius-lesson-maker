@@ -60,7 +60,7 @@ const ExerciseEditor: React.FC<ExerciseEditorProps> = ({ exercise, onSave, onCan
       case Game.TRUE_OR_FALSE:
         return 'Verdadero o Falso';
       case Game.ROULETTE:
-        return 'Ruleta de Reflexión';
+        return 'Ruleta';
       case Game.MATCHING:
         return 'Emparejamiento';
       default:

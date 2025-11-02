@@ -66,7 +66,7 @@ const getGameName = (game: Game) => {
     case Game.TRUE_OR_FALSE:
       return 'Verdadero o falso';
     case Game.ROULETTE:
-      return 'Ruleta de reflexión';
+      return 'Ruleta';
     case Game.MATCHING:
       return 'Emparejamiento';
     default:
@@ -317,7 +317,7 @@ const ExerciseAnswersModal: React.FC<ExerciseAnswersModalProps> = ({
           <div className="space-y-4">
             <h3 className="font-semibold text-lg flex items-center gap-2">
               <Target className="h-5 w-5 text-rose-600" />
-              Frases de Reflexión
+              Frases
             </h3>
             {exercise.instructions && (
               <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg">
@@ -341,7 +341,7 @@ const ExerciseAnswersModal: React.FC<ExerciseAnswersModalProps> = ({
             </div>
             <div className="p-3 bg-rose-100 border-l-4 border-rose-500 rounded">
               <p className="text-sm text-rose-800">
-                💡 La ruleta seleccionará aleatoriamente una de estas frases para que el estudiante reflexione.
+                💡 La ruleta seleccionará aleatoriamente una de estas frases.
               </p>
             </div>
           </div>
