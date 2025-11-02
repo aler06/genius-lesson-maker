@@ -88,6 +88,9 @@ const SessionRoom = () => {
   const [sessionStartTime, setSessionStartTime] = useState<number>(Date.now());
   const [scoreInitialized, setScoreInitialized] = useState(false);
   const [guestTokenObtained, setGuestTokenObtained] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [timerStarted, setTimerStarted] = useState(false);
+  const [timeExpired, setTimeExpired] = useState(false);
 
   // Session scores hook
   const { initializeScore, submitAnswer: submitScoreAnswer, completeSession: completeSessionScore } = useSessionScores(sessionId);
@@ -264,8 +267,41 @@ const SessionRoom = () => {
       console.log('Session joined - starting timer');
       setScoreInitialized(true);
       setSessionStartTime(Date.now());
+      
+      // Initialize countdown timer based on session duration
+      if (sessionData?.duration) {
+        setTimeRemaining(sessionData.duration * 60); // Convert minutes to seconds
+        setTimerStarted(true);
+      }
     }
-  }, [isJoined, sessionId, scoreInitialized]);
+  }, [isJoined, sessionId, scoreInitialized, sessionData?.duration]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!timerStarted || timeRemaining <= 0 || allExercisesCompleted) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTimeRemaining(prev => {
+        if (prev <= 1) {
+          setTimeExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [timerStarted, timeRemaining, allExercisesCompleted]);
+
+  // Auto-submit when time expires
+  useEffect(() => {
+    if (timeExpired && !allExercisesCompleted) {
+      console.log('⏰ Time expired - auto-submitting answers');
+      handleTimeExpired();
+    }
+  }, [timeExpired]);
 
   useEffect(() => {
     setConnectionStatus(isConnected ? 'connected' : 'disconnected');
@@ -285,6 +321,118 @@ const SessionRoom = () => {
     }
     // Always navigate to home for students (session interface is for students)
     navigate('/');
+  };
+
+  // Handle time expiration - auto-submit all answers
+  const handleTimeExpired = () => {
+    const userToUse = currentUser || user;
+    const timeSpent = Math.floor((Date.now() - sessionStartTime) / 1000);
+
+    // Mark all exercises as completed (even if not finished)
+    const completedStatus = exercises.map((_, idx) => exerciseCompleted[idx] || false);
+    setExerciseCompleted(completedStatus);
+
+    // Build results for all exercises (completed and not completed)
+    const allResults = exercises.map((exercise, idx) => {
+      // If exercise was already completed, use existing result
+      if (exerciseResults[idx]) {
+        return exerciseResults[idx];
+      }
+      
+      // For incomplete exercises, create empty result
+      return {
+        score: 0,
+        total: getExerciseTotal(exercise),
+        type: exercise.game || 'unknown',
+        answers: exercise.questions?.map((q: any) => ({
+          question: q.question || q.sentence || '',
+          selectedAnswer: '',
+          correctAnswer: q.correct_answer || '',
+          explanation: q.explanation,
+          isCorrect: false
+        })),
+        trueFalseData: exercise.trueFalseQuestions?.map((q: any) => ({
+          statement: q.statement || '',
+          selectedAnswer: false,
+          correctAnswer: q.correctAnswer || false,
+          explanation: q.explanation || '',
+          isCorrect: false
+        }))
+      };
+    });
+
+    setExerciseResults(allResults);
+    setAllExercisesCompleted(true);
+
+    // Calculate final score
+    const totalCorrect = allResults.reduce((sum, result) => sum + (result?.score || 0), 0);
+    const totalQuestions = allResults.reduce((sum, result) => sum + (result?.total || 0), 0);
+    const MAX_SCORE = 20;
+    const finalScore = totalQuestions > 0 ? (totalCorrect / totalQuestions) * MAX_SCORE : 0;
+    const roundedFinalScore = Math.round(finalScore * 100) / 100;
+
+    // Submit to backend
+    if (sessionId && userToUse) {
+      const nombre = userToUse.firstName ? `${userToUse.firstName} ${userToUse.lastName || ''}`.trim() : userToUse.name || 'Estudiante';
+      const correo = userToUse.email || userToUse.correo || `guest_${userToUse.id}@temp.com`;
+      
+      const allAnswers: any[] = [];
+      
+      allResults.forEach((result, idx) => {
+        if (!result) return;
+        const exercise = exercises[idx];
+        if (!exercise?.id) return;
+        
+        const totalExercisesCompleted = allResults.filter(r => r).length;
+        
+        if (result.answers && result.answers.length > 0) {
+          result.answers.forEach((answer: any, qIdx: number) => {
+            const question = exercise.questions?.[qIdx];
+            allAnswers.push({
+              exerciseId: exercise.id,
+              questionId: question?._id || `${exercise.id}-q${qIdx}`,
+              answer: answer.selectedAnswer || '',
+              isCorrect: answer.isCorrect,
+              timeSpent: Math.floor(timeSpent / totalExercisesCompleted / (result.answers?.length || 1))
+            });
+          });
+        } else if (result.trueFalseData && result.trueFalseData.length > 0) {
+          result.trueFalseData.forEach((answer: any, qIdx: number) => {
+            const question = exercise.trueFalseQuestions?.[qIdx];
+            allAnswers.push({
+              exerciseId: exercise.id,
+              questionId: question?._id || `${exercise.id}-tf${qIdx}`,
+              answer: answer.selectedAnswer.toString(),
+              isCorrect: answer.isCorrect,
+              timeSpent: Math.floor(timeSpent / totalExercisesCompleted / (result.trueFalseData?.length || 1))
+            });
+          });
+        }
+      });
+      
+      completeSessionScore({
+        sessionId: sessionId,
+        nombre: nombre,
+        correo: correo,
+        puntajeFinal: roundedFinalScore,
+        tiempoTotal: timeSpent,
+        respuestas: allAnswers
+      });
+    }
+
+    toast({
+      title: "⏰ Tiempo agotado",
+      description: `Se han enviado tus respuestas. Puntuación: ${roundedFinalScore}/20`,
+      variant: "destructive"
+    });
+  };
+
+  // Helper function to get total questions for an exercise
+  const getExerciseTotal = (exercise: any): number => {
+    if (exercise.questions?.length) return exercise.questions.length;
+    if (exercise.trueFalseQuestions?.length) return exercise.trueFalseQuestions.length;
+    if (exercise.pairs?.length) return exercise.pairs.length;
+    return 1; // For games like hangman, drag&drop, etc.
   };
 
   // Define variables needed by functions
@@ -469,6 +617,26 @@ const SessionRoom = () => {
       const totalScore = exerciseResults.reduce((sum, result) => sum + result.score, 0);
       const totalQuestions = exerciseResults.reduce((sum, result) => sum + result.total, 0);
       const percentage = totalQuestions > 0 ? Math.round((totalScore / totalQuestions) * 100) : 0;
+      
+      // Calculate final grade out of 20
+      const MAX_SCORE = 20;
+      const finalGrade = totalQuestions > 0 ? (totalScore / totalQuestions) * MAX_SCORE : 0;
+      const roundedFinalGrade = Math.round(finalGrade * 100) / 100;
+      
+      // Determine grade color and message
+      const getGradeColor = (grade: number) => {
+        if (grade >= 18) return 'text-green-600';
+        if (grade >= 14) return 'text-blue-600';
+        if (grade >= 10) return 'text-yellow-600';
+        return 'text-red-600';
+      };
+      
+      const getGradeMessage = (grade: number) => {
+        if (grade >= 18) return '¡Excelente trabajo!';
+        if (grade >= 14) return '¡Muy bien!';
+        if (grade >= 10) return '¡Buen esfuerzo!';
+        return 'Sigue practicando 💪';
+      };
 
       return (
         <div className="text-center py-12">
@@ -477,6 +645,23 @@ const SessionRoom = () => {
           <p className="text-xl text-muted-foreground mb-8">
             Has terminado todos los ejercicios de la sesión
           </p>
+          
+          {/* Final Grade Card - Prominent Display */}
+          <div className="bg-gradient-to-br from-primary/10 to-primary/5 border-2 border-primary rounded-xl p-8 max-w-md mx-auto mb-8 shadow-lg">
+            <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              Tu Calificación Final
+            </div>
+            <div className={`text-7xl font-bold ${getGradeColor(roundedFinalGrade)} mb-3`}>
+              {roundedFinalGrade}
+              <span className="text-4xl text-muted-foreground">/20</span>
+            </div>
+            <div className="text-xl font-semibold text-foreground mb-2">
+              {getGradeMessage(roundedFinalGrade)}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Equivalente a {percentage}% de precisión
+            </div>
+          </div>
           
           <div className="bg-muted rounded-lg p-6 max-w-4xl mx-auto mb-8">
             <div className="grid grid-cols-3 gap-6 mb-6">
@@ -529,10 +714,14 @@ const SessionRoom = () => {
                       <h4 className="font-semibold text-sm text-gray-700 flex items-center gap-2">
                         📋 Revisión Detallada de Respuestas
                       </h4>
-                      {result.answers.map((answer, qIndex) => (
+                      {result.answers.map((answer, qIndex) => {
+                        const wasNotAnswered = !answer.selectedAnswer || answer.selectedAnswer === '';
+                        return (
                         <div key={qIndex} className={`p-4 rounded-lg border-l-4 shadow-sm ${
                           answer.isCorrect 
                             ? 'border-l-green-500 bg-green-50 border border-green-200' 
+                            : wasNotAnswered
+                            ? 'border-l-gray-500 bg-gray-50 border border-gray-200'
                             : 'border-l-red-500 bg-red-50 border border-red-200'
                         }`}>
                           <div className="font-semibold text-sm mb-3 text-gray-800">
@@ -543,23 +732,34 @@ const SessionRoom = () => {
                           </div>
                           
                           <div className="space-y-2">
-                            <div className={`flex items-center gap-2 p-2 rounded ${
-                              answer.isCorrect ? 'bg-green-100' : 'bg-red-100'
-                            }`}>
-                              <span className={`text-lg ${answer.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                                {answer.isCorrect ? '✅' : '❌'}
-                              </span>
-                              <div className="flex-1">
-                                <span className="font-medium text-sm text-gray-700">Tu respuesta:</span>
-                                <span className={`ml-2 font-semibold ${
-                                  answer.isCorrect ? 'text-green-700' : 'text-red-700'
-                                }`}>
-                                  {answer.selectedAnswer}
+                            {!wasNotAnswered && (
+                              <div className={`flex items-center gap-2 p-2 rounded ${
+                                answer.isCorrect ? 'bg-green-100' : 'bg-red-100'
+                              }`}>
+                                <span className={`text-lg ${answer.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                                  {answer.isCorrect ? '✅' : '❌'}
                                 </span>
+                                <div className="flex-1">
+                                  <span className="font-medium text-sm text-gray-700">Tu respuesta:</span>
+                                  <span className={`ml-2 font-semibold ${
+                                    answer.isCorrect ? 'text-green-700' : 'text-red-700'
+                                  }`}>
+                                    {answer.selectedAnswer}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
+                            )}
                             
-                            {!answer.isCorrect && (
+                            {wasNotAnswered && (
+                              <div className="flex items-center gap-2 p-2 bg-gray-100 rounded">
+                                <span className="text-lg text-gray-600">⊘</span>
+                                <div className="flex-1">
+                                  <span className="font-medium text-sm text-gray-700">No respondida</span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {(!answer.isCorrect || wasNotAnswered) && (
                               <div className="flex items-center gap-2 p-2 bg-green-100 rounded">
                                 <span className="text-lg text-green-600">✅</span>
                                 <div className="flex-1">
@@ -586,7 +786,8 @@ const SessionRoom = () => {
                             )}
                           </div>
                         </div>
-                      ))}
+                      );
+                      })}
                     </div>
                   )}
                   
@@ -1470,8 +1671,15 @@ const SessionRoom = () => {
 
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Users className="h-3 w-3" />
-                    {participantCount} participantes
+                    {participantCount} / {sessionData.maxParticipants || '∞'} participantes
                   </Badge>
+
+                  {sessionData.duration && (
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {sessionData.duration} min
+                    </Badge>
+                  )}
                 </div>
               </div>
 
@@ -1485,6 +1693,25 @@ const SessionRoom = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Timer Card - Show countdown */}
+        {timerStarted && !allExercisesCompleted && (
+          <Card className={`mb-6 ${timeRemaining <= 60 ? 'border-red-500 bg-red-50' : timeRemaining <= 300 ? 'border-yellow-500 bg-yellow-50' : 'border-blue-500 bg-blue-50'}`}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center gap-4">
+                <Clock className={`h-8 w-8 ${timeRemaining <= 60 ? 'text-red-600 animate-pulse' : timeRemaining <= 300 ? 'text-yellow-600' : 'text-blue-600'}`} />
+                <div className="text-center">
+                  <div className={`text-4xl font-bold ${timeRemaining <= 60 ? 'text-red-600' : timeRemaining <= 300 ? 'text-yellow-600' : 'text-blue-600'}`}>
+                    {Math.floor(timeRemaining / 60)}:{String(timeRemaining % 60).padStart(2, '0')}
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    {timeRemaining <= 60 ? '⚠️ ¡Tiempo casi agotado!' : timeRemaining <= 300 ? '⏰ Quedan pocos minutos' : 'Tiempo restante'}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Progress Card */}
         <Card className="mb-6">

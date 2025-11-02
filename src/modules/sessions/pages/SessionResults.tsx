@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { NavHeader } from '@/components/ui/nav-header';
 import { useSessionScores } from '../hooks/useSessionScores';
+import { exportSessionToExcel, downloadExcelFile } from '../services/session-export.service';
+import { useToast } from '@/hooks/use-toast';
 import { 
   ArrowLeft, 
   Trophy, 
@@ -17,7 +19,9 @@ import {
   Award,
   Loader2,
   Mail,
-  User
+  User,
+  FileSpreadsheet,
+  Download
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -25,7 +29,34 @@ import { es } from 'date-fns/locale';
 const SessionResults = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const { sessionScores, isLoadingScores, scoresError, refetchScores } = useSessionScores(sessionId);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportToExcel = async () => {
+    if (!sessionId) return;
+    
+    setIsExporting(true);
+    
+    try {
+      const blob = await exportSessionToExcel(sessionId);
+      downloadExcelFile(blob, sessionId);
+      
+      toast({
+        title: '✅ Exportación exitosa',
+        description: 'Los resultados se han descargado en formato Excel',
+      });
+    } catch (error) {
+      console.error('Error al exportar:', error);
+      toast({
+        title: '❌ Error al exportar',
+        description: error instanceof Error ? error.message : 'No se pudo exportar los resultados',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (isLoadingScores) {
     return (
@@ -139,9 +170,28 @@ const SessionResults = () => {
                   {sessionName}
                 </CardDescription>
               </div>
-              <Button onClick={() => refetchScores()} variant="outline">
-                Actualizar
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={() => refetchScores()} variant="outline">
+                  Actualizar
+                </Button>
+                <Button 
+                  onClick={handleExportToExcel}
+                  disabled={isExporting || sortedScores.length === 0}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {isExporting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Exportando...
+                    </>
+                  ) : (
+                    <>
+                      <FileSpreadsheet className="h-4 w-4 mr-2" />
+                      Exportar a Excel
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </CardHeader>
         </Card>
