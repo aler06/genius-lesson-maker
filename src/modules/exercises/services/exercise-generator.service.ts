@@ -9,6 +9,7 @@ export interface GeneratedHangmanExercise {
   hint: string;
 }
 
+
 export const exerciseGeneratorService = {
   async generateHangmanExercise(): Promise<GeneratedHangmanExercise> {
     try {

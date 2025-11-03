@@ -23,7 +23,9 @@ export function NavHeader() {
 
   const handleLogoClick = () => {
     if (isProfessor) {
-      navigate('/create-exercise');
+      navigate('/dashboard');
+    } else if (user && user.role === 'student') {
+      navigate('/student-dashboard');
     } else {
       navigate('/');
     }
@@ -49,7 +51,7 @@ export function NavHeader() {
           </div>
 
           <div className="flex items-center gap-4">
-            {user && location.pathname !== '/' && location.pathname !== '/join-session' && (
+            {user && isProfessor && location.pathname !== '/' && location.pathname !== '/join-session' && (
               <nav className="flex items-center gap-2">
                 <Button
                   variant={location.pathname === '/create-exercise' ? 'default' : 'ghost'}
@@ -73,6 +75,22 @@ export function NavHeader() {
                 >
                   <Settings className="h-4 w-4" />
                   Dashboard
+                </Button>
+              </nav>
+            )}
+            
+            {user && user.role === 'student' && location.pathname !== '/' && location.pathname !== '/join-session' && (
+              <nav className="flex items-center gap-2">
+                <Button
+                  variant={location.pathname === '/student-dashboard' ? 'default' : 'ghost'}
+                  onClick={() => navigate('/student-dashboard')}
+                  className={location.pathname === '/student-dashboard' ? 
+                    "gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600" : 
+                    "gap-2 hover:bg-gradient-to-r hover:from-blue-500 hover:to-cyan-500 hover:text-white"
+                  }
+                >
+                  <Settings className="h-4 w-4" />
+                  Mi Dashboard
                 </Button>
               </nav>
             )}

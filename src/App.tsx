@@ -13,6 +13,7 @@ import JoinSession from "./modules/sessions/pages/JoinSession";
 import SessionRoom from "./modules/sessions/pages/SessionRoom";
 import CreateSession from "./modules/sessions/pages/CreateSession";
 import SessionResults from "./modules/sessions/pages/SessionResults";
+import StudentDashboard from "./modules/students/pages/StudentDashboard";
 import ProtectedRoute from "./components/ui/protected-route";
 import { Role } from "./types/enums";
 import NotFound from "./pages/NotFound";
@@ -36,6 +37,13 @@ const App = () => (
           
           {/* Home route - redirect to join session for public access */}
           <Route path="/" element={<JoinSession />} />
+          
+          {/* Protected routes for students */}
+          <Route path="/student-dashboard" element={
+            <ProtectedRoute requiredRole={Role.STUDENT}>
+              <StudentDashboard />
+            </ProtectedRoute>
+          } />
           
           {/* Protected routes for teachers */}
           <Route path="/create-exercise" element={

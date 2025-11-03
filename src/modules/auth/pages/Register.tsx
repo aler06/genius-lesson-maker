@@ -38,8 +38,10 @@ const Register = () => {
       // Redirect based on user role
       if (response.user.role === 'teacher') {
         navigate('/dashboard');
+      } else if (response.user.role === 'student') {
+        navigate('/student-dashboard');
       } else {
-        navigate('/'); // Students go to join session page
+        navigate('/'); // Fallback to join session page
       }
     } catch (error) {
       toast({
