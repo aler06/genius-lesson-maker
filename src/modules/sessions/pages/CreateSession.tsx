@@ -34,8 +34,10 @@ const CreateSession = () => {
   const [selectedExercise, setSelectedExercise] = useState<ExerciseResponse | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Show all exercises since published logic is removed from backend
-  const availableExercises = exercises || [];
+  // Filter out flip_cards and roulette exercises (they are for teacher explanation only, not for students to solve)
+  const availableExercises = (exercises || []).filter(exercise => 
+    exercise.game !== 'flip_cards' && exercise.game !== 'roulette'
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,7 +193,7 @@ const CreateSession = () => {
                       <Checkbox
                         id="allowLateJoin"
                         checked={formData.allowLateJoin}
-                        onCheckedChange={(checked) => setFormData(prev => ({ ...prev, allowLateJoin: !!checked }))}
+                        onCheckedChange={(checked) => (prev => ({ ...prev, allowLateJoin: !!checked }))}
                       />
                       <Label htmlFor="allowLateJoin" className="text-sm">
                         Permitir unirse tarde
@@ -281,7 +283,13 @@ const CreateSession = () => {
                   <>
                     <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                       <p className="text-sm text-blue-800">
-                        💡 <strong>Tip:</strong> Haz clic en los ejercicios que quieras incluir para crear una experiencia completa.
+                        <strong>Tip:</strong> Haz clic en los ejercicios que quieras incluir para crear una experiencia completa.
+                      </p>
+                    </div>
+
+                    <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <p className="text-sm text-amber-800">
+                         <strong>Nota:</strong> Las tarjetas giratorias y la ruleta no están disponibles para sesiones porque son material de explicación para el profesor, no ejercicios para resolver.
                       </p>
                     </div>
                     

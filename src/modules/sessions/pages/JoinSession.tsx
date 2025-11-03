@@ -18,7 +18,7 @@ import { validateSession } from '@/utils/api';
 const JoinSession = () => {
   const navigate = useNavigate();
   const { accessCode: urlAccessCode } = useParams<{ accessCode: string }>();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { tempUser, createTemporaryUser } = useTemporaryUser();
   const { toast } = useToast();
   const [accessCode, setAccessCode] = useState('');
@@ -30,12 +30,20 @@ const JoinSession = () => {
   // Debug logs
   console.log('JoinSession render:', { 
     user, 
+    isAuthenticated,
+    authLoading,
     tempUser, 
     showNameModal, 
     pendingSessionData: !!pendingSessionData 
   });
 
   const handleJoinSessionWithCode = async (code: string) => {
+    // Wait for auth to finish loading before proceeding
+    if (authLoading) {
+      console.log('Auth still loading, waiting...');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -43,22 +51,32 @@ const JoinSession = () => {
       // Validate the session exists using the API utility
       const sessionData = await validateSession(code);
       
-      // If user is authenticated (teacher/registered student), join directly
-      if (user) {
+      // If user is authenticated (registered student or teacher), join directly with their data
+      if (isAuthenticated && user) {
+        console.log('Authenticated user joining session:', user);
+        // Use authenticated user's data directly from the database
         navigate(`/session/${sessionData.id}`, { 
           state: { 
             sessionData,
             accessCode: code,
-            currentUser: user
+            currentUser: {
+              id: user.id,
+              _id: user.id, // Backend might expect _id
+              firstName: user.firstName,
+              lastName: user.lastName,
+              email: user.email,
+              role: user.role,
+              isTemporary: false // Authenticated users are not temporary
+            }
           } 
         });
-      } else {
-        // For non-authenticated users, always show name modal (even if tempUser exists)
-        // This ensures students can change their name if needed
-        console.log('Showing name modal for non-authenticated user');
-        setPendingSessionData({ sessionData, accessCode: code });
-        setShowNameModal(true);
+        return; // Exit early to prevent any modal from showing
       }
+      
+      // For non-authenticated users, show name modal to create temporary user
+      console.log('Non-authenticated user - showing name modal', { isAuthenticated, user });
+      setPendingSessionData({ sessionData, accessCode: code });
+      setShowNameModal(true);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error al unirse a la sesión';
@@ -80,13 +98,14 @@ const JoinSession = () => {
   };
 
   // If there's an access code in the URL, use it and auto-join
+  // Wait for auth to finish loading before attempting to join
   useEffect(() => {
-    if (urlAccessCode) {
+    if (urlAccessCode && !authLoading) {
       setAccessCode(urlAccessCode.toUpperCase());
-      // Always try to join with the URL access code
+      // Try to join with the URL access code once auth is loaded
       handleJoinSessionWithCode(urlAccessCode.toUpperCase());
     }
-  }, [urlAccessCode]);
+  }, [urlAccessCode, authLoading]);
 
   const handleJoinSession = async (e: React.FormEvent) => {
     e.preventDefault();
