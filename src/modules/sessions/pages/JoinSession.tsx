@@ -14,12 +14,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatAccessCode, isValidAccessCode } from '@/utils/sessionHelpers';
 import { validateSession } from '@/utils/api';
+import { checkSessionCompletion } from '@/modules/sessions/services/session-scores.service';
 
 const JoinSession = () => {
   const navigate = useNavigate();
   const { accessCode: urlAccessCode } = useParams<{ accessCode: string }>();
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { tempUser, createTemporaryUser } = useTemporaryUser();
+  const { tempUser, createTemporaryUser, updateTemporaryUser } = useTemporaryUser();
   const { toast } = useToast();
   const [accessCode, setAccessCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -51,9 +52,29 @@ const JoinSession = () => {
       // Validate the session exists using the API utility
       const sessionData = await validateSession(code);
       
-      // If user is authenticated (registered student or teacher), join directly with their data
+      // If user is authenticated (registered student or teacher), check if they already completed this session
       if (isAuthenticated && user) {
         console.log('Authenticated user joining session:', user);
+        
+        // Check if user already completed this session
+        try {
+          const existingCompletion = await checkSessionCompletion(sessionData.id, user.email);
+          
+          if (existingCompletion) {
+            // User already completed this session - block access
+            toast({
+              title: '⚠️ Sesión ya completada',
+              description: `Ya completaste esta sesión con un puntaje de ${existingCompletion.puntajeFinal?.toFixed(1) || 0}/20. No puedes volver a entrar.`,
+              variant: 'destructive',
+            });
+            setIsLoading(false);
+            return; // Block access
+          }
+        } catch (checkError) {
+          console.log('Error checking completion (allowing access):', checkError);
+          // If check fails (404 or error), allow access (fail open)
+        }
+        
         // Use authenticated user's data directly from the database
         navigate(`/session/${sessionData.id}`, { 
           state: { 
@@ -123,8 +144,47 @@ const JoinSession = () => {
     await handleJoinSessionWithCode(accessCode.toUpperCase());
   };
 
-  const handleNameSubmit = (name: string) => {
-    const newTempUser = createTemporaryUser(name);
+  const handleNameSubmit = async (name: string) => {
+    // Check if there's already a temporary user in localStorage
+    let userToUse = tempUser;
+    
+    if (!userToUse) {
+      // Create new temporary user only if one doesn't exist
+      userToUse = createTemporaryUser(name);
+    } else {
+      // Update the existing temporary user's name if it changed
+      const currentName = `${userToUse.firstName} ${userToUse.lastName}`.trim();
+      if (currentName !== name.trim()) {
+        userToUse = updateTemporaryUser(name) || userToUse;
+      }
+    }
+    
+    // Check if temporary user already completed this session
+    if (pendingSessionData && userToUse.email) {
+      try {
+        const existingCompletion = await checkSessionCompletion(
+          pendingSessionData.sessionData.id,
+          userToUse.email
+        );
+        
+        if (existingCompletion) {
+          // User already completed this session - block access
+          setShowNameModal(false);
+          setPendingSessionData(null);
+          toast({
+            title: '⚠️ Sesión ya completada',
+            description: `Ya completaste esta sesión con un puntaje de ${existingCompletion.puntajeFinal?.toFixed(1) || 0}/20. No puedes volver a entrar.`,
+            variant: 'destructive',
+          });
+          return; // Block access
+        }
+      } catch (checkError) {
+        console.log('Error checking completion for temp user (allowing access):', checkError);
+        // If check fails (404 or error), allow access (fail open)
+      }
+    }
+    
+    // Email is already included in tempUser model
     setShowNameModal(false);
     
     if (pendingSessionData) {
@@ -132,7 +192,7 @@ const JoinSession = () => {
         state: { 
           sessionData: pendingSessionData.sessionData,
           accessCode: pendingSessionData.accessCode,
-          currentUser: newTempUser
+          currentUser: userToUse
         } 
       });
       setPendingSessionData(null);

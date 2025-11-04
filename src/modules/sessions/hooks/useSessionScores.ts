@@ -9,6 +9,8 @@ import {
   getMyScores,
   getUserScores,
   deleteScore,
+  checkSessionCompletion,
+  markSessionAsCompleted,
 } from '../services/session-scores.service';
 import {
   InitializeScoreRequest,
@@ -106,9 +108,18 @@ export const useSessionScores = (sessionId?: string) => {
   // Mutation to complete session
   const completeSessionMutation = useMutation({
     mutationFn: (request: CompleteSessionRequest) => completeSession(request),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       if (data) {
         queryClient.setQueryData(['student-score', data.sessionId], data);
+        
+        // Mark session as completed in localStorage
+        markSessionAsCompleted(
+          data.sessionId,
+          data.correo,
+          data.puntajeFinal,
+          data.tiempoTotal,
+          data.respuestas
+        );
         
         // Invalidate session scores to refresh teacher view
         queryClient.invalidateQueries({ queryKey: ['session-scores', data.sessionId] });
@@ -119,6 +130,14 @@ export const useSessionScores = (sessionId?: string) => {
         });
       } else {
         console.log('Session completion skipped (endpoint not available)');
+        // Still mark as completed in localStorage even if backend fails
+        markSessionAsCompleted(
+          variables.sessionId,
+          variables.correo,
+          variables.puntajeFinal,
+          variables.tiempoTotal,
+          variables.respuestas
+        );
         // Still show a completion message even if backend doesn't track scores
         toast({
           title: '¡Sesión completada!',
@@ -126,8 +145,16 @@ export const useSessionScores = (sessionId?: string) => {
         });
       }
     },
-    onError: (error) => {
+    onError: (error, variables) => {
       console.error('Error completing session:', error);
+      // Even on error, mark as completed in localStorage to prevent re-entry
+      markSessionAsCompleted(
+        variables.sessionId,
+        variables.correo,
+        variables.puntajeFinal,
+        variables.tiempoTotal,
+        variables.respuestas
+      );
       // Show toast for real errors (not 404)
       if (error instanceof Error && !error.message.includes('404')) {
         toast({
@@ -191,6 +218,9 @@ export const useSessionScores = (sessionId?: string) => {
     isSubmitting: submitAnswerMutation.isPending,
     isCompleting: completeSessionMutation.isPending,
     isDeleting: deleteScoreMutation.isPending,
+    
+    // Utility functions
+    checkSessionCompletion,
   };
 };
 

@@ -91,9 +91,20 @@ const SessionRoom = () => {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [timerStarted, setTimerStarted] = useState(false);
   const [timeExpired, setTimeExpired] = useState(false);
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false);
+  const [existingScore, setExistingScore] = useState<any>(null);
+  const [checkingCompletion, setCheckingCompletion] = useState(true);
+  const [fiveMinuteWarningShown, setFiveMinuteWarningShown] = useState(false);
+  const [oneMinuteWarningShown, setOneMinuteWarningShown] = useState(false);
 
   // Session scores hook
-  const { initializeScore, submitAnswer: submitScoreAnswer, completeSession: completeSessionScore } = useSessionScores(sessionId);
+  const { initializeScore, submitAnswer: submitScoreAnswer, completeSession: completeSessionScore, checkSessionCompletion } = useSessionScores(sessionId);
+
+  // Define variables needed by hooks and functions (must be before hooks that use them)
+  const exercises = sessionData?.exercises || [];
+  const currentExercise = exercises[currentExerciseIndex];
+  const totalExercises = exercises.length;
+  const completedExercises = exerciseCompleted.filter(Boolean).length;
 
   const {
     isConnected,
@@ -202,20 +213,13 @@ const SessionRoom = () => {
     },
   });
 
+  // Connect to WebSocket on mount
   useEffect(() => {
-    if (!currentUser) {
-      navigate('/');
-      return;
+    // Only connect if we have the required data
+    if (currentUser && sessionData && sessionId) {
+      connect();
+      setConnectionStatus('connecting');
     }
-
-    if (!sessionData || !sessionId) {
-      navigate('/');
-      return;
-    }
-
-    // Connect to WebSocket
-    connect();
-    setConnectionStatus('connecting');
 
     return () => {
       if (isJoined && sessionId && currentUser) {
@@ -242,8 +246,8 @@ const SessionRoom = () => {
     if (isTemporary && !hasToken && !guestTokenObtained && userToUse) {
       console.log('Getting guest token for temporary user:', userToUse);
       const nombre = userToUse.firstName ? `${userToUse.firstName} ${userToUse.lastName || ''}`.trim() : userToUse.name || 'Estudiante';
-      // Use the user's temporary ID to ensure consistent email across all requests
-      const correo = userToUse.email || `guest_${userToUse.id}@temp.com`;
+      // Use the email from tempUser model (consistent across all sessions)
+      const correo = userToUse.email;
       
       authService.guestLogin({ nombre, correo })
         .then((response) => {
@@ -261,6 +265,61 @@ const SessionRoom = () => {
     }
   }, [currentUser, user, guestTokenObtained, toast]);
 
+  // Check if user has already completed this session
+  useEffect(() => {
+    const checkCompletion = async () => {
+      const userToUse = currentUser || user;
+      
+      if (!sessionId || !userToUse) {
+        setCheckingCompletion(false);
+        return;
+      }
+
+      // Get user's email
+      const correo = userToUse.email || userToUse.correo;
+      
+      if (!correo) {
+        setCheckingCompletion(false);
+        return;
+      }
+
+      try {
+        console.log('🔍 Checking if user already completed session:', { sessionId, correo });
+        const existingCompletion = await checkSessionCompletion(sessionId, correo);
+        
+        if (existingCompletion) {
+          console.log('⚠️ User has already completed this session:', existingCompletion);
+          setAlreadyCompleted(true);
+          setExistingScore(existingCompletion);
+          
+          toast({
+            title: '⚠️ Sesión ya completada',
+            description: `Ya completaste esta sesión con un puntaje de ${existingCompletion.puntajeFinal?.toFixed(1) || 0} puntos. No puedes volver a enviar respuestas.`,
+            variant: 'default',
+          });
+        } else {
+          console.log('✅ User has not completed this session yet');
+          setAlreadyCompleted(false);
+        }
+      } catch (error) {
+        console.error('Error checking session completion:', error);
+        // If there's an error, allow the user to continue (fail open)
+        setAlreadyCompleted(false);
+      } finally {
+        setCheckingCompletion(false);
+      }
+    };
+
+    // Only check after we have a token (for temporary users) or immediately for authenticated users
+    const userToUse = currentUser || user;
+    const isTemporary = userToUse?.isTemporary;
+    const hasToken = !!localStorage.getItem('token');
+    
+    if (userToUse && (!isTemporary || (isTemporary && hasToken))) {
+      checkCompletion();
+    }
+  }, [sessionId, currentUser, user, guestTokenObtained, checkSessionCompletion, toast]);
+
   // Start timer when session is joined
   useEffect(() => {
     if (isJoined && sessionId && !scoreInitialized) {
@@ -276,7 +335,7 @@ const SessionRoom = () => {
     }
   }, [isJoined, sessionId, scoreInitialized, sessionData?.duration]);
 
-  // Countdown timer effect
+  // Countdown timer effect with warnings
   useEffect(() => {
     if (!timerStarted || timeRemaining <= 0 || allExercisesCompleted) {
       return;
@@ -284,16 +343,39 @@ const SessionRoom = () => {
 
     const interval = setInterval(() => {
       setTimeRemaining(prev => {
-        if (prev <= 1) {
+        const newTime = prev - 1;
+        
+        // Show 5 minute warning
+        if (newTime === 300 && !fiveMinuteWarningShown) {
+          setFiveMinuteWarningShown(true);
+          toast({
+            title: "⏰ 5 minutos restantes",
+            description: "La sesión está por terminar. Apresúrate a completar los ejercicios.",
+            variant: "default",
+          });
+        }
+        
+        // Show 1 minute warning
+        if (newTime === 60 && !oneMinuteWarningShown) {
+          setOneMinuteWarningShown(true);
+          toast({
+            title: "⚠️ 1 minuto restante",
+            description: "¡Último minuto! La sesión terminará pronto.",
+            variant: "destructive",
+          });
+        }
+        
+        if (newTime <= 0) {
           setTimeExpired(true);
           return 0;
         }
-        return prev - 1;
+        
+        return newTime;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timerStarted, timeRemaining, allExercisesCompleted]);
+  }, [timerStarted, timeRemaining, allExercisesCompleted, fiveMinuteWarningShown, oneMinuteWarningShown, toast]);
 
   // Auto-submit when time expires
   useEffect(() => {
@@ -306,6 +388,27 @@ const SessionRoom = () => {
   useEffect(() => {
     setConnectionStatus(isConnected ? 'connected' : 'disconnected');
   }, [isConnected]);
+
+  // Initialize exercise completion tracking
+  useEffect(() => {
+    if (exercises.length > 0 && exerciseCompleted.length === 0) {
+      setExerciseCompleted(new Array(exercises.length).fill(false));
+      setExerciseResults(new Array(exercises.length).fill({score: 0, total: 0, type: 'unknown'}));
+    }
+  }, [exercises.length, exerciseCompleted.length]);
+
+  // Validation and redirect - must be AFTER all hooks
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/');
+      return;
+    }
+
+    if (!sessionData || !sessionId) {
+      navigate('/');
+      return;
+    }
+  }, [currentUser, sessionData, sessionId, navigate]);
 
   const handleSubmitAnswer = (questionId: string, answer: string, timeSpent: number) => {
     const userToUse = currentUser || user;
@@ -374,7 +477,8 @@ const SessionRoom = () => {
     // Submit to backend
     if (sessionId && userToUse) {
       const nombre = userToUse.firstName ? `${userToUse.firstName} ${userToUse.lastName || ''}`.trim() : userToUse.name || 'Estudiante';
-      const correo = userToUse.email || userToUse.correo || `guest_${userToUse.id}@temp.com`;
+      // Use the email from tempUser model (consistent across all sessions)
+      const correo = userToUse.email || userToUse.correo;
       
       const allAnswers: any[] = [];
       
@@ -410,19 +514,26 @@ const SessionRoom = () => {
         }
       });
       
-      completeSessionScore({
-        sessionId: sessionId,
-        nombre: nombre,
-        correo: correo,
-        puntajeFinal: roundedFinalScore,
-        tiempoTotal: timeSpent,
-        respuestas: allAnswers
-      });
+      // Only submit if user hasn't already completed this session
+      if (!alreadyCompleted) {
+        completeSessionScore({
+          sessionId: sessionId,
+          nombre: nombre,
+          correo: correo,
+          puntajeFinal: roundedFinalScore,
+          tiempoTotal: timeSpent,
+          respuestas: allAnswers
+        });
+      } else {
+        console.log('⚠️ Skipping score submission - user already completed this session');
+      }
     }
 
     toast({
       title: "⏰ Tiempo agotado",
-      description: `Se han enviado tus respuestas. Puntuación: ${roundedFinalScore}/20`,
+      description: alreadyCompleted 
+        ? `Tiempo agotado. Tu puntaje anterior de ${existingScore?.puntajeFinal?.toFixed(1) || 0}/20 se mantiene.`
+        : `Se han enviado tus respuestas. Puntuación: ${roundedFinalScore}/20`,
       variant: "destructive"
     });
   };
@@ -434,12 +545,6 @@ const SessionRoom = () => {
     if (exercise.pairs?.length) return exercise.pairs.length;
     return 1; // For games like hangman, drag&drop, etc.
   };
-
-  // Define variables needed by functions
-  const exercises = sessionData?.exercises || [];
-  const currentExercise = exercises[currentExerciseIndex];
-  const totalExercises = exercises.length;
-  const completedExercises = exerciseCompleted.filter(Boolean).length;
 
   const handleExerciseComplete = (exerciseIndex: number, success: boolean, score?: number, total?: number, quizAnswers?: Array<{question: string, selectedAnswer: string, correctAnswer: string, explanation?: string, isCorrect: boolean}>, hangmanData?: {word: string, hint?: string, guessedLetters: string[], wrongGuesses: number}, dragDropData?: {elements: Array<{id: number, texto: string}>, userOrder: number[], correctOrder: number[], explanation?: string}, trueFalseData?: Array<{statement: string, selectedAnswer: boolean, correctAnswer: boolean, explanation: string, isCorrect: boolean}>, rouletteData?: {selectedPhrase: string, phraseIndex: number, allPhrases: Array<{text: string}>}, matchingData?: {matchedPairs: Array<{term: string, match: string, correct: boolean, correctMatch?: string}>, totalPairs: number}) => {
     const userToUse = currentUser || user;
@@ -500,7 +605,8 @@ const SessionRoom = () => {
         // Submit final results to backend
         if (sessionId && userToUse) {
           const nombre = userToUse.firstName ? `${userToUse.firstName} ${userToUse.lastName || ''}`.trim() : userToUse.name || 'Estudiante';
-          const correo = userToUse.email || userToUse.correo || `guest_${userToUse.id}@temp.com`;
+          // Use the email from tempUser model (consistent across all sessions)
+          const correo = userToUse.email || userToUse.correo;
           
           console.log('📊 Submitting final session results:', {
             totalCorrect,
@@ -586,26 +692,32 @@ const SessionRoom = () => {
             }
           });
           
-          // Submit final score with all answers
-          console.log('📤 Sending to backend:', {
-            answersCount: allAnswers.length,
-            puntajeFinal: roundedFinalScore,
-            tiempoTotal: timeSpent
-          });
-          
-          completeSessionScore({
-            sessionId: sessionId,
-            nombre: nombre,
-            correo: correo,
-            puntajeFinal: roundedFinalScore,
-            tiempoTotal: timeSpent,
-            respuestas: allAnswers
-          });
+          // Only submit if user hasn't already completed this session
+          if (!alreadyCompleted) {
+            console.log('📤 Sending to backend:', {
+              answersCount: allAnswers.length,
+              puntajeFinal: roundedFinalScore,
+              tiempoTotal: timeSpent
+            });
+            
+            completeSessionScore({
+              sessionId: sessionId,
+              nombre: nombre,
+              correo: correo,
+              puntajeFinal: roundedFinalScore,
+              tiempoTotal: timeSpent,
+              respuestas: allAnswers
+            });
+          } else {
+            console.log('⚠️ Skipping score submission - user already completed this session');
+          }
         }
         
         toast({
           title: "¡Sesión completada!",
-          description: `Has terminado todos los ejercicios. Puntuación final: ${roundedFinalScore}/20 (${finalPercentage}%)`,
+          description: alreadyCompleted 
+            ? `Has terminado los ejercicios. Tu puntaje anterior de ${existingScore?.puntajeFinal?.toFixed(1) || 0}/20 se mantiene.`
+            : `Has terminado todos los ejercicios. Puntuación final: ${roundedFinalScore}/20 (${finalPercentage}%)`,
         });
       }
     }, 500); // Quick transition between exercises
@@ -1577,6 +1689,114 @@ const SessionRoom = () => {
     );
   }
 
+  // Show loading screen while checking if user already completed
+  if (checkingCompletion) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+        <NavHeader />
+        <main className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Card className="text-center p-8">
+              <CardContent>
+                <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
+                <h2 className="text-xl font-semibold mb-2">Verificando sesión...</h2>
+                <p className="text-muted-foreground">
+                  Comprobando tu progreso anterior
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Show special screen if user already completed this session
+  if (alreadyCompleted && existingScore) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+        <NavHeader />
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <Card className="shadow-2xl border-2 border-yellow-500">
+              <CardHeader className="text-center bg-gradient-to-r from-yellow-50 to-amber-50 border-b">
+                <Trophy className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
+                <CardTitle className="text-3xl font-bold text-gray-900">
+                  🚫 Acceso Denegado
+                </CardTitle>
+                <CardDescription className="text-lg text-gray-700 mt-2">
+                  Ya completaste esta sesión. No puedes volver a entrar.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                {/* Score Display */}
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-200">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-600 mb-2">Tu Puntaje Registrado</p>
+                    <p className="text-5xl font-bold text-blue-600">
+                      {existingScore.puntajeFinal?.toFixed(1) || 0}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">de 20 puntos</p>
+                  </div>
+                </div>
+
+                {/* Info Message */}
+                <Alert className="border-red-200 bg-red-50">
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                  <AlertDescription className="text-gray-700">
+                    <strong>Solo puedes completar cada sesión una vez.</strong>
+                    <br />
+                    Para mantener la integridad de los resultados, cada estudiante tiene un solo intento por sesión. Tu puntaje anterior ha sido guardado y no puede ser modificado. Puedes unirte a otras sesiones diferentes.
+                  </AlertDescription>
+                </Alert>
+
+                {/* Session Info */}
+                <div className="space-y-3 text-sm text-gray-600">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="font-medium">Sesión:</span>
+                    <span>{sessionData?.name || 'Sin nombre'}</span>
+                  </div>
+                  {existingScore.tiempoTotal && (
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="font-medium">Tiempo empleado:</span>
+                      <span>{Math.floor(existingScore.tiempoTotal / 60)} minutos</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="font-medium">Fecha de completitud:</span>
+                    <span>
+                      {existingScore.createdAt 
+                        ? new Date(existingScore.createdAt).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })
+                        : 'No disponible'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    onClick={() => navigate('/')}
+                    className="flex-1"
+                    variant="default"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Volver al Inicio
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   // Safety checks for exercises data
   if (!sessionData?.exercises || sessionData.exercises.length === 0) {
     console.warn('Session data or exercises are missing:', sessionData);
@@ -1584,14 +1804,6 @@ const SessionRoom = () => {
 
   // Use default subject info if exercise data is missing
   const subjectInfo = getSubjectInfo(Subject.GENERAL);
-  
-  // Initialize exercise completion tracking
-  React.useEffect(() => {
-    if (exercises.length > 0 && exerciseCompleted.length === 0) {
-      setExerciseCompleted(new Array(exercises.length).fill(false));
-      setExerciseResults(new Array(exercises.length).fill({score: 0, total: 0, type: 'unknown'}));
-    }
-  }, [exercises.length, exerciseCompleted.length]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
