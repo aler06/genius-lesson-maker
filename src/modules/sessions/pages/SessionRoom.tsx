@@ -39,6 +39,7 @@ import { SessionResponse, AnswerResult } from '@/types/session-backend';
 import { getSubjectInfo } from '@/modules/exercises/utils/subject-detector';
 import { Subject } from '@/modules/exercises/enum/subject.enum';
 import { useSessionScores } from '@/modules/sessions/hooks/useSessionScores';
+import { sendSessionCompletionWebhook } from '@/services/webhook.service';
 
 interface LocationState {
   sessionData: SessionResponse;
@@ -716,6 +717,23 @@ const SessionRoom = () => {
               tiempoTotal: timeSpent,
               respuestas: allAnswers
             });
+            
+            // Send webhook notification for authenticated users only
+            const isAuthenticatedUser = userToUse && !userToUse.isTemporary;
+            if (isAuthenticatedUser) {
+              console.log('📨 Sending webhook notification for authenticated user');
+              sendSessionCompletionWebhook({
+                nombre: nombre,
+                correo: correo,
+                puntajeFinal: roundedFinalScore,
+                nombreSesion: sessionData?.name || 'Sesión sin nombre',
+              }).catch(error => {
+                console.error('Failed to send webhook notification:', error);
+                // Don't block the UI if webhook fails
+              });
+            } else {
+              console.log('⏭️ Skipping webhook notification for temporary user');
+            }
           } else {
             console.log('⚠️ Skipping score submission - user already completed this session');
           }
