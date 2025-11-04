@@ -265,7 +265,7 @@ const JoinSession = () => {
                       disabled={isLoading}
                     />
                     <p className="text-xs text-muted-foreground text-center">
-                      No necesitas crear una cuenta para participar
+                      No necesitas crear una cuenta para participar, pero no podras tener un seguimiento de los puntajes de tu sesiones
                     </p>
                   </div>
 
@@ -313,9 +313,9 @@ const JoinSession = () => {
                     <BookOpenCheck className="h-8 w-8 text-white" />
                   </div>
                 </div>
-                <CardTitle className="text-2xl text-gray-900">Acceso para Profesores</CardTitle>
+                <CardTitle className="text-2xl text-gray-900">Ingresar a tu cuenta</CardTitle>
                 <CardDescription className="text-base text-gray-600">
-                  Crea y gestiona ejercicios interactivos con IA
+                  Puedes registrarte como estudiante o profesor.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -339,12 +339,12 @@ const JoinSession = () => {
                 </div>
 
                 <div className="pt-4 border-t border-gray-200">
-                  <h4 className="font-medium text-gray-900 mb-2">¿Qué puedes hacer?</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">¿Como profesor qué puedes hacer?</h4>
                   <ul className="text-sm text-gray-700 space-y-1">
                     <li>• Generar ejercicios con IA</li>
                     <li>• Crear sesiones interactivas</li>
                     <li>• Gestionar estudiantes</li>
-                    <li>• Ver estadísticas en tiempo real</li>
+                    <li>• Ver estadísticas de tus sesiones</li>
                   </ul>
                 </div>
               </CardContent>
