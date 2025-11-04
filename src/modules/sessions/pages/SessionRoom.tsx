@@ -422,8 +422,16 @@ const SessionRoom = () => {
     if (sessionId && userToUse) {
       leaveSession(sessionId, userToUse.id || userToUse._id);
     }
-    // Always navigate to home for students (session interface is for students)
-    navigate('/');
+    
+    // Navigate to dashboard for authenticated users, home for temporary users
+    const isAuthenticatedUser = userToUse && !userToUse.isTemporary;
+    if (isAuthenticatedUser) {
+      console.log('📊 Redirecting authenticated user to dashboard');
+      navigate('/student-dashboard');
+    } else {
+      console.log('🏠 Redirecting temporary user to home');
+      navigate('/');
+    }
   };
 
   // Handle time expiration - auto-submit all answers
@@ -1330,7 +1338,7 @@ const SessionRoom = () => {
             className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
           >
             <LogOut className="h-4 w-4 mr-2" />
-            Salir de la Sesión
+            {(currentUser && !currentUser.isTemporary) || user ? 'Ir a Mi Dashboard' : 'Salir de la Sesión'}
           </Button>
         </div>
       );
@@ -1781,12 +1789,17 @@ const SessionRoom = () => {
                 {/* Actions */}
                 <div className="flex gap-3 pt-4">
                   <Button
-                    onClick={() => navigate('/')}
+                    onClick={() => {
+                      const userToUse = currentUser || user;
+                      // Authenticated users don't have isTemporary or it's false
+                      const isAuthenticatedUser = (currentUser && !currentUser.isTemporary) || user;
+                      navigate(isAuthenticatedUser ? '/student-dashboard' : '/');
+                    }}
                     className="flex-1"
                     variant="default"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
-                    Volver al Inicio
+                    {(currentUser && !currentUser.isTemporary) || user ? 'Ir a Mi Dashboard' : 'Volver al Inicio'}
                   </Button>
                 </div>
               </CardContent>
