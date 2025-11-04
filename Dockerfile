@@ -17,12 +17,13 @@ ARG VITE_API_URL=http://taller-api-fw2kqq-703289-173-212-248-96.traefik.me:3010
 ARG VITE_API_BASE_URL=http://taller-api-fw2kqq-703289-173-212-248-96.traefik.me:3010/api/v1
 ARG VITE_WS_URL=http://taller-api-fw2kqq-703289-173-212-248-96.traefik.me:3010
 ARG VITE_FRONTEND_URL=http://localhost:3011
-
+ARG VITE_N8N_WEBHOOK_URL=https://n8n.automaginex-ai.lat/webhook/a245315a-7478-444c-a8fa-4ab50452cdde
 # Set environment variables
 ENV VITE_API_URL=${VITE_API_URL}
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 ENV VITE_WS_URL=${VITE_WS_URL}
 ENV VITE_FRONTEND_URL=${VITE_FRONTEND_URL}
+ENV VITE_N8N_WEBHOOK_URL=${VITE_N8N_WEBHOOK_URL}
 
 # Build the application
 RUN npm run build
