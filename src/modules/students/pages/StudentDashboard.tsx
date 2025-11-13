@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// Componentes UI
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,9 +16,13 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { NavHeader } from '@/components/ui/nav-header';
+
+// Hooks y servicios
 import { useMyScores } from '@/modules/sessions/hooks/useSessionScores';
 import { authService } from '@/modules/auth/services/auth.service';
 import { useToast } from '@/hooks/use-toast';
+
+// Iconos
 import { 
   Trophy, 
   Target, 
@@ -32,9 +38,12 @@ import {
   LogIn,
   X
 } from 'lucide-react';
+
+// Utilidades de fecha
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
+// Dashboard para estudiantes - visualización de progreso y acceso a sesiones
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -44,6 +53,7 @@ const StudentDashboard = () => {
   const [accessCode, setAccessCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
 
+  // Manejar unión a sesión con código de acceso
   const handleJoinSession = () => {
     if (!accessCode.trim()) {
       toast({
@@ -55,7 +65,6 @@ const StudentDashboard = () => {
     }
 
     setIsJoining(true);
-    // Navigate to session with access code
     navigate(`/session/join/${accessCode.trim().toUpperCase()}`);
   };
 
@@ -106,7 +115,7 @@ const StudentDashboard = () => {
     );
   }
 
-  // Calculate statistics
+  // Calcular estadísticas del estudiante
   const totalSessions = myScores?.length || 0;
   const completedSessions = myScores?.filter(score => score.completado).length || 0;
   const averageScore = totalSessions > 0 
@@ -121,7 +130,7 @@ const StudentDashboard = () => {
   ) || 0;
   const accuracyPercentage = totalAnswers > 0 ? (correctAnswers / totalAnswers) * 100 : 0;
 
-  // Sort scores by date (most recent first)
+  // Ordenar puntajes por fecha (más recientes primero)
   const sortedScores = myScores ? [...myScores].sort((a, b) => 
     new Date(b.fechaResolucion || b.createdAt).getTime() - 
     new Date(a.fechaResolucion || a.createdAt).getTime()

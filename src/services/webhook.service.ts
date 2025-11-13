@@ -1,7 +1,4 @@
-/**
- * Webhook service for sending session completion data to n8n
- */
-
+// Servicio para enviar notificaciones de sesiones completadas a N8N
 const WEBHOOK_URL = import.meta.env.VITE_N8N_WEBHOOK_URL;
 
 export interface SessionCompletionWebhookData {
@@ -11,14 +8,11 @@ export interface SessionCompletionWebhookData {
   nombreSesion: string;
 }
 
-/**
- * Send session completion data to n8n webhook
- * Only for authenticated (registered) users
- */
+// Enviar datos de sesión completada a webhook de N8N (solo usuarios registrados)
 export const sendSessionCompletionWebhook = async (
   data: SessionCompletionWebhookData
 ): Promise<boolean> => {
-  // Skip if webhook URL is not configured
+  // Saltar si no está configurada la URL del webhook
   if (!WEBHOOK_URL) {
     console.warn('⚠️ N8N Webhook URL not configured - skipping webhook notification');
     return false;

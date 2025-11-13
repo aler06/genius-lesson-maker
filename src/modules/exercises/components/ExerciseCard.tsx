@@ -23,6 +23,7 @@ interface ExerciseCardProps {
   onDelete: (id: string) => void;
 }
 
+// Obtener icono según el tipo de juego
 const getGameIcon = (game: Game) => {
   switch (game) {
     case Game.QUIZ:
@@ -46,6 +47,7 @@ const getGameIcon = (game: Game) => {
   }
 };
 
+// Obtener nombre en español del tipo de juego
 const getGameName = (game: Game) => {
   switch (game) {
     case Game.QUIZ:
@@ -69,6 +71,7 @@ const getGameName = (game: Game) => {
   }
 };
 
+// Obtener colores del badge según el tipo de juego
 const getGameColor = (game: Game) => {
   switch (game) {
     case Game.QUIZ:

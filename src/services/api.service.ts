@@ -8,6 +8,7 @@ import {
   UserResponseDTO 
 } from '../types/dtos';
 
+// Servicio centralizado para todas las peticiones HTTP de la API
 class ApiService {
   private baseUrl: string;
 
@@ -15,146 +16,64 @@ class ApiService {
     this.baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
   }
 
-  // Exercise endpoints
-  async createExercise(data: ExerciseRequestDTO): Promise<ExerciseResponseDto> {
-    const response = await fetch(`${this.baseUrl}/exercises`, {
-      method: 'POST',
+  // Método helper para hacer peticiones HTTP con manejo de errores
+  private async makeRequest<T>(
+    endpoint: string, 
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+    body?: any
+  ): Promise<T> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(data),
+      body: body ? JSON.stringify(body) : undefined,
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to create exercise: ${response.statusText}`);
+      throw new Error(`API Error: ${response.statusText}`);
     }
 
-    return response.json();
+    return method === 'DELETE' ? undefined as T : response.json();
+  }
+
+  // Endpoints de ejercicios - CRUD completo
+  async createExercise(data: ExerciseRequestDTO): Promise<ExerciseResponseDto> {
+    return this.makeRequest<ExerciseResponseDto>('/exercises', 'POST', data);
   }
 
   async getExerciseById(data: ExerciseByIdRequestDTO): Promise<ExerciseResponseDto> {
-    const response = await fetch(`${this.baseUrl}/exercises/${data.exerciseId}?userId=${data.userId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to get exercise: ${response.statusText}`);
-    }
-
-    return response.json();
+    return this.makeRequest<ExerciseResponseDto>(`/exercises/${data.exerciseId}?userId=${data.userId}`);
   }
 
   async updateExercise(data: ExerciseUpdateRequestDTO): Promise<ExerciseResponseDto> {
-    const response = await fetch(`${this.baseUrl}/exercises/${data.exerciseId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to update exercise: ${response.statusText}`);
-    }
-
-    return response.json();
+    return this.makeRequest<ExerciseResponseDto>(`/exercises/${data.exerciseId}`, 'PUT', data);
   }
 
   async deleteExercise(data: ExerciseByIdRequestDTO): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/exercises/${data.exerciseId}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ userId: data.userId }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to delete exercise: ${response.statusText}`);
-    }
+    return this.makeRequest<void>(`/exercises/${data.exerciseId}`, 'DELETE', { userId: data.userId });
   }
 
   async getUserExercises(data: UserExerciseRequestDTO): Promise<ExerciseResponseDto[]> {
-    const response = await fetch(`${this.baseUrl}/exercises/user/${data.userId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to get user exercises: ${response.statusText}`);
-    }
-
-    return response.json();
+    return this.makeRequest<ExerciseResponseDto[]>(`/exercises/user/${data.userId}`);
   }
 
-  // User endpoints
+  // Endpoints de usuarios
   async createUser(data: UserRequestDTO): Promise<UserResponseDTO> {
-    const response = await fetch(`${this.baseUrl}/users`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to create user: ${response.statusText}`);
-    }
-
-    return response.json();
+    return this.makeRequest<UserResponseDTO>('/users', 'POST', data);
   }
 
   async getUser(userId: string): Promise<UserResponseDTO> {
-    const response = await fetch(`${this.baseUrl}/users/${userId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to get user: ${response.statusText}`);
-    }
-
-    return response.json();
+    return this.makeRequest<UserResponseDTO>(`/users/${userId}`);
   }
 
-  // Auth endpoints
+  // Endpoints de autenticación
   async login(email: string, password: string): Promise<{ user: UserResponseDTO; token: string }> {
-    const response = await fetch(`${this.baseUrl}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to login: ${response.statusText}`);
-    }
-
-    return response.json();
+    return this.makeRequest<{ user: UserResponseDTO; token: string }>('/auth/login', 'POST', { email, password });
   }
 
   async register(data: UserRequestDTO): Promise<{ user: UserResponseDTO; token: string }> {
-    const response = await fetch(`${this.baseUrl}/auth/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to register: ${response.statusText}`);
-    }
-
-    return response.json();
+    return this.makeRequest<{ user: UserResponseDTO; token: string }>('/auth/register', 'POST', data);
   }
 }
 

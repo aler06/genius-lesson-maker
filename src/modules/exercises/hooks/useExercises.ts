@@ -7,11 +7,12 @@ import { ExerciseByIdRequestModel } from '../model/exercise-by-id-request.model'
 import { ExerciseUpdateRequestModel } from '../model/exercise-update-request.model';
 import { useToast } from '@/hooks/use-toast';
 
+// Hook principal para gestión de ejercicios - CRUD completo con React Query
 export const useExercises = (userId?: string) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get user exercises
+  // Obtener ejercicios del usuario con cache automático
   const {
     data: exercises,
     isLoading,
@@ -22,7 +23,7 @@ export const useExercises = (userId?: string) => {
     enabled: !!userId,
   });
 
-  // Create exercise mutation
+  // Mutación para crear ejercicio con notificaciones
   const createExerciseMutation = useMutation({
     mutationFn: (data: ExerciseRequestModel) => exerciseService.generateExercise(data),
     onSuccess: () => {
@@ -41,7 +42,7 @@ export const useExercises = (userId?: string) => {
     },
   });
 
-  // Update exercise mutation
+  // Mutación para actualizar ejercicio
   const updateExerciseMutation = useMutation({
     mutationFn: (data: ExerciseUpdateRequestModel) => exerciseService.updateExercise(data),
     onSuccess: () => {

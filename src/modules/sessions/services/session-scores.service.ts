@@ -8,12 +8,10 @@ import {
   CompleteSessionRequest,
 } from '../types/session-scores.types';
 
+// Servicio para manejo de puntajes y progreso de sesiones
 const API_BASE = '/api/v1/session-scores';
 
-/**
- * Initialize a score record for a student when they join a session
- * NOTE: This endpoint may not be available in the backend yet
- */
+// Inicializar registro de puntaje cuando estudiante se une a sesión
 export const initializeScore = async (
   request: InitializeScoreRequest
 ): Promise<SessionScore | null> => {
@@ -24,9 +22,8 @@ export const initializeScore = async (
     });
 
     if (!response.ok) {
-      // If endpoint doesn't exist (404), return null instead of throwing
+      // Si endpoint no existe (404), retornar null en lugar de error
       if (response.status === 404) {
-        // Silently skip for 404 (endpoint not available)
         return null;
       }
       const errorText = await response.text();
@@ -37,15 +34,12 @@ export const initializeScore = async (
 
     return await response.json();
   } catch (error) {
-    // Silently skip network errors
+    // Ignorar errores de red silenciosamente
     return null;
   }
 };
 
-/**
- * Submit an answer for a question in the session
- * NOTE: This endpoint may not be available in the backend yet
- */
+// Enviar respuesta de una pregunta en la sesión
 export const submitAnswer = async (
   request: SubmitAnswerRequest
 ): Promise<SubmitAnswerResponse | null> => {

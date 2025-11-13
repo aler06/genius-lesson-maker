@@ -1,25 +1,39 @@
+// Componentes de UI y notificaciones
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
+// React Query para manejo de estado del servidor
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// Páginas de ejercicios
 import CreateExercise from "./modules/exercises/pages/CreateExercise";
-import Dashboard from "./modules/dashboard/pages/Dashboard";
 import ExerciseDetail from "./modules/exercises/pages/ExerciseDetail";
 import ExerciseTypeSelector from "./modules/exercises/pages/ExerciseTypeSelector";
+
+// Páginas de autenticación
 import Login from "./modules/auth/pages/Login";
 import Register from "./modules/auth/pages/Register";
+
+// Páginas de sesiones
 import JoinSession from "./modules/sessions/pages/JoinSession";
 import SessionRoom from "./modules/sessions/pages/SessionRoom";
 import CreateSession from "./modules/sessions/pages/CreateSession";
 import SessionResults from "./modules/sessions/pages/SessionResults";
+
+// Dashboards
+import Dashboard from "./modules/dashboard/pages/Dashboard";
 import StudentDashboard from "./modules/students/pages/StudentDashboard";
+
+// Componentes de protección y utilidades
 import ProtectedRoute from "./components/ui/protected-route";
 import { Role } from "./types/enums";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Componente principal de la aplicación con rutas y proveedores
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -30,22 +44,20 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
-          {/* Public routes for students */}
+          {/* Rutas públicas - acceso sin autenticación */}
           <Route path="/join-session" element={<JoinSession />} />
           <Route path="/session/join/:accessCode" element={<JoinSession />} />
           <Route path="/session/:sessionId" element={<SessionRoom />} />
-          
-          {/* Home route - redirect to join session for public access */}
           <Route path="/" element={<JoinSession />} />
           
-          {/* Protected routes for students */}
+          {/* Rutas protegidas para estudiantes */}
           <Route path="/student-dashboard" element={
             <ProtectedRoute requiredRole={Role.STUDENT}>
               <StudentDashboard />
             </ProtectedRoute>
           } />
           
-          {/* Protected routes for teachers */}
+          {/* Rutas protegidas para profesores */}
           <Route path="/create-exercise" element={
             <ProtectedRoute requiredRole={Role.PROFESSOR}>
               <CreateExercise />
@@ -81,7 +93,7 @@ const App = () => (
               <ExerciseTypeSelector />
             </ProtectedRoute>
           } />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          {/* Ruta catch-all para páginas no encontradas */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

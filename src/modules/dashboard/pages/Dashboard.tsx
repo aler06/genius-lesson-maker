@@ -1,30 +1,41 @@
+// Componentes de navegación y UI
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { NavHeader } from '@/components/ui/nav-header';
+
+// Hooks de dominio
 import { useAuth } from '@/modules/auth/hooks/useAuth';
 import { useExercises } from '@/modules/exercises/hooks/useExercises';
 import { useSessions } from '@/modules/sessions/hooks/useSessions';
+
+// Componentes específicos
 import ExerciseCard from '@/modules/exercises/components/ExerciseCard';
 import SessionCard from '@/modules/sessions/components/SessionCard';
+
+// Iconos y utilidades
 import { Plus, Brain, CheckCircle, Users, Calendar, Play } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+// Dashboard principal para profesores - gestión de ejercicios y sesiones
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  // Hooks para datos de ejercicios y sesiones
   const { exercises, isLoading: exercisesLoading, deleteExercise, error: exercisesError } = useExercises(user?.id);
   const { sessions, isLoading: sessionsLoading, startSession, endSession, deleteSession, isStarting, isEnding, isDeleting, error: sessionsError } = useSessions(user?.id);
+  
   const [activeTab, setActiveTab] = useState('exercises');
   const { toast } = useToast();
 
 
+  // Handlers para ejercicios
   const handleViewExercise = (exerciseId: string) => {
     navigate(`/exercise/${exerciseId}`);
   };
-
 
   const handleDeleteExercise = (exerciseId: string) => {
     if (user?.id && window.confirm('¿Estás seguro de que quieres eliminar este ejercicio?')) {
@@ -32,11 +43,11 @@ const Dashboard = () => {
     }
   };
 
-
   const handleCreateExercise = () => {
     navigate('/create-exercise');
   };
 
+  // Handlers para sesiones
   const handleCreateSession = () => {
     navigate('/create-session');
   };
@@ -51,7 +62,6 @@ const Dashboard = () => {
     }
   };
 
-
   const handleDeleteSession = (sessionId: string) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta sesión?')) {
       deleteSession(sessionId);
@@ -59,7 +69,6 @@ const Dashboard = () => {
   };
 
   const handleViewResults = (sessionId: string) => {
-    // Navegar a la página de resultados de la sesión
     navigate(`/session/${sessionId}/results`);
   };
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { authService } from '../services/auth.service';
 import { UserProfile } from '../model/auth-response.model';
 
+// Hook principal para manejo de autenticación y estado del usuario
 export const useAuth = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,18 +16,18 @@ export const useAuth = () => {
           return;
         }
 
-        // Try to read cached user first
+        // Cargar usuario desde cache primero (UX más rápida)
         const cached = authService.getStoredUser();
         if (cached) {
           setUser(cached);
         }
 
-        // Always verify token and refresh user data
+        // Verificar token y actualizar datos del usuario
         const profile = await authService.getProfile();
         setUser(profile);
         localStorage.setItem('user', JSON.stringify(profile));
       } catch (error) {
-        // Any error means unauthenticated
+        // Cualquier error = usuario no autenticado
         authService.logout();
         setUser(null);
       } finally {
@@ -41,6 +42,7 @@ export const useAuth = () => {
     setUser(null);
   };
 
+  // Estados derivados para facilitar validaciones
   const isAuthenticated = !!user;
   const isProfessor = user?.role === 'teacher';
   const isStudent = user?.role === 'student';

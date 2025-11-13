@@ -718,7 +718,32 @@ const SessionRoom = () => {
               respuestas: allAnswers
             });
             
-            // Send webhook notification for authenticated users only
+            /**
+             * WEBHOOK DE NOTIFICACIÓN DE SESIÓN COMPLETADA
+             * 
+             * Envía una notificación webhook a N8N cuando un usuario registrado completa una sesión.
+             * 
+             * ¿Cuándo se ejecuta?
+             * - Después de guardar exitosamente el puntaje en la base de datos
+             * - Una sola vez por sesión completada
+             * 
+             * ¿Qué datos envía?
+             * - nombre: Nombre completo del estudiante
+             * - correo: Email del estudiante registrado
+             * - puntajeFinal: Calificación final sobre 20 puntos
+             * - nombreSesion: Nombre de la sesión completada
+             * - timestamp: Fecha y hora de completitud (agregado automáticamente por el servicio)
+             * 
+             * Configuración requerida:
+             * - Variable de entorno: VITE_N8N_WEBHOOK_URL en archivo .env
+             * - URL del webhook de N8N configurada correctamente
+             * 
+             * Comportamiento:
+             * - Si el webhook falla, NO bloquea la interfaz del usuario
+             * - Los errores se registran en consola para debugging
+             * - Solo se ejecuta si la variable de entorno está configurada
+             * - Usuarios temporales (invitados) NO activan el webhook
+             */
             const isAuthenticatedUser = userToUse && !userToUse.isTemporary;
             if (isAuthenticatedUser) {
               console.log('📨 Sending webhook notification for authenticated user');
@@ -729,7 +754,7 @@ const SessionRoom = () => {
                 nombreSesion: sessionData?.name || 'Sesión sin nombre',
               }).catch(error => {
                 console.error('Failed to send webhook notification:', error);
-                // Don't block the UI if webhook fails
+                // No bloquear la UI si el webhook falla
               });
             } else {
               console.log('⏭️ Skipping webhook notification for temporary user');
@@ -773,6 +798,7 @@ const SessionRoom = () => {
         if (grade >= 18) return '¡Excelente trabajo!';
         if (grade >= 14) return '¡Muy bien!';
         if (grade >= 10) return '¡Buen esfuerzo!';
+        if (grade >= 5) return '¡Mas suerte para la siguiente!';
         return 'Sigue practicando 💪';
       };
 

@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/utils/api';
 
-// Session interface matching exact backend response
+// Interfaz de sesión que coincide exactamente con la respuesta del backend
 interface Session {
   id: string;
   teacher: {
@@ -15,7 +15,7 @@ interface Session {
     createdAt: string;
     updatedAt: string;
   };
-  // Updated to support multiple exercises
+  // Soporte para múltiples ejercicios por sesión
   exercises: {
     id: string;
     game: string;
@@ -42,7 +42,7 @@ interface Session {
   updatedAt: string;
 }
 
-// Interface for creating a session
+// Interfaz para crear una sesión
 interface CreateSessionRequest {
   teacherId: string;
   exerciseIds: string[];
@@ -54,7 +54,7 @@ interface CreateSessionRequest {
   showLeaderboard?: boolean;
 }
 
-// Mock API functions - replace with actual API calls
+// Datos mock para fallback cuando la API no está disponible
 const mockSessions: Session[] = [
   {
     id: '68d75771162164a7a9e24ba7',
@@ -107,6 +107,7 @@ const mockSessions: Session[] = [
   }
 ];
 
+// Obtener sesiones del profesor con fallback a datos mock
 const fetchSessions = async (teacherId: string): Promise<Session[]> => {
   try {
     const response = await apiRequest(`/api/v1/sessions/teacher/${teacherId}`, {
@@ -121,13 +122,14 @@ const fetchSessions = async (teacherId: string): Promise<Session[]> => {
     const data = await response.json();
     return data;
   } catch (error) {
-    // Fallback to mock data if API fails
+    // Fallback a datos mock si la API falla
     console.warn('API call failed, using mock data:', error);
     await new Promise(resolve => setTimeout(resolve, 500));
     return mockSessions;
   }
 };
 
+// Crear nueva sesión con múltiples ejercicios
 const createSession = async (sessionData: CreateSessionRequest): Promise<Session> => {
   try {
     console.log('Creating session with data:', sessionData);
@@ -221,11 +223,12 @@ const deleteSession = async (sessionId: string): Promise<void> => {
 };
 
 
+// Hook principal para gestión de sesiones - CRUD completo con React Query
 export const useSessions = (teacherId?: string) => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch sessions query
+  // Query para obtener sesiones con cache de 5 minutos
   const {
     data: sessions = [],
     isLoading,
@@ -235,14 +238,14 @@ export const useSessions = (teacherId?: string) => {
     queryKey: ['sessions', teacherId],
     queryFn: () => fetchSessions(teacherId!),
     enabled: !!teacherId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
-  // Create session mutation
+  // Mutación para crear sesión con actualización optimista
   const createSessionMutation = useMutation({
     mutationFn: createSession,
     onSuccess: (newSession) => {
-      // Optimistically update the cache
+      // Actualizar cache optimísticamente
       queryClient.setQueryData(['sessions', teacherId], (old: Session[] = []) => [
         newSession,
         ...old
