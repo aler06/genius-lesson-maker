@@ -341,7 +341,7 @@ const ExerciseAnswersModal: React.FC<ExerciseAnswersModalProps> = ({
             </div>
             <div className="p-3 bg-rose-100 border-l-4 border-rose-500 rounded">
               <p className="text-sm text-rose-800">
-                💡 La ruleta seleccionará aleatoriamente una de estas frases.
+                 La ruleta seleccionará aleatoriamente una de estas frases.
               </p>
             </div>
           </div>

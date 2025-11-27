@@ -15,7 +15,8 @@ import {
   CheckCircle,
   Loader2,
   XCircle,
-  BarChart3
+  BarChart3,
+  Eye
 } from 'lucide-react';
 import { Session } from '../hooks/useSessions';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +27,7 @@ interface SessionCardProps {
   onEnd?: (sessionId: string) => void;
   onDelete?: (sessionId: string) => void;
   onViewResults?: (sessionId: string) => void;
+  onViewDynamic?: (sessionId: string) => void;
   isStarting?: boolean;
   isEnding?: boolean;
   isDeleting?: boolean;
@@ -37,6 +39,7 @@ const SessionCard = ({
   onEnd, 
   onDelete,
   onViewResults,
+  onViewDynamic,
   isStarting = false,
   isEnding = false,
   isDeleting = false
@@ -51,6 +54,17 @@ const SessionCard = ({
       case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  const getSessionTypeBadge = (sessionType: Session['sessionType']) => {
+    if (sessionType === 'dynamic') {
+      return (
+        <Badge className="ml-2 bg-purple-100 text-purple-800 border border-purple-200 text-[10px] uppercase tracking-wide">
+          Dinámica · Solo profesor
+        </Badge>
+      );
+    }
+    return null;
   };
 
   const getStatusIcon = (status: Session['status']) => {
@@ -111,11 +125,14 @@ const SessionCard = ({
   return (
     <Card className="h-full hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary">
       <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-2">
           <div className="space-y-2 flex-1">
-            <CardTitle className="text-lg font-semibold line-clamp-2">
-              {session.name}
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-lg font-semibold line-clamp-2">
+                {session.name}
+              </CardTitle>
+              {getSessionTypeBadge(session.sessionType)}
+            </div>
             {session.description && (
               <CardDescription className="text-sm line-clamp-2">
                 {session.description}
@@ -130,42 +147,48 @@ const SessionCard = ({
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Access Code and Link */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Código:</span>
-              <code className="text-lg font-mono font-bold text-primary">
-                {session.accessCode}
-              </code>
+        {/* Access Code and Link - solo para sesiones normales con código */}
+        {session.sessionType === 'normal' && session.accessCode && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Código:</span>
+                <code className="text-lg font-mono font-bold text-primary">
+                  {session.accessCode}
+                </code>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={copyAccessCode}
+                className="h-8 w-8 p-0"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={copyAccessCode}
-              className="h-8 w-8 p-0"
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
+            
+            {session.shareableLink && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={copyShareableLink}
+                className="w-full text-xs"
+              >
+                <ExternalLink className="h-3 w-3 mr-1" />
+                Copiar enlace compartible
+              </Button>
+            )}
           </div>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={copyShareableLink}
-            className="w-full text-xs"
-          >
-            <ExternalLink className="h-3 w-3 mr-1" />
-            Copiar enlace compartible
-          </Button>
-        </div>
+        )}
 
         {/* Session Info */}
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <span>{session.participants?.length || 0}/{session.maxParticipants}</span>
-          </div>
+          {session.sessionType === 'normal' && (
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <span>{session.participants?.length || 0}/{session.maxParticipants}</span>
+            </div>
+          )}
           <div className="flex items-center gap-2">
             <Timer className="h-4 w-4 text-muted-foreground" />
             <span>{getDuration()}</span>
@@ -211,52 +234,15 @@ const SessionCard = ({
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-2">
-          {session.status === 'waiting' && (
-            <Button
-              onClick={() => onStart?.(session.id)}
-              disabled={isStarting}
-              className="w-full bg-green-600 hover:bg-green-700 no-hover"
-              size="sm"
-            >
-              {isStarting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-1" />
-                  Iniciar
-                </>
-              )}
-            </Button>
-          )}
-          
-          {session.status === 'active' && (
-            <Button
-              onClick={() => onEnd?.(session.id)}
-              disabled={isEnding}
-              variant="destructive"
-              className="w-full"
-              size="sm"
-            >
-              {isEnding ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Square className="h-4 w-4 mr-1" />
-                  Finalizar
-                </>
-              )}
-            </Button>
-          )}
-
-          {(session.status === 'finished' || session.status === 'cancelled') && (
+          {session.sessionType === 'dynamic' ? (
             <>
               <Button
-                onClick={() => onViewResults?.(session.id)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                onClick={() => onViewDynamic?.(session.id)}
+                className="flex-1 bg-purple-600 hover:bg-purple-700"
                 size="sm"
               >
-                <BarChart3 className="h-4 w-4 mr-1" />
-                Ver Resultados
+                <Eye className="h-4 w-4 mr-1" />
+                Ver sesión
               </Button>
               <Button
                 onClick={() => onDelete?.(session.id)}
@@ -274,6 +260,74 @@ const SessionCard = ({
                   </>
                 )}
               </Button>
+            </>
+          ) : (
+            <>
+              {session.status === 'waiting' && (
+                <Button
+                  onClick={() => onStart?.(session.id)}
+                  disabled={isStarting}
+                  className="w-full bg-green-600 hover:bg-green-700 no-hover"
+                  size="sm"
+                >
+                  {isStarting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 mr-1" />
+                      Iniciar
+                    </>
+                  )}
+                </Button>
+              )}
+              
+              {session.status === 'active' && (
+                <Button
+                  onClick={() => onEnd?.(session.id)}
+                  disabled={isEnding}
+                  variant="destructive"
+                  className="w-full"
+                  size="sm"
+                >
+                  {isEnding ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Square className="h-4 w-4 mr-1" />
+                      Finalizar
+                    </>
+                  )}
+                </Button>
+              )}
+
+              {(session.status === 'finished' || session.status === 'cancelled') && (
+                <>
+                  <Button
+                    onClick={() => onViewResults?.(session.id)}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    size="sm"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Ver Resultados
+                  </Button>
+                  <Button
+                    onClick={() => onDelete?.(session.id)}
+                    disabled={isDeleting}
+                    variant="outline"
+                    className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    size="sm"
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Eliminar
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
             </>
           )}
         </div>

@@ -28,16 +28,23 @@ const CreateSession = () => {
     maxParticipants: '',
     allowLateJoin: true,
     showLeaderboard: true,
-    selectedExercises: [] as string[]
+    selectedExercises: [] as string[],
+    // Tipo de sesión: 'normal' (por defecto) o 'dynamic' (solo profesor)
+    sessionType: 'normal' as 'normal' | 'dynamic',
   });
 
   const [selectedExercise, setSelectedExercise] = useState<ExerciseResponse | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Filter out flip_cards and roulette exercises (they are for teacher explanation only, not for students to solve)
-  const availableExercises = (exercises || []).filter(exercise => 
-    exercise.game !== 'flip_cards' && exercise.game !== 'roulette'
-  );
+  // Disponibilidad de ejercicios según el tipo de sesión
+  // - normal: ejercicios interactivos para estudiantes (excluye flip_cards y roulette)
+  // - dynamic: solo material de explicación para el profesor (flip_cards y roulette)
+  const availableExercises = (exercises || []).filter(exercise => {
+    if (formData.sessionType === 'dynamic') {
+      return exercise.game === 'flip_cards' || exercise.game === 'roulette';
+    }
+    return exercise.game !== 'flip_cards' && exercise.game !== 'roulette';
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +70,9 @@ const CreateSession = () => {
       duration: parseInt(formData.duration) || 30,
       maxParticipants: parseInt(formData.maxParticipants) || 25,
       allowLateJoin: formData.allowLateJoin,
-      showLeaderboard: formData.showLeaderboard
+      showLeaderboard: formData.showLeaderboard,
+      // Para sesiones dinámicas, el backend no generará accessCode ni shareableLink
+      sessionType: formData.sessionType,
     };
 
     createSession(payload);
@@ -149,6 +158,40 @@ const CreateSession = () => {
                       rows={3}
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Tipo de sesión</Label>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, sessionType: 'normal', selectedExercises: [] }))}
+                        className={`border rounded-lg px-3 py-2 text-left transition-colors ${
+                          formData.sessionType === 'normal'
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-border hover:bg-muted'
+                        }`}
+                      >
+                        <div className="font-semibold">Normal</div>
+                        <div className="text-xs text-muted-foreground">
+                          Estudiantes se unen con código y resuelven ejercicios interactivos.
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, sessionType: 'dynamic', selectedExercises: [] }))}
+                        className={`border rounded-lg px-3 py-2 text-left transition-colors ${
+                          formData.sessionType === 'dynamic'
+                            ? 'border-purple-500 bg-purple-50 text-purple-700'
+                            : 'border-border hover:bg-muted'
+                        }`}
+                      >
+                        <div className="font-semibold">Dinámica</div>
+                        <div className="text-xs text-muted-foreground">
+                          Solo profesor, ideal para ruletas y tarjetas giratorias en clase.
+                        </div>
+                      </button>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -173,6 +216,7 @@ const CreateSession = () => {
                         value={formData.duration}
                         onChange={(e) => setFormData(prev => ({ ...prev, duration: e.target.value }))}
                         placeholder="Ej: 30"
+                        disabled={formData.sessionType === 'dynamic'}
                       />
                     </div>
 
@@ -184,6 +228,7 @@ const CreateSession = () => {
                         value={formData.maxParticipants}
                         onChange={(e) => setFormData(prev => ({ ...prev, maxParticipants: e.target.value }))}
                         placeholder="Ej: 25"
+                        disabled={formData.sessionType === 'dynamic'}
                       />
                     </div>
                   </div>
@@ -287,11 +332,13 @@ const CreateSession = () => {
                       </p>
                     </div>
 
-                    <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                      <p className="text-sm text-amber-800">
-                         <strong>Nota:</strong> Las tarjetas giratorias y la ruleta no están disponibles para sesiones porque son material de explicación para el profesor, no ejercicios para resolver.
-                      </p>
-                    </div>
+                    {formData.sessionType === 'normal' && (
+                      <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-sm text-amber-800">
+                          <strong>Nota:</strong> Las tarjetas giratorias y la ruleta no están disponibles para sesiones normales porque son material de explicación para el profesor. Usa el tipo "Dinámica" para trabajar solo con ese material.
+                        </p>
+                      </div>
+                    )}
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {availableExercises.map((exercise) => (

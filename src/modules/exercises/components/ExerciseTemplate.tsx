@@ -411,51 +411,21 @@ const ExerciseTemplate: React.FC<ExerciseTemplateProps> = ({
     }
 
     return (
-      <div className="space-y-6">
-        {/* Phrases List Card */}
-        <Card className="border-l-4 border-l-rose-500 bg-rose-50">
-          <CardHeader>
-            <CardTitle className="text-lg text-rose-800 flex items-center gap-2">
-              <Target className="h-5 w-5" />
-              Frases
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {exercise.phrases.map((phrase, index) => (
-                <div key={index} className="p-4 bg-white border border-rose-200 rounded-lg flex items-start gap-3">
-                  <span className="bg-rose-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
-                    {index + 1}
-                  </span>
-                  <span className="text-gray-800">{phrase.text}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 p-3 bg-rose-100 border-l-4 border-rose-500 rounded">
-              <p className="text-sm text-rose-800">
-                💡 La ruleta seleccionará aleatoriamente una de estas frases.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Interactive Game */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Vista Previa del Juego</CardTitle>
-            <CardDescription>Así es como los estudiantes verán el ejercicio</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <RouletteGame 
-              phrases={exercise.phrases}
-              instructions={exercise.instructions}
-              onGameComplete={(selectedPhrase, phraseIndex) => {
-                console.log(`Roulette completed: Selected phrase "${selectedPhrase}" at index ${phraseIndex}`);
-              }}
-            />
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Vista Previa del Juego</CardTitle>
+          <CardDescription>Así es como los estudiantes verán el ejercicio</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RouletteGame 
+            phrases={exercise.phrases}
+            instructions={exercise.instructions}
+            onGameComplete={(selectedPhrase, phraseIndex) => {
+              console.log(`Roulette completed: Selected phrase "${selectedPhrase}" at index ${phraseIndex}`);
+            }}
+          />
+        </CardContent>
+      </Card>
     );
   };
 

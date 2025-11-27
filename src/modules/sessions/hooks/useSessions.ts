@@ -28,16 +28,20 @@ interface Session {
   }[];
   name: string;
   description?: string;
-  accessCode: string;
+  // accessCode ahora es opcional porque las sesiones dinámicas no tienen código
+  accessCode?: string;
   status: 'waiting' | 'active' | 'finished' | 'cancelled';
   duration: number;
   startTime?: string;
   endTime?: string;
   participants: any[];
   maxParticipants: number;
-  shareableLink: string;
+  // Para sesiones dinámicas, el backend no genera shareableLink
+  shareableLink?: string;
   allowLateJoin: boolean;
   showLeaderboard: boolean;
+  // Tipo de sesión: 'normal' (por defecto) o 'dynamic' (solo profesor)
+  sessionType: 'normal' | 'dynamic';
   createdAt: string;
   updatedAt: string;
 }
@@ -52,6 +56,8 @@ interface CreateSessionRequest {
   maxParticipants?: number;
   allowLateJoin?: boolean;
   showLeaderboard?: boolean;
+  // Opcional para compatibilidad: si no se envía, el backend asume 'normal'
+  sessionType?: 'normal' | 'dynamic';
 }
 
 // Datos mock para fallback cuando la API no está disponible
@@ -102,6 +108,7 @@ const mockSessions: Session[] = [
     shareableLink: 'http://localhost:3000/session/join/LXQ7TM',
     allowLateJoin: true,
     showLeaderboard: true,
+    sessionType: 'normal',
     createdAt: '2025-09-27T03:18:09.711Z',
     updatedAt: '2025-09-27T03:43:39.056Z'
   }

@@ -134,7 +134,7 @@ const FlipCardsGame: React.FC<FlipCardsGameProps> = ({
                       {currentCard.front}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      💡 Haz clic para revelar la respuesta
+                       Haz clic para revelar la respuesta
                     </p>
                   </div>
                 </CardContent>
@@ -153,7 +153,7 @@ const FlipCardsGame: React.FC<FlipCardsGameProps> = ({
                       {currentCard.back}
                     </p>
                     <p className="text-sm text-green-600">
-                      ✨ Haz clic para volver al frente
+                       Haz clic para volver al frente
                     </p>
                   </div>
                 </CardContent>
@@ -173,24 +173,6 @@ const FlipCardsGame: React.FC<FlipCardsGameProps> = ({
           </Button>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleFlipCard}
-              className="text-xs bg-primary/5 hover:bg-primary/10 border border-primary/20 transition-all duration-200"
-            >
-              {isFlipped ? (
-                <>
-                  <EyeOff className="h-3 w-3 mr-1" />
-                  Ocultar Respuesta
-                </>
-              ) : (
-                <>
-                  <Eye className="h-3 w-3 mr-1" />
-                  Revelar Respuesta
-                </>
-              )}
-            </Button>
           </div>
 
           <Button
@@ -198,7 +180,7 @@ const FlipCardsGame: React.FC<FlipCardsGameProps> = ({
             disabled={!viewedCards.has(currentCardIndex)}
             className="no-hover"
           >
-            {isLastCard ? 'Finalizar' : 'Siguiente →'}
+            {isLastCard ? 'Terminado' : 'Siguiente →'}
           </Button>
         </div>
 

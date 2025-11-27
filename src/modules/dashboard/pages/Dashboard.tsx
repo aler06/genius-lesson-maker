@@ -72,6 +72,10 @@ const Dashboard = () => {
     navigate(`/session/${sessionId}/results`);
   };
 
+  const handleViewDynamicSession = (sessionId: string) => {
+    navigate(`/session/dynamic/${sessionId}`);
+  };
+
   if (exercisesLoading || sessionsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted">
@@ -274,6 +278,7 @@ const Dashboard = () => {
                         onEnd={handleEndSession}
                         onDelete={handleDeleteSession}
                         onViewResults={handleViewResults}
+                        onViewDynamic={handleViewDynamicSession}
                         isStarting={isStarting}
                         isEnding={isEnding}
                         isDeleting={isDeleting}

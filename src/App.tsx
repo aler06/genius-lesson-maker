@@ -21,6 +21,7 @@ import JoinSession from "./modules/sessions/pages/JoinSession";
 import SessionRoom from "./modules/sessions/pages/SessionRoom";
 import CreateSession from "./modules/sessions/pages/CreateSession";
 import SessionResults from "./modules/sessions/pages/SessionResults";
+import DynamicSessionView from "./modules/sessions/pages/DynamicSessionView";
 
 // Dashboards
 import Dashboard from "./modules/dashboard/pages/Dashboard";
@@ -76,6 +77,11 @@ const App = () => (
           <Route path="/session/:sessionId/results" element={
             <ProtectedRoute requiredRole={Role.PROFESSOR}>
               <SessionResults />
+            </ProtectedRoute>
+          } />
+          <Route path="/session/dynamic/:sessionId" element={
+            <ProtectedRoute requiredRole={Role.PROFESSOR}>
+              <DynamicSessionView />
             </ProtectedRoute>
           } />
           <Route path="/exercise/:exerciseId" element={
